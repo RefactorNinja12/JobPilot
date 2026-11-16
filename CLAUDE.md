@@ -45,6 +45,7 @@ Conventions:
 | Frontend | `web/` | Vitest, React Testing Library, MSW |
 
 Automated tests never hit the real JobTech API; it is mocked with WireMock.
+Real-data findings about the JobTech APIs (field coverage, gotchas) are in `docs/jobtech-api.md`. Read it before touching JobAd or the clients.
 
 ## MCP servers (`.mcp.json`)
 - `microsoft-learn`: current .NET/EF Core/ASP.NET docs. Prefer it over memory for API details.
