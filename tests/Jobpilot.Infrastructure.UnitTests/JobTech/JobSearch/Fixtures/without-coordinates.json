@@ -1,0 +1,51 @@
+{
+  "id": "31532394",
+  "headline": "Embedded utvecklare för Linux / Android",
+  "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/31532394",
+  "application_deadline": "2026-11-30T23:59:59",
+  "publication_date": "2026-09-29T13:50:30",
+  "description": {
+    "text": "Vill du utveckla avancerade säkerhetssystem i en modern och trivsam arbetsmiljö? Vi söker dig som är erfaren embedded-utvecklare och som vill bli en viktig del av vårt team och arbeta med utvecklingen av våra Android- och Linux-kärnor, drivrutiner samt MCU-firmware för plattformar som Atmel, Nordic …"
+  },
+  "employer": {
+    "name": "Steplock access AB",
+    "organization_number": "5591059992",
+    "workplace": "Steplock access AB"
+  },
+  "workplace_address": {
+    "municipality": "Falun",
+    "municipality_code": "2080",
+    "region": "Dalarnas län",
+    "country": "Sverige",
+    "coordinates": [
+      null,
+      null
+    ]
+  },
+  "occupation": {
+    "concept_id": "fg7B_yov_smw",
+    "label": "Systemutvecklare/Programmerare"
+  },
+  "working_hours_type": {
+    "concept_id": "6YE1_gAC_R2G",
+    "label": "Heltid"
+  },
+  "scope_of_work": {
+    "min": 100,
+    "max": 100
+  },
+  "must_have": {
+    "skills": [],
+    "languages": [],
+    "work_experiences": [
+      {
+        "weight": 10,
+        "concept_id": "fg7B_yov_smw",
+        "label": "Systemutvecklare/Programmerare",
+        "legacy_ams_taxonomy_id": "2419"
+      }
+    ],
+    "education": [],
+    "education_level": []
+  }
+}

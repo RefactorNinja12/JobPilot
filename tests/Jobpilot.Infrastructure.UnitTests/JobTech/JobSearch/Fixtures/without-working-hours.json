@@ -1,0 +1,44 @@
+{
+  "id": "31728950",
+  "headline": "Konsult/Interim Programledare AI Örebro",
+  "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/31728950",
+  "application_deadline": "2026-12-13T23:59:59",
+  "publication_date": "2026-11-13T15:16:24",
+  "description": {
+    "text": "Driv AI-initiativ från strategi till verklig verksamhetsnytta. Vi söker en erfaren programledare med fokus på förändringsledning!\nHur säkerställer man att stora AI-satsningar faktiskt leder till resultat? Vi söker nu en erfaren Programledare inom AI till ett konsultuppdrag där du får en central …"
+  },
+  "employer": {
+    "name": "TNG Group AB",
+    "organization_number": "5566482781",
+    "workplace": "Ada Digital"
+  },
+  "workplace_address": {
+    "municipality": "Örebro",
+    "municipality_code": "1880",
+    "region": "Örebro län",
+    "country": "Sverige",
+    "coordinates": [
+      15.21341,
+      59.27526
+    ]
+  },
+  "occupation": {
+    "concept_id": "fg7B_yov_smw",
+    "label": "Systemutvecklare/Programmerare"
+  },
+  "working_hours_type": {
+    "concept_id": null,
+    "label": null
+  },
+  "scope_of_work": {
+    "min": null,
+    "max": null
+  },
+  "must_have": {
+    "skills": [],
+    "languages": [],
+    "work_experiences": [],
+    "education": [],
+    "education_level": []
+  }
+}

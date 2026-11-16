@@ -1,0 +1,44 @@
+{
+  "id": "31727571",
+  "headline": "Senior utvecklare observability",
+  "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/31727571",
+  "application_deadline": "2026-11-27T23:59:59",
+  "publication_date": "2026-11-13T13:15:54",
+  "description": {
+    "text": "Vill du utvecklas inom plattformar och är redo att ta nästa steg i din karriär? Har duerfarenhet av att arbeta med infrastruktur? Hos oss får du möjlighet att arbeta i en organisation där du tillsammans med kunniga och utvecklingsinriktade kollegor får möjlighet att driva en av Sveriges största …"
+  },
+  "employer": {
+    "name": "Skatteverket",
+    "organization_number": "2021005448",
+    "workplace": "Skatteverket"
+  },
+  "workplace_address": {
+    "municipality": "Sundbyberg",
+    "municipality_code": "0183",
+    "region": "Stockholms län",
+    "country": "Sverige",
+    "coordinates": [
+      17.96871970992916,
+      59.363060218513375
+    ]
+  },
+  "occupation": {
+    "concept_id": "fg7B_yov_smw",
+    "label": "Systemutvecklare/Programmerare"
+  },
+  "working_hours_type": {
+    "concept_id": "6YE1_gAC_R2G",
+    "label": "Heltid"
+  },
+  "scope_of_work": {
+    "min": 100,
+    "max": 100
+  },
+  "must_have": {
+    "skills": [],
+    "languages": [],
+    "work_experiences": [],
+    "education": [],
+    "education_level": []
+  }
+}

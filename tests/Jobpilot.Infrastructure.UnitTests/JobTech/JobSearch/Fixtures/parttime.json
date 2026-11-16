@@ -1,0 +1,44 @@
+{
+  "id": "31729888",
+  "headline": "RPA-konsult – Blue Prism och Treserva",
+  "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/31729888",
+  "application_deadline": "2026-11-18T23:59:59",
+  "publication_date": "2026-11-13T16:42:42",
+  "description": {
+    "text": "Vidareutveckla Mölndals stads automation och interna kompetens inom RPA.\nOm uppdraget\nUtveckla och förvalta RPA-processer.\nKartlägga, värdera och prioritera processer tillsammans med verksamheten.\nStödja produktion och överföra kompetens till stadens personal.\n\nKrav\nMinst fem års RPA-utveckling i …"
+  },
+  "employer": {
+    "name": "Agile Resources AB",
+    "organization_number": "5593595258",
+    "workplace": "Agile Resources AB"
+  },
+  "workplace_address": {
+    "municipality": "Mölndal",
+    "municipality_code": "1481",
+    "region": "Västra Götalands län",
+    "country": "Sverige",
+    "coordinates": [
+      11.9876381,
+      57.6408942
+    ]
+  },
+  "occupation": {
+    "concept_id": "fg7B_yov_smw",
+    "label": "Systemutvecklare/Programmerare"
+  },
+  "working_hours_type": {
+    "concept_id": "947z_JGS_Uk2",
+    "label": "Deltid"
+  },
+  "scope_of_work": {
+    "min": 0,
+    "max": 100
+  },
+  "must_have": {
+    "skills": [],
+    "languages": [],
+    "work_experiences": [],
+    "education": [],
+    "education_level": []
+  }
+}
