@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="NetArchTest.Rules" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Jobpilot.Domain\Jobpilot.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Jobpilot.Application\Jobpilot.Application.csproj" />
+  </ItemGroup>
+
+</Project>
