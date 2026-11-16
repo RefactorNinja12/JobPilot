@@ -1,3 +1,4 @@
+using Jobpilot.Domain.Locations;
 using Jobpilot.Domain.Profiles;
 
 namespace Jobpilot.Domain.UnitTests.Profiles;
@@ -58,6 +59,22 @@ public class JobPreferencesTests
         none.AcceptsFullTime.ShouldBeTrue();
         none.AcceptsPartTime.ShouldBeTrue();
         none.ExcludeStaffingAgencies.ShouldBeFalse();
+        none.CommuteLimit.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Create_WithoutCommuteLimit_HasNoCommuteRequirement() =>
+        JobPreferences.Create(null, true, true, false).Value.CommuteLimit.ShouldBeNull();
+
+    [Fact]
+    public void Create_WithCommuteLimit_KeepsIt()
+    {
+        var home = Coordinates.Create(59.3293, 18.0686).Value;
+        var limit = CommuteLimit.Create(home, 40).Value;
+
+        var preferences = JobPreferences.Create(null, true, true, false, limit).Value;
+
+        preferences.CommuteLimit.ShouldBe(limit);
     }
 
     [Fact]
