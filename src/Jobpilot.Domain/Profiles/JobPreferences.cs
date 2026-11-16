@@ -8,16 +8,12 @@ namespace Jobpilot.Domain.Profiles;
 /// </summary>
 public sealed record JobPreferences
 {
-    public const int MaxMonthlySalary = 1_000_000;
-
     private JobPreferences(
-        int? minimumMonthlySalary,
         bool acceptsFullTime,
         bool acceptsPartTime,
         bool excludeStaffingAgencies,
         CommuteLimit? commuteLimit)
     {
-        MinimumMonthlySalary = minimumMonthlySalary;
         AcceptsFullTime = acceptsFullTime;
         AcceptsPartTime = acceptsPartTime;
         ExcludeStaffingAgencies = excludeStaffingAgencies;
@@ -25,10 +21,8 @@ public sealed record JobPreferences
     }
 
     /// <summary>No requirements: every ad passes. Default for new profiles.</summary>
-    public static JobPreferences None { get; } = new(null, acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, commuteLimit: null);
-
-    /// <summary>Minimum salary in SEK per month, or null for no requirement.</summary>
-    public int? MinimumMonthlySalary { get; }
+    public static JobPreferences None { get; } =
+        new(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, commuteLimit: null);
 
     public bool AcceptsFullTime { get; }
 
@@ -40,27 +34,16 @@ public sealed record JobPreferences
     public CommuteLimit? CommuteLimit { get; }
 
     public static Result<JobPreferences> Create(
-        int? minimumMonthlySalary,
         bool acceptsFullTime,
         bool acceptsPartTime,
         bool excludeStaffingAgencies,
         CommuteLimit? commuteLimit = null)
     {
-        if (minimumMonthlySalary is < 1 or > MaxMonthlySalary)
-        {
-            return JobPreferencesErrors.SalaryOutOfRange;
-        }
-
         if (!acceptsFullTime && !acceptsPartTime)
         {
             return JobPreferencesErrors.NoEmploymentExtentAccepted;
         }
 
-        return new JobPreferences(
-            minimumMonthlySalary,
-            acceptsFullTime,
-            acceptsPartTime,
-            excludeStaffingAgencies,
-            commuteLimit);
+        return new JobPreferences(acceptsFullTime, acceptsPartTime, excludeStaffingAgencies, commuteLimit);
     }
 }
