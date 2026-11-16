@@ -4,8 +4,6 @@ namespace Jobpilot.Domain.UnitTests.Profiles;
 
 public class SkillTests
 {
-    private const string CSharpTaxonomyId = "rQds_YGd_quU";
-
     [Fact]
     public void Create_WithValidName_Succeeds()
     {
@@ -13,17 +11,11 @@ public class SkillTests
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.Name.ShouldBe("C#");
-        result.Value.TaxonomyId.ShouldBeNull();
     }
 
     [Fact]
-    public void Create_TrimsNameAndTaxonomyId()
-    {
-        var skill = Skill.Create("  C#  ", $" {CSharpTaxonomyId} ").Value;
-
-        skill.Name.ShouldBe("C#");
-        skill.TaxonomyId.ShouldBe(CSharpTaxonomyId);
-    }
+    public void Create_TrimsName() =>
+        Skill.Create("  C#  ").Value.Name.ShouldBe("C#");
 
     [Theory]
     [InlineData(null)]
@@ -40,17 +32,11 @@ public class SkillTests
     public void Create_WithNameOverMaxLength_FailsWithNameTooLong() =>
         Skill.Create(new string('a', Skill.MaxNameLength + 1)).Error.ShouldBe(SkillErrors.NameTooLong);
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Create_WithBlankTaxonomyId_TreatsItAsFreeText(string taxonomyId) =>
-        Skill.Create("C#", taxonomyId).Value.TaxonomyId.ShouldBeNull();
-
     [Fact]
-    public void FreeTextSkills_WithSameNameDifferentCase_AreEqual()
+    public void Skills_WithSameNameDifferentCase_AreEqual()
     {
-        var a = Skill.Create("C#").Value;
-        var b = Skill.Create("c#").Value;
+        var a = Skill.Create("Postgresql").Value;
+        var b = Skill.Create("PostgreSQL").Value;
 
         a.ShouldBe(b);
         (a == b).ShouldBeTrue();
@@ -58,42 +44,13 @@ public class SkillTests
     }
 
     [Fact]
-    public void FreeTextSkills_WithDifferentNames_AreNotEqual()
+    public void Skills_WithDifferentNames_AreNotEqual()
     {
         var a = Skill.Create("C#").Value;
         var b = Skill.Create("Java").Value;
 
         a.ShouldNotBe(b);
         (a != b).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void TaxonomySkills_WithSameIdDifferentNames_AreEqual()
-    {
-        var a = Skill.Create("C#", CSharpTaxonomyId).Value;
-        var b = Skill.Create("Programmering i C#", CSharpTaxonomyId).Value;
-
-        a.ShouldBe(b);
-        a.GetHashCode().ShouldBe(b.GetHashCode());
-    }
-
-    [Fact]
-    public void TaxonomySkills_WithSameNameDifferentIds_AreNotEqual()
-    {
-        var a = Skill.Create("Java", "id_1").Value;
-        var b = Skill.Create("Java", "id_2").Value;
-
-        a.ShouldNotBe(b);
-    }
-
-    [Fact]
-    public void TaxonomySkill_AndFreeTextSkill_AreNeverEqual()
-    {
-        var taxonomy = Skill.Create("C#", CSharpTaxonomyId).Value;
-        var freeText = Skill.Create("C#").Value;
-
-        taxonomy.ShouldNotBe(freeText);
-        freeText.ShouldNotBe(taxonomy);
     }
 
     [Fact]
@@ -107,14 +64,18 @@ public class SkillTests
     }
 
     [Fact]
+    public void Equality_WithOtherType_IsFalse() =>
+        Skill.Create("C#").Value.Equals("C#").ShouldBeFalse();
+
+    [Fact]
     public void Skills_InHashSet_AreDeduplicated()
     {
         var skills = new HashSet<Skill>
         {
             Skill.Create("C#").Value,
             Skill.Create("c#").Value,
-            Skill.Create("SQL", "sql_id").Value,
-            Skill.Create("Structured Query Language", "sql_id").Value,
+            Skill.Create(".net").Value,
+            Skill.Create(".NET").Value,
         };
 
         skills.Count.ShouldBe(2);

@@ -5,7 +5,7 @@ namespace Jobpilot.Domain.UnitTests.Profiles;
 
 public class ProfileTests
 {
-    private static readonly Skill _csharp = Skill.Create("C#", "rQds_YGd_quU").Value;
+    private static readonly Skill _csharp = Skill.Create("C#").Value;
     private static readonly Skill _sql = Skill.Create("SQL").Value;
 
     private static ProfileSkill CSharp(int years = 4) =>
@@ -47,13 +47,13 @@ public class ProfileTests
     }
 
     [Fact]
-    public void AddSkill_SameTaxonomyIdDifferentName_CountsAsDuplicate()
+    public void AddSkill_SameNameDifferentCase_CountsAsDuplicate()
     {
         var profile = Profile.Create();
         profile.AddSkill(CSharp());
-        var renamed = Skill.Create("Programmering i C#", "rQds_YGd_quU").Value;
+        var lowerCase = Skill.Create("c#").Value;
 
-        var result = profile.AddSkill(ProfileSkill.Create(renamed, SkillLevel.Beginner, 1).Value);
+        var result = profile.AddSkill(ProfileSkill.Create(lowerCase, SkillLevel.Beginner, 1).Value);
 
         result.Error.Code.ShouldBe("Profile.SkillAlreadyAdded");
     }
