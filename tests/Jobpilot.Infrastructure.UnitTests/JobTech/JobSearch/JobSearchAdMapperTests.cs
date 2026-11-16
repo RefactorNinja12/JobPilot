@@ -88,12 +88,21 @@ public class JobSearchAdMapperTests
     [Theory]
     [InlineData(null)]
     [InlineData("not a url")]
-    [InlineData("/platsbanken/annonser/1")]
-    public void InvalidUrl_FailsWithInvalidUrl(string? url)
+    public void UnparsableUrl_FailsWithInvalidUrl(string? url)
     {
         var dto = LoadFixture("parttime") with { WebpageUrl = url };
 
         JobSearchAdMapper.ToJobAd(dto).Error.Code.ShouldBe("JobSearch.InvalidUrl");
+    }
+
+    [Fact]
+    public void PathOnlyUrl_IsRejected()
+    {
+        // On Linux "/path" parses as file:///path and is rejected by JobAd (UrlInvalid);
+        // on Windows Uri.TryCreate already fails (JobSearch.InvalidUrl). Either way: no ad.
+        var dto = LoadFixture("parttime") with { WebpageUrl = "/platsbanken/annonser/1" };
+
+        JobSearchAdMapper.ToJobAd(dto).IsFailure.ShouldBeTrue();
     }
 
     [Fact]

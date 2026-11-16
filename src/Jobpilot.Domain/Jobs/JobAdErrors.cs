@@ -22,8 +22,8 @@ public static class JobAdErrors
     public static readonly Error HeadlineEmpty =
         Error.Validation("JobAd.HeadlineEmpty", "Job ad headline is required.");
 
-    public static readonly Error UrlNotAbsolute =
-        Error.Validation("JobAd.UrlNotAbsolute", "Job ad URL must be absolute.");
+    public static readonly Error UrlInvalid =
+        Error.Validation("JobAd.UrlInvalid", "Job ad URL must be an absolute http or https URL.");
 
     public static readonly Error WorkingHoursInvalid =
         Error.Validation("JobAd.WorkingHoursInvalid", "Working hours value is not valid.");

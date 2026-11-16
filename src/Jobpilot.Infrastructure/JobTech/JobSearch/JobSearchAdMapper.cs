@@ -28,9 +28,8 @@ public static class JobSearchAdMapper
             return JobSearchErrors.MissingField(ad, "application_deadline");
         }
 
-        // Scheme check matters: on Linux, "/path" parses as an absolute file:// URI.
-        if (!Uri.TryCreate(dto.WebpageUrl, UriKind.Absolute, out var url)
-            || (url.Scheme != Uri.UriSchemeHttps && url.Scheme != Uri.UriSchemeHttp))
+        // Only parses here; JobAd.Create enforces http(s).
+        if (!Uri.TryCreate(dto.WebpageUrl, UriKind.Absolute, out var url))
         {
             return JobSearchErrors.InvalidUrl(ad);
         }
