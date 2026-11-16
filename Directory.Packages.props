@@ -9,6 +9,13 @@
     <PackageVersion Include="Meziantou.Analyzer" Version="3.0.341" />
   </ItemGroup>
 
+  <!-- Hosting and HTTP -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.14" />
+  </ItemGroup>
+
   <!-- Testing -->
   <ItemGroup>
     <PackageVersion Include="xunit.v3" Version="4.0.3" />

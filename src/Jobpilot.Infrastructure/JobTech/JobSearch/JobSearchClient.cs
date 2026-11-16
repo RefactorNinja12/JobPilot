@@ -5,6 +5,7 @@ using System.Text.Json;
 using Jobpilot.Application.Abstractions.JobSearch;
 using Jobpilot.Domain.Common;
 using Jobpilot.Domain.Jobs;
+using Polly;
 
 namespace Jobpilot.Infrastructure.JobTech.JobSearch;
 
@@ -98,6 +99,11 @@ public sealed class JobSearchClient(HttpClient httpClient) : IJobSearchClient
         {
             // HttpClient.Timeout surfaces as a cancellation the caller did not ask for.
             return JobSearchErrors.Unavailable("timeout");
+        }
+        catch (ExecutionRejectedException ex)
+        {
+            // Resilience pipeline gave up: total timeout reached or circuit open.
+            return JobSearchErrors.Unavailable(ex.Message);
         }
         catch (JsonException)
         {
