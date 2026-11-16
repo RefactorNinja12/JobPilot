@@ -53,5 +53,8 @@ POST /enrichtextdocuments
 }
 ```
 
-Response: `enriched_candidates.{occupations, competencies, traits, geos}[]`, each with
+Response: a JSON array with one object per input document, matched by `doc_id`. Each has
+`enriched_candidates.{occupations, competencies, traits, geos}[]`, and each candidate has
 `concept_label`, `term`, `term_misspelled` and `prediction` (0–1).
+An empty `doc_text` still returns its document, often with no competencies.
+An empty `documents_input` returns `[]` with HTTP 200.
