@@ -14,16 +14,18 @@ public sealed record JobPreferences
         int? minimumMonthlySalary,
         bool acceptsFullTime,
         bool acceptsPartTime,
-        bool excludeStaffingAgencies)
+        bool excludeStaffingAgencies,
+        CommuteLimit? commuteLimit)
     {
         MinimumMonthlySalary = minimumMonthlySalary;
         AcceptsFullTime = acceptsFullTime;
         AcceptsPartTime = acceptsPartTime;
         ExcludeStaffingAgencies = excludeStaffingAgencies;
+        CommuteLimit = commuteLimit;
     }
 
     /// <summary>No requirements: every ad passes. Default for new profiles.</summary>
-    public static JobPreferences None { get; } = new(null, acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false);
+    public static JobPreferences None { get; } = new(null, acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, commuteLimit: null);
 
     /// <summary>Minimum salary in SEK per month, or null for no requirement.</summary>
     public int? MinimumMonthlySalary { get; }
@@ -34,11 +36,15 @@ public sealed record JobPreferences
 
     public bool ExcludeStaffingAgencies { get; }
 
+    /// <summary>Maximum commute distance from home, or null for no requirement.</summary>
+    public CommuteLimit? CommuteLimit { get; }
+
     public static Result<JobPreferences> Create(
         int? minimumMonthlySalary,
         bool acceptsFullTime,
         bool acceptsPartTime,
-        bool excludeStaffingAgencies)
+        bool excludeStaffingAgencies,
+        CommuteLimit? commuteLimit = null)
     {
         if (minimumMonthlySalary is < 1 or > MaxMonthlySalary)
         {
@@ -50,6 +56,11 @@ public sealed record JobPreferences
             return JobPreferencesErrors.NoEmploymentExtentAccepted;
         }
 
-        return new JobPreferences(minimumMonthlySalary, acceptsFullTime, acceptsPartTime, excludeStaffingAgencies);
+        return new JobPreferences(
+            minimumMonthlySalary,
+            acceptsFullTime,
+            acceptsPartTime,
+            excludeStaffingAgencies,
+            commuteLimit);
     }
 }
