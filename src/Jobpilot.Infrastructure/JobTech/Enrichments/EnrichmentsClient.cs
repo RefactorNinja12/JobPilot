@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Jobpilot.Application.Abstractions.Enrichments;
@@ -64,7 +65,8 @@ public sealed class EnrichmentsClient(HttpClient httpClient) : IEnrichmentsClien
             using var response = await httpClient.PostAsJsonAsync(_enrichPath, request, JobTechJson.Options, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                return EnrichmentsErrors.Unavailable($"HTTP {(int)response.StatusCode}");
+                return EnrichmentsErrors.Unavailable(
+                    string.Create(CultureInfo.InvariantCulture, $"HTTP {(int)response.StatusCode}"));
             }
 
             var body = await response.Content.ReadFromJsonAsync<IReadOnlyList<EnrichedDocumentDto>>(
