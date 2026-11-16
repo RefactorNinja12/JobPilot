@@ -46,6 +46,10 @@ Conventions:
 
 Automated tests never hit the real JobTech API; it is mocked with WireMock.
 
+## MCP servers (`.mcp.json`)
+- `microsoft-learn`: current .NET/EF Core/ASP.NET docs. Prefer it over memory for API details.
+- `github`: PRs, CI results, review comments. Needs `GITHUB_PAT` exported in the shell (never commit tokens).
+
 ## Commands
 ```bash
 dotnet build Jobpilot.slnx
