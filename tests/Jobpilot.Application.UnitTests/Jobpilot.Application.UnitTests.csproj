@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Jobpilot.Application\Jobpilot.Application.csproj" />
+  </ItemGroup>
+
+</Project>
