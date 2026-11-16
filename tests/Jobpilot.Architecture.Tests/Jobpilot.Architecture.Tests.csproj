@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Jobpilot.Domain\Jobpilot.Domain.csproj" />
     <ProjectReference Include="..\..\src\Jobpilot.Application\Jobpilot.Application.csproj" />
+    <ProjectReference Include="..\..\src\Jobpilot.Infrastructure\Jobpilot.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
