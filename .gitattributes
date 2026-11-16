@@ -1,0 +1,4 @@
+# Normalize line endings (repo is edited from both Windows and WSL)
+* text=auto eol=lf
+*.{cmd,bat,ps1} text eol=crlf
+*.{png,jpg,jpeg,gif,ico,pdf,docx} binary
