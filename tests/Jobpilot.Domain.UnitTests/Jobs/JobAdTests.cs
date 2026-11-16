@@ -58,10 +58,18 @@ public class JobAdTests
     public void Create_WithoutDescription_UsesEmptyString() =>
         JobAd.Create("1", "Utvecklare", null, Details()).Value.Description.ShouldBe(string.Empty);
 
+    [Theory]
+    [InlineData("/annonser/1", UriKind.Relative)]
+    [InlineData("file:///annonser/1", UriKind.Absolute)]
+    [InlineData("ftp://example.com/annons", UriKind.Absolute)]
+    public void Create_WithNonWebUrl_FailsWithUrlInvalid(string url, UriKind kind) =>
+        JobAd.Create("1", "Utvecklare", "", Details(url: new Uri(url, kind)))
+            .Error.ShouldBe(JobAdErrors.UrlInvalid);
+
     [Fact]
-    public void Create_WithRelativeUrl_FailsWithUrlNotAbsolute() =>
-        JobAd.Create("1", "Utvecklare", "", Details(url: new Uri("/annonser/1", UriKind.Relative)))
-            .Error.ShouldBe(JobAdErrors.UrlNotAbsolute);
+    public void Create_WithHttpUrl_Succeeds() =>
+        JobAd.Create("1", "Utvecklare", "", Details(url: new Uri("http://example.com/annons")))
+            .IsSuccess.ShouldBeTrue();
 
     [Theory]
     [InlineData(WorkingHours.Unknown)]

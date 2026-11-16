@@ -62,9 +62,11 @@ public sealed class JobAd
             return JobAdErrors.HeadlineEmpty;
         }
 
-        if (!details.Url.IsAbsoluteUri)
+        // Scheme check matters: on Linux, "/path" parses as an absolute file:// URI.
+        if (!details.Url.IsAbsoluteUri
+            || (details.Url.Scheme != Uri.UriSchemeHttps && details.Url.Scheme != Uri.UriSchemeHttp))
         {
-            return JobAdErrors.UrlNotAbsolute;
+            return JobAdErrors.UrlInvalid;
         }
 
         if (!Enum.IsDefined(details.WorkingHours))
