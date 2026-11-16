@@ -16,6 +16,7 @@ permissions:
 env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+  HUSKY: 0 # git hooks are for local development only
   SONAR_PROJECT_KEY: RefactorNinja12_JobPilot
   SONAR_ORGANIZATION: refactorninja12
 

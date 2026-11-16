@@ -1,0 +1,30 @@
+{
+  "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
+  "tasks": [
+    {
+      "name": "format-check",
+      "group": "pre-commit",
+      "command": "dotnet",
+      "args": ["format", "Jobpilot.slnx", "--verify-no-changes", "--include", "${staged}"],
+      "include": ["**/*.cs", "**/*.csproj", "**/*.props", ".editorconfig"]
+    },
+    {
+      "name": "conventional-commit",
+      "group": "commit-msg",
+      "command": "bash",
+      "args": [".husky/scripts/check-commit-msg.sh", "${args}"]
+    },
+    {
+      "name": "build",
+      "group": "pre-push",
+      "command": "dotnet",
+      "args": ["build", "Jobpilot.slnx", "--configuration", "Release"]
+    },
+    {
+      "name": "test",
+      "group": "pre-push",
+      "command": "dotnet",
+      "args": ["test", "--solution", "Jobpilot.slnx", "--configuration", "Release", "--no-build"]
+    }
+  ]
+}

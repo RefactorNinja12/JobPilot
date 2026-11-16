@@ -21,4 +21,11 @@
     <PackageReference Include="SonarAnalyzer.CSharp" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
     <PackageReference Include="Meziantou.Analyzer" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
   </ItemGroup>
+
+  <!-- Install git hooks (Husky.Net) on restore. Runs once (Domain project only); skipped in CI via HUSKY=0. -->
+  <Target Name="InstallGitHooks" BeforeTargets="Restore;CollectPackageReferences"
+          Condition="'$(MSBuildProjectName)' == 'Jobpilot.Domain' And '$(HUSKY)' != '0'">
+    <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="$(MSBuildThisFileDirectory)" />
+    <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="$(MSBuildThisFileDirectory)" />
+  </Target>
 </Project>
