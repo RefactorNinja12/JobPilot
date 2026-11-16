@@ -130,4 +130,23 @@ public class ProfileTests
     [Fact]
     public void Skills_CannotBeModifiedFromOutside() =>
         Profile.Create().Skills.ShouldBeAssignableTo<System.Collections.ObjectModel.ReadOnlyCollection<ProfileSkill>>();
+
+    [Fact]
+    public void Create_StartsWithNoDealbreakers() =>
+        Profile.Create().Preferences.ShouldBe(JobPreferences.None);
+
+    [Fact]
+    public void UpdatePreferences_ReplacesPreferences()
+    {
+        var profile = Profile.Create();
+        var preferences = JobPreferences.Create(35_000, true, false, true).Value;
+
+        profile.UpdatePreferences(preferences);
+
+        profile.Preferences.ShouldBe(preferences);
+    }
+
+    [Fact]
+    public void UpdatePreferences_WithNull_Throws() =>
+        Should.Throw<ArgumentNullException>(() => Profile.Create().UpdatePreferences(null!));
 }
