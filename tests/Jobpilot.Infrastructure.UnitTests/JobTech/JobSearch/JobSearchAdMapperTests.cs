@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Jobpilot.Domain.Jobs;
+using Jobpilot.Infrastructure.JobTech;
 using Jobpilot.Infrastructure.JobTech.JobSearch;
 
 namespace Jobpilot.Infrastructure.UnitTests.JobTech.JobSearch;
@@ -10,7 +11,7 @@ public class JobSearchAdMapperTests
     private static JobSearchAdDto LoadFixture(string name)
     {
         var path = Path.Combine(AppContext.BaseDirectory, "JobTech", "JobSearch", "Fixtures", name + ".json");
-        return JsonSerializer.Deserialize<JobSearchAdDto>(File.ReadAllText(path), JobSearchJson.Options)!;
+        return JsonSerializer.Deserialize<JobSearchAdDto>(File.ReadAllText(path), JobTechJson.Options)!;
     }
 
     private static JobAd Map(string fixture) => JobSearchAdMapper.ToJobAd(LoadFixture(fixture)).Value;

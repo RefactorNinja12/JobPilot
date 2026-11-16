@@ -86,7 +86,7 @@ public sealed class JobSearchClient(HttpClient httpClient) : IJobSearchClient
                 return JobSearchErrors.Unavailable($"HTTP {(int)response.StatusCode}");
             }
 
-            var body = await response.Content.ReadFromJsonAsync<JobSearchResponseDto>(JobSearchJson.Options, cancellationToken);
+            var body = await response.Content.ReadFromJsonAsync<JobSearchResponseDto>(JobTechJson.Options, cancellationToken);
             return body?.Hits is { } hits
                 ? Result.Success(hits)
                 : JobSearchErrors.InvalidResponse;
