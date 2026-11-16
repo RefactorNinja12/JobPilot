@@ -3,6 +3,12 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
+  <!-- Static analysis (applied to every project via Directory.Build.props) -->
+  <ItemGroup>
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.36.0.15337" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.341" />
+  </ItemGroup>
+
   <!-- Testing -->
   <ItemGroup>
     <PackageVersion Include="xunit.v3" Version="4.0.3" />

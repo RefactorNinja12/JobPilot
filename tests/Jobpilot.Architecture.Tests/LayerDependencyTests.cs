@@ -10,15 +10,14 @@ namespace Jobpilot.Architecture.Tests;
 /// </summary>
 public class LayerDependencyTests
 {
-    private const string DomainNamespace = "Jobpilot.Domain";
     private const string ApplicationNamespace = "Jobpilot.Application";
     private const string InfrastructureNamespace = "Jobpilot.Infrastructure";
     private const string ApiNamespace = "Jobpilot.Api";
     private const string McpNamespace = "Jobpilot.Mcp";
     private const string WorkerNamespace = "Jobpilot.Worker";
 
-    private static readonly Assembly _domainAssembly = typeof(Domain.AssemblyReference).Assembly;
-    private static readonly Assembly _applicationAssembly = typeof(Application.AssemblyReference).Assembly;
+    private static readonly Assembly _domainAssembly = Domain.AssemblyReference.Assembly;
+    private static readonly Assembly _applicationAssembly = Application.AssemblyReference.Assembly;
 
     [Fact]
     public void Domain_ShouldNotDependOnAnyOtherLayer()
