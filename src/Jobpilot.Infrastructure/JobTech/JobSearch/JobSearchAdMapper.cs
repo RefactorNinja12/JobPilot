@@ -11,8 +11,6 @@ public static class JobSearchAdMapper
     private const string FullTimeConceptId = "6YE1_gAC_R2G";
     private const string PartTimeConceptId = "947z_JGS_Uk2";
 
-    private static readonly TimeZoneInfo _swedishTime = TimeZoneInfo.FindSystemTimeZoneById("Europe/Stockholm");
-
     public static Result<JobAd> ToJobAd(JobSearchAdDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
@@ -87,5 +85,5 @@ public static class JobSearchAdMapper
     };
 
     private static DateTimeOffset ToSwedishTime(DateTime local) =>
-        new(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), _swedishTime.GetUtcOffset(local));
+        new(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), SwedishTime.Zone.GetUtcOffset(local));
 }

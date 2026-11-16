@@ -23,6 +23,10 @@ public class ErrorTests
         Error.Conflict("Skill.Duplicate", "Skill already added.").Type.ShouldBe(ErrorType.Conflict);
 
     [Fact]
+    public void Unavailable_CreatesErrorWithUnavailableType() =>
+        Error.Unavailable("JobSearch.Unavailable", "API down.").Type.ShouldBe(ErrorType.Unavailable);
+
+    [Fact]
     public void Errors_WithSameValues_AreEqual() =>
         Error.Validation("A", "B").ShouldBe(Error.Validation("A", "B"));
 }
