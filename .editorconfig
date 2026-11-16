@@ -66,3 +66,4 @@ dotnet_diagnostic.CA1707.severity = none   # underscores allowed in test method 
 dotnet_diagnostic.CA1515.severity = none   # public types allowed (consumed across projects)
 dotnet_diagnostic.MA0004.severity = none   # ConfigureAwait(false): no SynchronizationContext in ASP.NET Core
 dotnet_diagnostic.MA0006.severity = none   # string == is ordinal in C#; string.Equals adds noise
+dotnet_diagnostic.CA1716.severity = none   # VB keyword clashes (e.g. "Error"): C#-only codebase
