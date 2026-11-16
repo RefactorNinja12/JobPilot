@@ -59,3 +59,9 @@ dotnet test --solution Jobpilot.slnx
 dotnet format Jobpilot.slnx --verify-no-changes   # CI fails if this fails
 ```
 Test runner: Microsoft.Testing.Platform (configured in `global.json`).
+
+### Git hooks (Husky.Net, installed automatically on `dotnet restore`)
+- `pre-commit`: `dotnet format --verify-no-changes` on staged files. Fix with `dotnet format Jobpilot.slnx`.
+- `commit-msg`: subject must follow Conventional Commits.
+- `pre-push`: Release build plus all tests.
+Never bypass the hooks with `--no-verify`; fix the cause instead.
