@@ -16,6 +16,9 @@ public sealed class Profile
 
     public IReadOnlyList<ProfileSkill> Skills => _skills.AsReadOnly();
 
+    /// <summary>Dealbreakers used to filter job ads. New profiles start with <see cref="JobPreferences.None"/>.</summary>
+    public JobPreferences Preferences { get; private set; } = JobPreferences.None;
+
     public static Profile Create() => new(Guid.CreateVersion7());
 
     /// <summary>Adds a skill. Fails with a conflict if the same skill (see <see cref="Skill"/> equality) is already present.</summary>
@@ -59,6 +62,12 @@ public sealed class Profile
 
         _skills.RemoveAt(index);
         return Result.Success();
+    }
+
+    public void UpdatePreferences(JobPreferences preferences)
+    {
+        ArgumentNullException.ThrowIfNull(preferences);
+        Preferences = preferences;
     }
 
     private int IndexOf(Skill skill) => _skills.FindIndex(s => s.Skill == skill);
