@@ -139,7 +139,7 @@ public class ProfileTests
     public void UpdatePreferences_ReplacesPreferences()
     {
         var profile = Profile.Create();
-        var preferences = JobPreferences.Create(35_000, true, false, true).Value;
+        var preferences = JobPreferences.Create(true, false, true).Value;
 
         profile.UpdatePreferences(preferences);
 
