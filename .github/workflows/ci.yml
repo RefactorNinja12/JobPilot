@@ -47,6 +47,15 @@ jobs:
       - name: Verify formatting
         run: dotnet format Jobpilot.slnx --verify-no-changes --no-restore
 
+      - name: Check Sonar token
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::error::SONAR_TOKEN secret is missing. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
       - name: Begin Sonar analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
