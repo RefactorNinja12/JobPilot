@@ -4,7 +4,7 @@ namespace Jobpilot.Domain.UnitTests.Profiles;
 
 public class ProfileSkillTests
 {
-    private static readonly Skill _csharp = Skill.Create("C#", "rQds_YGd_quU").Value;
+    private static readonly Skill _csharp = Skill.Create("C#").Value;
 
     [Fact]
     public void Create_WithValidInput_Succeeds()
@@ -47,7 +47,7 @@ public class ProfileSkillTests
     public void ProfileSkills_WithSameValues_AreEqual()
     {
         var a = ProfileSkill.Create(_csharp, SkillLevel.Advanced, 4).Value;
-        var b = ProfileSkill.Create(Skill.Create("c#", "rQds_YGd_quU").Value, SkillLevel.Advanced, 4).Value;
+        var b = ProfileSkill.Create(Skill.Create("c#").Value, SkillLevel.Advanced, 4).Value;
 
         a.ShouldBe(b);
         a.GetHashCode().ShouldBe(b.GetHashCode());
