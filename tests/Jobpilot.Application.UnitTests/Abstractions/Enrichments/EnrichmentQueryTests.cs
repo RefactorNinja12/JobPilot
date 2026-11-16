@@ -46,7 +46,7 @@ public class EnrichmentQueryTests
 
     [Fact]
     public void Create_WithNullAds_FailsWithNoAds() =>
-        EnrichmentQuery.Create(null).Error.ShouldBe(EnrichmentQueryErrors.NoAds);
+        EnrichmentQuery.Create(ads: null).Error.ShouldBe(EnrichmentQueryErrors.NoAds);
 
     [Fact]
     public void Create_WithEmptyAds_FailsWithNoAds() =>
