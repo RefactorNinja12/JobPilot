@@ -64,3 +64,5 @@ dotnet_naming_style.prefix_i.required_prefix = I
 # Analyzer noise we accept
 dotnet_diagnostic.CA1707.severity = none   # underscores allowed in test method names
 dotnet_diagnostic.CA1515.severity = none   # public types allowed (consumed across projects)
+dotnet_diagnostic.MA0004.severity = none   # ConfigureAwait(false): no SynchronizationContext in ASP.NET Core
+dotnet_diagnostic.MA0006.severity = none   # string == is ordinal in C#; string.Equals adds noise

@@ -1,4 +1,9 @@
+using System.Reflection;
+
 namespace Jobpilot.Domain;
 
-/// <summary>Marker type used to locate this assembly (e.g. in architecture tests).</summary>
-public static class AssemblyReference;
+/// <summary>Exposes this assembly so it can be located (e.g. in architecture tests and DI scanning).</summary>
+public static class AssemblyReference
+{
+    public static readonly Assembly Assembly = typeof(AssemblyReference).Assembly;
+}
