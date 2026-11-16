@@ -49,6 +49,8 @@ Automated tests never hit the real JobTech API; it is mocked with WireMock.
 ## MCP servers (`.mcp.json`)
 - `microsoft-learn`: current .NET/EF Core/ASP.NET docs. Prefer it over memory for API details.
 - `github`: PRs, CI results, review comments. Needs `GITHUB_PAT` exported in the shell (never commit tokens).
+- `sonarqube`: SonarCloud issues, quality gate and coverage (runs in Docker). Needs `SONAR_TOKEN` exported.
+  Check it after each PR and fix new issues before asking for merge.
 
 ## Commands
 ```bash
