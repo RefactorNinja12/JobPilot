@@ -15,4 +15,19 @@ public static class JobAdErrors
 
     public static readonly Error OccupationLabelEmpty =
         Error.Validation("Occupation.LabelEmpty", "Occupation label is required.");
+
+    public static readonly Error IdEmpty =
+        Error.Validation("JobAd.IdEmpty", "Job ad id is required.");
+
+    public static readonly Error HeadlineEmpty =
+        Error.Validation("JobAd.HeadlineEmpty", "Job ad headline is required.");
+
+    public static readonly Error UrlNotAbsolute =
+        Error.Validation("JobAd.UrlNotAbsolute", "Job ad URL must be absolute.");
+
+    public static readonly Error WorkingHoursInvalid =
+        Error.Validation("JobAd.WorkingHoursInvalid", "Working hours value is not valid.");
+
+    public static readonly Error DeadlineBeforePublication =
+        Error.Validation("JobAd.DeadlineBeforePublication", "Application deadline cannot be before the publication date.");
 }
