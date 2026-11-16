@@ -11,10 +11,13 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: read # lets SonarCloud decorate PRs
 
 env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+  SONAR_PROJECT_KEY: RefactorNinja12_JobPilot
+  SONAR_ORGANIZATION: refactorninja12
 
 jobs:
   backend:
@@ -22,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for accurate Sonar blame / new-code detection
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -29,11 +34,31 @@ jobs:
           cache: true
           cache-dependency-path: '**/Directory.Packages.props'
 
+      - uses: actions/setup-java@v4 # required by the Sonar scanner
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Restore
-        run: dotnet restore Jobpilot.slnx
+        run: |
+          dotnet tool restore
+          dotnet restore Jobpilot.slnx
 
       - name: Verify formatting
         run: dotnet format Jobpilot.slnx --verify-no-changes --no-restore
+
+      - name: Begin Sonar analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: >
+          dotnet sonarscanner begin
+          /k:"$SONAR_PROJECT_KEY"
+          /o:"$SONAR_ORGANIZATION"
+          /d:sonar.host.url="https://sonarcloud.io"
+          /d:sonar.token="$SONAR_TOKEN"
+          /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/*.xml"
+          /d:sonar.exclusions="**/Migrations/**"
+          /d:sonar.qualitygate.wait=true
 
       - name: Build
         run: dotnet build Jobpilot.slnx --configuration Release --no-restore
@@ -42,8 +67,13 @@ jobs:
         run: >
           dotnet test --solution Jobpilot.slnx
           --configuration Release --no-build
-          --coverage --coverage-output-format cobertura
+          --coverage --coverage-output-format xml
           --results-directory TestResults
+
+      - name: End Sonar analysis (fails on red quality gate)
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
       - name: Upload test results
         if: always()
