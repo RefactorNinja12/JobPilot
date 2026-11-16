@@ -25,7 +25,15 @@ Conventions:
 - Tests go in the same commit as the code they cover.
 - Every commit must build and pass `dotnet test`.
 - Conventional Commits: `feat(scope):`, `fix:`, `test:`, `refactor:`, `ci:`, `chore:`, `docs:`.
-- Work on short-lived feature branches and merge to `main` through a PR with green CI.
+- Never commit directly to `main`.
+
+### Workflow: one commit, one branch, one PR
+1. `git switch main && git pull`: always start from an up-to-date `main`.
+2. `git switch -c <type>/<short-name>`, e.g. `feat/skill-value-object`.
+3. Make one small change, then commit (build and tests green).
+4. `git push -u origin <branch>` and open a PR against `main`.
+5. Wait until the PR is merged before starting the next branch from the updated `main`.
+6. After merge, delete the branch locally and remotely.
 
 ## Testing
 | Level | Project | Tools |
