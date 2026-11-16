@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Jobpilot.Infrastructure\Jobpilot.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WireMock.Net" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" />
+  </ItemGroup>
+
+  <!-- Reuse the real (trimmed) ads saved for the mapper unit tests. -->
+  <ItemGroup>
+    <None Include="..\Jobpilot.Infrastructure.UnitTests\JobTech\JobSearch\Fixtures\*.json"
+          LinkBase="Fixtures"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
