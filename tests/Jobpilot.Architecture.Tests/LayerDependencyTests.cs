@@ -18,6 +18,7 @@ public class LayerDependencyTests
 
     private static readonly Assembly _domainAssembly = Domain.AssemblyReference.Assembly;
     private static readonly Assembly _applicationAssembly = Application.AssemblyReference.Assembly;
+    private static readonly Assembly _infrastructureAssembly = Infrastructure.AssemblyReference.Assembly;
 
     [Fact]
     public void Domain_ShouldNotDependOnAnyOtherLayer()
@@ -60,6 +61,24 @@ public class LayerDependencyTests
 
         result.IsSuccessful.ShouldBeTrue(FailingTypes(result));
     }
+
+    [Fact]
+    public void Infrastructure_ShouldNotDependOnEntryPoints()
+    {
+        var result = Types.InAssembly(_infrastructureAssembly)
+            .ShouldNot()
+            .HaveDependencyOnAny(ApiNamespace, McpNamespace, WorkerNamespace)
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue(FailingTypes(result));
+    }
+
+    [Theory]
+    [InlineData("Jobpilot.Domain", new string[0])]
+    [InlineData("Jobpilot.Application", new[] { "Jobpilot.Domain" })]
+    [InlineData("Jobpilot.Infrastructure", new[] { "Jobpilot.Application" })]
+    public void Project_ShouldOnlyReferenceAllowedProjects(string project, string[] allowed) =>
+        ProjectFile.ReferencedProjects(project).ShouldBe(allowed, ignoreOrder: true);
 
     private static string FailingTypes(TestResult result) =>
         "Violating types: " + string.Join(", ", result.FailingTypeNames ?? []);
