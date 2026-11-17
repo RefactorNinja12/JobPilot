@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Nodes;
 
 namespace Jobpilot.Infrastructure.IntegrationTests.JobTech.JobSearch;
@@ -19,7 +20,7 @@ internal static class JobSearchResponses
 
     /// <summary>A page of <paramref name="count"/> valid ads with ids "{idPrefix}-0", "{idPrefix}-1", ...</summary>
     public static string Page(int count, string idPrefix) =>
-        Body([.. Enumerable.Range(0, count).Select(i => Ad("parttime", $"{idPrefix}-{i}"))]);
+        Body([.. Enumerable.Range(0, count).Select(i => Ad("parttime", string.Create(CultureInfo.InvariantCulture, $"{idPrefix}-{i}")))]);
 
     public static string Body(params JsonObject[] hits) =>
         new JsonObject { ["total"] = new JsonObject { ["value"] = hits.Length }, ["hits"] = new JsonArray(hits) }

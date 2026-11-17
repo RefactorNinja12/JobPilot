@@ -30,7 +30,7 @@ public sealed record Employer
 
         if (string.IsNullOrWhiteSpace(organizationNumber))
         {
-            return new Employer(trimmedName, null);
+            return new Employer(trimmedName, organizationNumber: null);
         }
 
         var digits = organizationNumber.Trim().Replace("-", string.Empty, StringComparison.Ordinal);

@@ -56,7 +56,7 @@ public class JobAdTests
 
     [Fact]
     public void Create_WithoutDescription_UsesEmptyString() =>
-        JobAd.Create("1", "Utvecklare", null, Details()).Value.Description.ShouldBe(string.Empty);
+        JobAd.Create("1", "Utvecklare", description: null, Details()).Value.Description.ShouldBe(string.Empty);
 
     [Theory]
     [InlineData("/annonser/1", UriKind.Relative)]

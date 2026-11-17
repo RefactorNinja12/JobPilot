@@ -2,6 +2,7 @@ using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using static System.FormattableString;
 
 namespace Jobpilot.Infrastructure.IntegrationTests.Persistence;
 
@@ -79,7 +80,7 @@ public sealed class SkillVocabularyStoreTests(PostgresFixture postgres) : IAsync
     {
         // Enrichments has ~58k competence concepts.
         var concepts = Enumerable.Range(0, 60_000)
-            .Select(i => new SkillConcept($"Concept {i}", [$"term {i}", $"synonym {i}"]));
+            .Select(i => new SkillConcept(Invariant($"Concept {i}"), [Invariant($"term {i}"), Invariant($"synonym {i}")]));
         await SaveAsync(SkillVocabulary.Create(_builtAt, concepts));
 
         var loaded = (await GetAsync()).ShouldNotBeNull();

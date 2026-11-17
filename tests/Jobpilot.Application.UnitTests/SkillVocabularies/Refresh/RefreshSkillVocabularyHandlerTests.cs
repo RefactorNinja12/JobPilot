@@ -31,7 +31,7 @@ public class RefreshSkillVocabularyHandlerTests
     {
         var latest = Vocabulary(_june, "Kafka", "C#");
         Download(latest);
-        Stored(null);
+        Stored(vocabulary: null);
 
         var result = await _handler.HandleAsync(Ct);
 

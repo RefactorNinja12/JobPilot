@@ -139,7 +139,7 @@ public class ProfileTests
     public void UpdatePreferences_ReplacesPreferences()
     {
         var profile = Profile.Create();
-        var preferences = JobPreferences.Create(true, false, true).Value;
+        var preferences = JobPreferences.Create(acceptsFullTime: true, acceptsPartTime: false, excludeStaffingAgencies: true).Value;
 
         profile.UpdatePreferences(preferences);
 

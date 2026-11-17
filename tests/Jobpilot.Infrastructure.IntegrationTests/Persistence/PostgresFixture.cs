@@ -33,7 +33,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     /// <summary>AddInfrastructure on this container's database.</summary>
     public ServiceProvider BuildServices() => BuildServices(ConnectionString);
 
-    public async ValueTask InitializeAsync() => await _container.StartAsync();
+    public async ValueTask InitializeAsync() => await _container.StartAsync(TestContext.Current.CancellationToken);
 
     public async ValueTask DisposeAsync() => await _container.DisposeAsync();
 }
