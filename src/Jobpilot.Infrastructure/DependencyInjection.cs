@@ -1,9 +1,11 @@
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Application.Abstractions.JobSearch;
+using Jobpilot.Application.Profiles;
 using Jobpilot.Infrastructure.JobTech;
 using Jobpilot.Infrastructure.JobTech.Enrichments;
 using Jobpilot.Infrastructure.JobTech.JobSearch;
 using Jobpilot.Infrastructure.Persistence;
+using Jobpilot.Infrastructure.Persistence.Profiles;
 using Jobpilot.Infrastructure.Persistence.SkillVocabularies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -59,6 +61,7 @@ public static class DependencyInjection
             configuration.GetConnectionString(ConnectionStringName)
             ?? throw new InvalidOperationException($"ConnectionStrings:{ConnectionStringName} is not configured.")));
 
+        services.AddScoped<IProfileRepository, ProfileRepository>();
         services.AddScoped<ISkillVocabularyStore, SkillVocabularyStore>();
     }
 
