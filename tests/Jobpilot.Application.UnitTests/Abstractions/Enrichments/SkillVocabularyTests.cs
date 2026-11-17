@@ -28,6 +28,20 @@ public class SkillVocabularyTests
     }
 
     [Fact]
+    public void Concepts_AreTheCleanedConceptsInOrder()
+    {
+        var vocabulary = SkillVocabulary.Create(_builtAt,
+        [
+            new SkillConcept(" Kafka ", ["kafka", " "]),
+            new SkillConcept("C#", ["c#"]),
+            new SkillConcept("kafka", ["apache kafka"]),
+        ]);
+
+        vocabulary.Concepts.Select(c => c.Name).ShouldBe(["Kafka", "C#"]);
+        vocabulary.Concepts[0].Terms.ShouldBe(["kafka", "apache kafka"]);
+    }
+
+    [Fact]
     public void Create_MergesSameNameIgnoringCase_KeepingFirstSpellingAndAllTerms()
     {
         var vocabulary = SkillVocabulary.Create(_builtAt,

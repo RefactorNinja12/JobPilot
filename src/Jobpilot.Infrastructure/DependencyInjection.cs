@@ -4,6 +4,7 @@ using Jobpilot.Infrastructure.JobTech;
 using Jobpilot.Infrastructure.JobTech.Enrichments;
 using Jobpilot.Infrastructure.JobTech.JobSearch;
 using Jobpilot.Infrastructure.Persistence;
+using Jobpilot.Infrastructure.Persistence.SkillVocabularies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,11 +52,15 @@ public static class DependencyInjection
     /// Registers <see cref="JobpilotDbContext"/> on PostgreSQL. The connection string is read when the context is
     /// first created, so hosts that never touch the database start without one.
     /// </summary>
-    private static void AddPersistence(IServiceCollection services, IConfiguration configuration) =>
+    private static void AddPersistence(IServiceCollection services, IConfiguration configuration)
+    {
         services.AddDbContext<JobpilotDbContext>(options => JobpilotDbContext.Configure(
             options,
             configuration.GetConnectionString(ConnectionStringName)
             ?? throw new InvalidOperationException($"ConnectionStrings:{ConnectionStringName} is not configured.")));
+
+        services.AddScoped<ISkillVocabularyStore, SkillVocabularyStore>();
+    }
 
     /// <summary>Adds the standard resilience pipeline, tuned by "{api}:Resilience" when that section exists.</summary>
     private static void AddResilience(this IHttpClientBuilder builder, IConfigurationSection api)
