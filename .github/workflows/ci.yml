@@ -69,8 +69,10 @@ jobs:
           /d:sonar.host.url="https://sonarcloud.io"
           /d:sonar.token="$SONAR_TOKEN"
           /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/*.xml"
-          /d:sonar.exclusions="**/Migrations/**"
-          /d:sonar.coverage.exclusions="**/Program.cs"
+          /d:sonar.exclusions="**/Migrations/**,web/node_modules/**,web/dist/**,web/coverage/**"
+          /d:sonar.coverage.exclusions="**/Program.cs,web/src/main.tsx,web/vite.config.ts"
+          /d:sonar.test.inclusions="web/src/**/*.test.tsx,web/src/test/**"
+          /d:sonar.javascript.lcov.reportPaths="web/coverage/lcov.info"
           /d:sonar.qualitygate.wait=true
 
       - name: Build
@@ -82,6 +84,19 @@ jobs:
           --configuration Release --no-build
           --coverage --coverage-output-format xml
           --results-directory TestResults
+
+      # Web coverage for Sonar, which analyses web/ too. The web job runs lint and the build.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Web test coverage
+        working-directory: web
+        run: |
+          npm ci --ignore-scripts
+          npm run test:coverage
 
       - name: End Sonar analysis (fails on red quality gate)
         env:
@@ -146,7 +161,7 @@ jobs:
           cache-dependency-path: web/package-lock.json
 
       - name: Install
-        run: npm ci
+        run: npm ci --ignore-scripts # no package lifecycle scripts: none are needed
 
       - name: Lint
         run: npm run lint

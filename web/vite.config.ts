@@ -11,5 +11,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      // Report every source file, so untested ones show as uncovered (SonarCloud reads coverage/lcov.info).
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/main.tsx', 'src/test/**', 'src/**/*.test.{ts,tsx}'],
+      reporter: ['text-summary', 'lcov'],
+    },
   },
 })
