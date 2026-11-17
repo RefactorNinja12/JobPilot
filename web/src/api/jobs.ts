@@ -32,6 +32,20 @@ export type FindJobsResult = {
   newlyAnalysed: number
 }
 
+/** One ad in full, from GET /api/jobs/{adId}. */
+export type JobAd = {
+  adId: string
+  headline: string
+  employer: string
+  municipality: string | null
+  occupation: string
+  workingHours: JobMatch['workingHours']
+  publishedAt: string
+  applicationDeadline: string
+  url: string
+  description: string
+}
+
 /** A failed API call, carrying the backend's error code (e.g. "FindJobs.NoOccupations") from ProblemDetails. */
 export class ApiError extends Error {
   readonly status: number
@@ -45,12 +59,20 @@ export class ApiError extends Error {
   }
 }
 
-export async function fetchJobs(top = 25, signal?: AbortSignal): Promise<FindJobsResult> {
-  const response = await fetch(`/api/jobs?top=${top}`, { signal })
+async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(url, { signal })
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as { code?: string; detail?: string }
     throw new ApiError(response.status, problem.code, problem.detail ?? `HTTP ${response.status}`)
   }
 
-  return (await response.json()) as FindJobsResult
+  return (await response.json()) as T
+}
+
+export function fetchJobs(top = 25, signal?: AbortSignal): Promise<FindJobsResult> {
+  return getJson<FindJobsResult>(`/api/jobs?top=${top}`, signal)
+}
+
+export function fetchJob(adId: string, signal?: AbortSignal): Promise<JobAd> {
+  return getJson<JobAd>(`/api/jobs/${encodeURIComponent(adId)}`, signal)
 }

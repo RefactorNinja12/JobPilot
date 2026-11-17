@@ -128,6 +128,27 @@ public sealed class JobEndpointsTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task GetJob_ReturnsTheAdInFull()
+    {
+        _jobSearch.Ads.Add(Ad("31744367"));
+
+        var ad = await _http.GetFromJsonAsync<JsonElement>("/api/jobs/31744367", Ct);
+
+        ad.GetProperty("adId").GetString().ShouldBe("31744367");
+        ad.GetProperty("headline").GetString().ShouldBe("Utvecklare 31744367");
+        ad.GetProperty("description").GetString().ShouldBe("Text");
+    }
+
+    [Fact]
+    public async Task GetJob_Unknown_Is404WithTheErrorCode()
+    {
+        using var response = await _http.GetAsync(new Uri("/api/jobs/0000000", UriKind.Relative), Ct);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await ProblemAsync(response)).GetProperty("code").GetString().ShouldBe("JobSearch.AdNotFound");
+    }
+
+    [Fact]
     public async Task Health_IsOk()
     {
         using var response = await _http.GetAsync(new Uri("/health", UriKind.Relative), Ct);

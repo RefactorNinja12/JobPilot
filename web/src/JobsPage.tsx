@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ApiError, fetchJobs, type FindJobsResult, type JobMatch } from './api/jobs'
+import { JobDescription } from './JobDescription'
 
 const workingHoursText: Record<JobMatch['workingHours'], string> = {
   FullTime: 'Heltid',
@@ -94,6 +95,7 @@ function JobCard({ job }: { job: JobMatch }) {
         {job.unknowns.length > 0 && (
           <p className="unknowns">Kunde inte kontrollera {job.unknowns.map((u) => unknownText[u] ?? u).join(' och ')}.</p>
         )}
+        <JobDescription adId={job.adId} />
       </div>
     </article>
   )
