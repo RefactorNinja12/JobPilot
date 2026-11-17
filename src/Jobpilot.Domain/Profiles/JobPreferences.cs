@@ -1,4 +1,6 @@
 using Jobpilot.Domain.Common;
+using Jobpilot.Domain.Jobs;
+using Jobpilot.Domain.Matching;
 
 namespace Jobpilot.Domain.Profiles;
 
@@ -45,5 +47,51 @@ public sealed record JobPreferences
         }
 
         return new JobPreferences(acceptsFullTime, acceptsPartTime, excludeStaffingAgencies, commuteLimit);
+    }
+
+    /// <summary>
+    /// Checks an ad against these dealbreakers. Missing information never rejects: an ad without working hours or
+    /// coordinates passes with an <see cref="UnknownDetail"/> flag.
+    /// </summary>
+    /// <param name="ad">The ad to check.</param>
+    /// <param name="isStaffingAgency">Whether the ad's employer is a staffing agency; decided outside the domain.</param>
+    public DealbreakerVerdict Check(JobAd ad, bool isStaffingAgency)
+    {
+        ArgumentNullException.ThrowIfNull(ad);
+
+        var rejections = new List<RejectionReason>();
+        var unknowns = new List<UnknownDetail>();
+
+        switch (ad.WorkingHours)
+        {
+            case WorkingHours.FullTime when !AcceptsFullTime:
+                rejections.Add(RejectionReason.FullTimeNotAccepted);
+                break;
+            case WorkingHours.PartTime when !AcceptsPartTime:
+                rejections.Add(RejectionReason.PartTimeNotAccepted);
+                break;
+            case WorkingHours.Unknown:
+                unknowns.Add(UnknownDetail.WorkingHours);
+                break;
+        }
+
+        if (CommuteLimit is not null)
+        {
+            if (ad.Workplace.Coordinates is not { } workplace)
+            {
+                unknowns.Add(UnknownDetail.Location);
+            }
+            else if (!CommuteLimit.IsWithinReach(workplace))
+            {
+                rejections.Add(RejectionReason.TooFarAway);
+            }
+        }
+
+        if (ExcludeStaffingAgencies && isStaffingAgency)
+        {
+            rejections.Add(RejectionReason.StaffingAgency);
+        }
+
+        return new DealbreakerVerdict(rejections, unknowns);
     }
 }
