@@ -1,7 +1,9 @@
+using Jobpilot.Application.Abstractions.Employers;
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Application.Abstractions.JobSearch;
 using Jobpilot.Application.Abstractions.Taxonomy;
 using Jobpilot.Application.Profiles;
+using Jobpilot.Infrastructure.Employers;
 using Jobpilot.Infrastructure.JobTech;
 using Jobpilot.Infrastructure.JobTech.Enrichments;
 using Jobpilot.Infrastructure.JobTech.JobSearch;
@@ -51,6 +53,15 @@ public static class DependencyInjection
         services.AddHttpClient<IOccupationSearch, TaxonomyClient>((provider, http) =>
                 http.BaseAddress = provider.GetRequiredService<IOptions<TaxonomyOptions>>().Value.BaseUrl)
             .AddResilience(taxonomy);
+
+        // A mistyped number would silently stop the filter, so invalid entries fail at start instead.
+        services.AddOptions<StaffingAgencyOptions>()
+            .Bind(configuration.GetSection(StaffingAgencyOptions.SectionName))
+            .Validate(
+                o => o.OrganizationNumbers.All(n => ConfiguredStaffingAgencyDirectory.Normalize(n) is not null),
+                $"{StaffingAgencyOptions.SectionName}:OrganizationNumbers must be Swedish organization numbers (10 digits).")
+            .ValidateOnStart();
+        services.AddSingleton<IStaffingAgencyDirectory, ConfiguredStaffingAgencyDirectory>();
 
         AddPersistence(services, configuration);
 
