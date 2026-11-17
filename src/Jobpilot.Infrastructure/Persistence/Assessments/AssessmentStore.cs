@@ -1,0 +1,48 @@
+using Jobpilot.Application.Abstractions.Assessments;
+using Jobpilot.Domain.Matching;
+using Microsoft.EntityFrameworkCore;
+
+namespace Jobpilot.Infrastructure.Persistence.Assessments;
+
+/// <summary>Keeps one assessment per ad in ad_assessments.</summary>
+internal sealed class AssessmentStore(JobpilotDbContext db) : IAssessmentStore
+{
+    public async Task<IReadOnlyDictionary<string, AiAssessment>> GetAsync(
+        IReadOnlyCollection<string> adIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(adIds);
+        if (adIds.Count == 0)
+        {
+            return new Dictionary<string, AiAssessment>(StringComparer.Ordinal);
+        }
+
+        var rows = await db.Set<StoredAssessment>()
+            .AsNoTracking()
+            .Where(a => adIds.Contains(a.AdId))
+            .ToListAsync(cancellationToken);
+
+        // Only valid assessments are ever written, so Create cannot fail here.
+        return rows.ToDictionary(
+            r => r.AdId,
+            r => AiAssessment.Create(r.AdId, r.Chance, r.Summary, r.AssessedAt).Value,
+            StringComparer.Ordinal);
+    }
+
+    public async Task SaveAsync(AiAssessment assessment, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(assessment);
+
+        var row = await db.Set<StoredAssessment>().FindAsync([assessment.AdId], cancellationToken);
+        if (row is null)
+        {
+            row = new StoredAssessment { AdId = assessment.AdId };
+            db.Add(row);
+        }
+
+        row.Chance = assessment.Chance;
+        row.Summary = assessment.Summary;
+        row.AssessedAt = assessment.AssessedAt.ToUniversalTime();
+        await db.SaveChangesAsync(cancellationToken);
+    }
+}
