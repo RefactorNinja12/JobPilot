@@ -52,7 +52,8 @@ public static class DependencyInjection
     /// first created, so hosts that never touch the database start without one.
     /// </summary>
     private static void AddPersistence(IServiceCollection services, IConfiguration configuration) =>
-        services.AddDbContext<JobpilotDbContext>(options => options.UseNpgsql(
+        services.AddDbContext<JobpilotDbContext>(options => JobpilotDbContext.Configure(
+            options,
             configuration.GetConnectionString(ConnectionStringName)
             ?? throw new InvalidOperationException($"ConnectionStrings:{ConnectionStringName} is not configured.")));
 
