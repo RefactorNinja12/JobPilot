@@ -88,6 +88,7 @@ public class LayerDependencyTests
     [InlineData("Jobpilot.Domain", new string[0])]
     [InlineData("Jobpilot.Application", new[] { "Jobpilot.Domain" })]
     [InlineData("Jobpilot.Infrastructure", new[] { "Jobpilot.Application" })]
+    [InlineData("Jobpilot.Worker", new[] { "Jobpilot.Application", "Jobpilot.Infrastructure" })]
     public void Project_ShouldOnlyReferenceAllowedProjects(string project, string[] allowed) =>
         ProjectFile.ReferencedProjects(project).ShouldBe(allowed, ignoreOrder: true);
 

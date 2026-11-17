@@ -3,6 +3,7 @@
     <Project Path="src/Jobpilot.Application/Jobpilot.Application.csproj" />
     <Project Path="src/Jobpilot.Domain/Jobpilot.Domain.csproj" />
     <Project Path="src/Jobpilot.Infrastructure/Jobpilot.Infrastructure.csproj" />
+    <Project Path="src/Jobpilot.Worker/Jobpilot.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Jobpilot.Application.UnitTests/Jobpilot.Application.UnitTests.csproj" />
@@ -10,5 +11,6 @@
     <Project Path="tests/Jobpilot.Domain.UnitTests/Jobpilot.Domain.UnitTests.csproj" />
     <Project Path="tests/Jobpilot.Infrastructure.IntegrationTests/Jobpilot.Infrastructure.IntegrationTests.csproj" />
     <Project Path="tests/Jobpilot.Infrastructure.UnitTests/Jobpilot.Infrastructure.UnitTests.csproj" />
+    <Project Path="tests/Jobpilot.Worker.UnitTests/Jobpilot.Worker.UnitTests.csproj" />
   </Folder>
 </Solution>
