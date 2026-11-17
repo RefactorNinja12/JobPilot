@@ -97,7 +97,7 @@ jobs:
           if-no-files-found: ignore
 
   images:
-    name: Docker images (build)
+    name: Docker images and k8s manifests
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -110,6 +110,12 @@ jobs:
 
       - name: Build mcp image
         run: docker build --target mcp -t jobpilot-mcp:ci .
+
+      - name: Render k8s manifests
+        run: kubectl kustomize deploy/k8s > /dev/null
+
+      - name: Check deploy script
+        run: shellcheck scripts/deploy-local.sh
 
       - name: Images run as non-root
         run: |

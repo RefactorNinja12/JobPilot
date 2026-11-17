@@ -37,3 +37,20 @@ docker build --target mcp -t jobpilot-mcp .
 Both run as a non-root user on chiseled Ubuntu. They need `ConnectionStrings__Jobpilot`; the MCP server listens
 on port 8080 (`/mcp`, and `/health` for probes).
 
+## Run in Kubernetes (k3d)
+
+```bash
+./scripts/deploy-local.sh
+```
+
+Creates (or reuses) a k3d cluster named `jobpilot`, builds both images, imports them and applies `deploy/k8s`:
+PostgreSQL as a StatefulSet on a 5 Gi volume, the Worker (migrates, then refreshes the vocabulary daily) and the MCP
+server. The database password is generated once into the `jobpilot-db` Secret and never written to the repo.
+Run the script again after code changes to roll out new images.
+
+```bash
+kubectl --context k3d-jobpilot -n jobpilot port-forward svc/mcp 5199:80   # MCP at http://localhost:5199/mcp
+```
+
+`k3d cluster stop jobpilot` keeps the data; `k3d cluster delete jobpilot` removes it.
+
