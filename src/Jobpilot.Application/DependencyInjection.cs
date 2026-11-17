@@ -1,5 +1,6 @@
 using Jobpilot.Application.Profiles.AddSkill;
 using Jobpilot.Application.SkillVocabularies.Refresh;
+using Jobpilot.Application.SkillVocabularies.Search;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Jobpilot.Application;
@@ -14,6 +15,7 @@ public static class DependencyInjection
     {
         services.AddScoped<AddSkillHandler>();
         services.AddScoped<RefreshSkillVocabularyHandler>();
+        services.AddScoped<SearchSkillsHandler>();
         return services;
     }
 }
