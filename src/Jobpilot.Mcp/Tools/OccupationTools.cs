@@ -19,7 +19,7 @@ public static class OccupationTools
         [Description("Job title in Swedish works best, e.g. \"backend\", \"utvecklare\" or \"programmerare\".")] string text,
         [Description("Maximum number of results, 1-25.")] int maxResults = 10,
         CancellationToken cancellationToken = default) =>
-        (await handler.HandleAsync(new SearchOccupationsQuery(text, maxResults), cancellationToken)).ValueOrToolError();
+        (await ToolResults.Guard(handler.HandleAsync(new SearchOccupationsQuery(text, maxResults), cancellationToken))).ValueOrToolError();
 
     [McpServerTool(Name = "set_occupations", Destructive = false, Idempotent = true)]
     [Description(
@@ -30,5 +30,5 @@ public static class OccupationTools
         SetOccupationsHandler handler,
         [Description("Occupations from search_occupations, each with taxonomyId and label.")] OccupationView[] occupations,
         CancellationToken cancellationToken = default) =>
-        (await handler.HandleAsync(occupations, cancellationToken)).ValueOrToolError();
+        (await ToolResults.Guard(handler.HandleAsync(occupations, cancellationToken))).ValueOrToolError();
 }

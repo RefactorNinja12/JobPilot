@@ -24,7 +24,7 @@ public static class SkillTools
         [Description("Maximum number of results, 1-50.")] int maxResults = 10,
         CancellationToken cancellationToken = default)
     {
-        var concepts = (await handler.HandleAsync(new SearchSkillsQuery(text, maxResults), cancellationToken))
+        var concepts = (await ToolResults.Guard(handler.HandleAsync(new SearchSkillsQuery(text, maxResults), cancellationToken)))
             .ValueOrToolError();
         return [.. concepts.Select(c => new SkillMatch(c.Name, c.Terms))];
     }
@@ -41,7 +41,7 @@ public static class SkillTools
         [Description("Whole years of hands-on experience, 0-50.")] int yearsOfExperience,
         CancellationToken cancellationToken = default)
     {
-        return (await handler.HandleAsync(new AddSkillCommand(name, ParseLevel(level), yearsOfExperience), cancellationToken))
+        return (await ToolResults.Guard(handler.HandleAsync(new AddSkillCommand(name, ParseLevel(level), yearsOfExperience), cancellationToken)))
             .ValueOrToolError();
     }
 
@@ -55,7 +55,7 @@ public static class SkillTools
         [Description("New level: Beginner, Intermediate, Advanced or Expert.")] string level,
         [Description("New number of whole years of hands-on experience, 0-50.")] int yearsOfExperience,
         CancellationToken cancellationToken = default) =>
-        (await handler.HandleAsync(new UpdateSkillCommand(name, ParseLevel(level), yearsOfExperience), cancellationToken))
+        (await ToolResults.Guard(handler.HandleAsync(new UpdateSkillCommand(name, ParseLevel(level), yearsOfExperience), cancellationToken)))
             .ValueOrToolError();
 
     [McpServerTool(Name = "remove_skill", Destructive = true, Idempotent = false)]
@@ -66,7 +66,7 @@ public static class SkillTools
         RemoveSkillHandler handler,
         [Description("Skill name or synonym, e.g. \"Kafka\".")] string name,
         CancellationToken cancellationToken = default) =>
-        (await handler.HandleAsync(name, cancellationToken)).ValueOrToolError();
+        (await ToolResults.Guard(handler.HandleAsync(name, cancellationToken))).ValueOrToolError();
 
     // Names only: Enum.TryParse would also accept numbers such as "3".
     private static SkillLevel ParseLevel(string? level) =>

@@ -16,7 +16,7 @@ public static class ProfileTools
         "(full-time/part-time, staffing agencies, max commute distance). The profile is the only source of " +
         "facts about the user; never invent skills or experience that are not in it.")]
     public static Task<ProfileView> GetProfile(GetProfileHandler handler, CancellationToken cancellationToken = default) =>
-        handler.HandleAsync(cancellationToken);
+        ToolResults.Guard(handler.HandleAsync(cancellationToken));
 
     [McpServerTool(Name = "set_preferences", Destructive = false, Idempotent = true)]
     [Description(
@@ -43,6 +43,6 @@ public static class ProfileTools
         };
 
         var command = new SetPreferencesCommand(acceptsFullTime, acceptsPartTime, excludeStaffingAgencies, commute);
-        return (await handler.HandleAsync(command, cancellationToken)).ValueOrToolError();
+        return (await ToolResults.Guard(handler.HandleAsync(command, cancellationToken))).ValueOrToolError();
     }
 }
