@@ -10,7 +10,6 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration)
-    .AddSingleton(TimeProvider.System)
     .AddHostedService<SkillVocabularyRefresher>();
 
 var host = builder.Build();
