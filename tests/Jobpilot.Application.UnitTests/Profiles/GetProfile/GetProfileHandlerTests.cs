@@ -1,5 +1,6 @@
 using Jobpilot.Application.Profiles;
 using Jobpilot.Application.Profiles.GetProfile;
+using Jobpilot.Domain.Jobs;
 using Jobpilot.Domain.Locations;
 using Jobpilot.Domain.Profiles;
 using NSubstitute;
@@ -22,6 +23,7 @@ public class GetProfileHandlerTests
         var view = await GetAsync();
 
         view.Skills.ShouldBeEmpty();
+        view.TargetOccupations.ShouldBeEmpty();
         view.Preferences.ShouldBe(new PreferencesView(
             AcceptsFullTime: true,
             AcceptsPartTime: true,
@@ -40,9 +42,12 @@ public class GetProfileHandlerTests
             acceptsPartTime: false,
             excludeStaffingAgencies: true,
             CommuteLimit.Create(Coordinates.Create(57.7089, 11.9746).Value, 40).Value).Value);
+        profile.SetTargetOccupations([Occupation.Create("7wdX_4rv_33z", "Backend-utvecklare").Value]);
         _profiles.GetAsync(Arg.Any<CancellationToken>()).Returns(profile);
 
         var view = await GetAsync();
+
+        view.TargetOccupations.ShouldBe([new OccupationView("7wdX_4rv_33z", "Backend-utvecklare")]);
 
         view.Skills.ShouldBe([
             new ProfileSkillView("Kafka", "Advanced", 3),

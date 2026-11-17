@@ -36,6 +36,7 @@ public sealed class SkillToolsTests : IAsyncLifetime
         {
             services.AddSingleton<IProfileRepository>(_profiles);
             services.AddSingleton<ISkillVocabularyStore>(_vocabularies);
+            services.AddSingleton<Application.Abstractions.Taxonomy.IOccupationSearch>(new FakeOccupationSearch());
         }));
 
         var transport = new HttpClientTransport(
@@ -73,7 +74,7 @@ public sealed class SkillToolsTests : IAsyncLifetime
     {
         var tools = await _client.ListToolsAsync(cancellationToken: Ct);
 
-        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile", "set_preferences"], ignoreOrder: true);
+        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile", "set_preferences", "search_occupations", "set_occupations"], ignoreOrder: true);
     }
 
     [Fact]
@@ -221,6 +222,21 @@ public sealed class SkillToolsTests : IAsyncLifetime
         result.IsError.ShouldBe(expected: true);
         Text(result).ShouldContain("together");
         _profiles.Profile.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task SearchOccupations_ThenSetOccupations_ShowsThemInTheProfile()
+    {
+        var found = Read<JsonElement>(await CallAsync("search_occupations", new(StringComparer.Ordinal) { ["text"] = "backend" }));
+        var backend = found.EnumerateArray().ShouldHaveSingleItem();
+
+        var result = await CallAsync("set_occupations", new(StringComparer.Ordinal) { ["occupations"] = new[] { backend } });
+
+        result.IsError.ShouldNotBe(expected: true, customMessage: Text(result));
+        var occupation = Read<JsonElement>(await CallAsync("get_profile", []))
+            .GetProperty("targetOccupations").EnumerateArray().ShouldHaveSingleItem();
+        occupation.GetProperty("taxonomyId").GetString().ShouldBe("7wdX_4rv_33z");
+        occupation.GetProperty("label").GetString().ShouldBe("Backend-utvecklare");
     }
 
     [Fact]

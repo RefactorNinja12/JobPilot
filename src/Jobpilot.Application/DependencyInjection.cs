@@ -1,6 +1,8 @@
+using Jobpilot.Application.Occupations.Search;
 using Jobpilot.Application.Profiles.AddSkill;
 using Jobpilot.Application.Profiles.GetProfile;
 using Jobpilot.Application.Profiles.RemoveSkill;
+using Jobpilot.Application.Profiles.SetOccupations;
 using Jobpilot.Application.Profiles.SetPreferences;
 using Jobpilot.Application.Profiles.UpdateSkill;
 using Jobpilot.Application.SkillVocabularies.Refresh;
@@ -22,6 +24,8 @@ public static class DependencyInjection
         services.AddScoped<UpdateSkillHandler>();
         services.AddScoped<RemoveSkillHandler>();
         services.AddScoped<SetPreferencesHandler>();
+        services.AddScoped<SetOccupationsHandler>();
+        services.AddScoped<SearchOccupationsHandler>();
         services.AddScoped<RefreshSkillVocabularyHandler>();
         services.AddScoped<SearchSkillsHandler>();
         return services;
