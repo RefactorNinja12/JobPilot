@@ -84,3 +84,14 @@ The device you connect from must be logged in to Tailscale. Add the server to Cl
 `claude mcp add --transport http jobpilot https://jobpilot.<tailnet>.ts.net/mcp`. The tailnet name is personal,
 so it stays out of `.mcp.json`, which keeps the local `localhost` address.
 
+## Web UI
+
+React + TypeScript (Vite) in `web/`. It reads from the HTTP API (`src/Jobpilot.Api`), which calls the same
+handlers as the MCP server but never an AI, so browsing costs no tokens and has no daily limit.
+
+```bash
+dotnet run --project src/Jobpilot.Api   # API on http://localhost:5299
+cd web && npm install && npm run dev    # http://localhost:5173, /api is proxied to the API
+npm test                                # Vitest + Testing Library; MSW fakes the API
+```
+
