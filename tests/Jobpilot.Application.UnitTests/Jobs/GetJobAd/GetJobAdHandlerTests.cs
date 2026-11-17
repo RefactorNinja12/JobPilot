@@ -20,7 +20,7 @@ public class GetJobAdHandlerTests
     {
         var ad = JobAd.Create("31744367", "Pythonutvecklare", "Vi söker dig som kan Django.", new JobAdDetails(
             new Uri("https://arbetsformedlingen.se/platsbanken/annonser/31744367"),
-            Employer.Create("Exempel AB", null).Value,
+            Employer.Create("Exempel AB", organizationNumber: null).Value,
             Workplace.Create("Göteborg", coordinates: null),
             Occupation.Create("fg7B_yov_smw", "Systemutvecklare/Programmerare").Value,
             WorkingHours.FullTime,
