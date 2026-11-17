@@ -6,6 +6,8 @@ set -euo pipefail
 CLUSTER=jobpilot
 CONTEXT="k3d-$CLUSTER"
 NAMESPACE=jobpilot
+# Tailscale Operator chart, pinned so a redeploy never upgrades it silently. Bump it deliberately.
+TAILSCALE_CHART_VERSION="${TAILSCALE_CHART_VERSION:-1.104.7}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 kc() { kubectl --context "$CONTEXT" "$@"; } # never touch another cluster by accident
 
@@ -39,6 +41,21 @@ if ! kc -n "$NAMESPACE" get secret jobpilot-db >/dev/null 2>&1; then
     --from-literal=connection-string="Host=postgres;Port=5432;Database=jobpilot;Username=jobpilot;Password=$password"
 fi
 
+# The Tailscale Operator puts the MCP server on the tailnet. It needs OAuth credentials in the
+# tailscale/operator-oauth Secret, which the user creates (see README); without it this step is skipped.
+if kc -n tailscale get secret operator-oauth >/dev/null 2>&1; then
+  command -v helm >/dev/null || { echo "Missing helm (needed for the Tailscale Operator)" >&2; exit 1; }
+  echo "==> Installing the Tailscale Operator"
+  helm repo add tailscale https://pkgs.tailscale.com/helmcharts --force-update >/dev/null
+  helm repo update tailscale >/dev/null
+  # No oauth values: the chart reads the pre-created operator-oauth Secret.
+  helm upgrade --install tailscale-operator tailscale/tailscale-operator \
+    --kube-context "$CONTEXT" --namespace tailscale \
+    --version "$TAILSCALE_CHART_VERSION" --wait
+else
+  echo "==> Skipping the Tailscale Operator: no tailscale/operator-oauth Secret (see README)"
+fi
+
 echo "==> Applying manifests"
 kc apply -k "$ROOT/deploy/k8s"
 
@@ -53,5 +70,7 @@ cat <<MSG
 Jobpilot is running in k3d cluster "$CLUSTER".
   MCP server:  kubectl --context $CONTEXT -n $NAMESPACE port-forward svc/mcp 5199:80
                then http://localhost:5199/mcp (the "jobpilot" entry in .mcp.json)
+  Over Tailscale (when the operator is installed): https://jobpilot.<tailnet>.ts.net/mcp
+               the address is in: kubectl --context $CONTEXT -n $NAMESPACE get ingress mcp
   Worker log:  kubectl --context $CONTEXT -n $NAMESPACE logs deploy/worker -f
 MSG
