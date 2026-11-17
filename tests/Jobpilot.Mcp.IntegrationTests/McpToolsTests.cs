@@ -9,12 +9,16 @@ using ModelContextProtocol.Protocol;
 
 namespace Jobpilot.Mcp.IntegrationTests;
 
-/// <summary>Talks to the real MCP server (in memory) through the SDK's own HTTP client.</summary>
-public sealed class SkillToolsTests : IAsyncLifetime
+/// <summary>
+/// Talks to the real MCP server (in memory) through the SDK's own HTTP client. Storage and the JobTech APIs are fakes.
+/// </summary>
+public sealed class McpToolsTests : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web);
 
     private readonly InMemoryProfileRepository _profiles = new();
+    private readonly FakeJobSearch _jobSearch = new();
+    private readonly FakeEnrichments _enrichments = new();
     private readonly InMemorySkillVocabularyStore _vocabularies = new()
     {
         Vocabulary = SkillVocabulary.Create(
@@ -37,6 +41,8 @@ public sealed class SkillToolsTests : IAsyncLifetime
             services.AddSingleton<IProfileRepository>(_profiles);
             services.AddSingleton<ISkillVocabularyStore>(_vocabularies);
             services.AddSingleton<Application.Abstractions.Taxonomy.IOccupationSearch>(new FakeOccupationSearch());
+            services.AddSingleton<Application.Abstractions.JobSearch.IJobSearchClient>(_jobSearch);
+            services.AddSingleton<Application.Abstractions.Enrichments.IEnrichmentsClient>(_enrichments);
         }));
 
         var transport = new HttpClientTransport(
@@ -74,7 +80,7 @@ public sealed class SkillToolsTests : IAsyncLifetime
     {
         var tools = await _client.ListToolsAsync(cancellationToken: Ct);
 
-        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile", "set_preferences", "search_occupations", "set_occupations"], ignoreOrder: true);
+        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile", "set_preferences", "search_occupations", "set_occupations", "find_jobs"], ignoreOrder: true);
     }
 
     [Fact]
@@ -238,6 +244,48 @@ public sealed class SkillToolsTests : IAsyncLifetime
         occupation.GetProperty("taxonomyId").GetString().ShouldBe("7wdX_4rv_33z");
         occupation.GetProperty("label").GetString().ShouldBe("Backend-utvecklare");
     }
+
+    [Fact]
+    public async Task FindJobs_ReturnsRankedMatchesForTheProfile()
+    {
+        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "C#", ["level"] = "Expert", ["yearsOfExperience"] = 8 });
+        await CallAsync("set_occupations", new(StringComparer.Ordinal)
+        {
+            ["occupations"] = new[] { new { taxonomyId = "7wdX_4rv_33z", label = "Backend-utvecklare" } },
+        });
+        _jobSearch.Ads.AddRange([JobAd("java"), JobAd("csharp")]);
+        _enrichments.SkillsByAd["java"] = ["Java"];
+        _enrichments.SkillsByAd["csharp"] = ["C#", "Kafka"];
+
+        var result = Read<JsonElement>(await CallAsync("find_jobs", new(StringComparer.Ordinal) { ["top"] = 1 }));
+
+        result.GetProperty("fetched").GetInt32().ShouldBe(2);
+        var match = result.GetProperty("matches").EnumerateArray().ShouldHaveSingleItem();
+        match.GetProperty("adId").GetString().ShouldBe("csharp");
+        match.GetProperty("fitScore").GetInt32().ShouldBe(50);
+        match.GetProperty("matchedSkills")[0].GetString().ShouldBe("C#");
+        match.GetProperty("missingSkills")[0].GetString().ShouldBe("Kafka");
+    }
+
+    [Fact]
+    public async Task FindJobs_WithoutOccupations_IsAToolErrorPointingToSetOccupations()
+    {
+        var result = await CallAsync("find_jobs", []);
+
+        result.IsError.ShouldBe(expected: true);
+        Text(result).ShouldContain("FindJobs.NoOccupations");
+        Text(result).ShouldContain("set_occupations");
+    }
+
+    private static Domain.Jobs.JobAd JobAd(string id) =>
+        Domain.Jobs.JobAd.Create(id, "Utvecklare", "Text", new Domain.Jobs.JobAdDetails(
+            new Uri("https://arbetsformedlingen.se/platsbanken/annonser/" + id),
+            Domain.Jobs.Employer.Create("Arbetsgivare", "2021005448").Value,
+            Domain.Jobs.Workplace.Unknown,
+            Domain.Jobs.Occupation.Create("7wdX_4rv_33z", "Backend-utvecklare").Value,
+            Domain.Jobs.WorkingHours.FullTime,
+            new DateTimeOffset(2026, 11, 16, 9, 0, 0, TimeSpan.FromHours(1)),
+            new DateOnly(2026, 12, 1))).Value;
 
     [Fact]
     public async Task Health_IsOk()
