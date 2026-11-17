@@ -8,7 +8,11 @@ internal sealed class InMemoryProfileRepository : IProfileRepository
 {
     public Profile? Profile { get; private set; }
 
-    public Task<Profile?> GetAsync(CancellationToken cancellationToken) => Task.FromResult(Profile);
+    /// <summary>When set, GetAsync throws it, to simulate database problems.</summary>
+    public Exception? Failure { get; set; }
+
+    public Task<Profile?> GetAsync(CancellationToken cancellationToken) =>
+        Failure is null ? Task.FromResult(Profile) : Task.FromException<Profile?>(Failure);
 
     public void Add(Profile profile) => Profile = profile;
 

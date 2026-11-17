@@ -331,6 +331,39 @@ public sealed class McpToolsTests : IAsyncLifetime
         Text(result).ShouldContain("AiAssessment.ChanceOutOfRange");
     }
 
+    [Theory]
+    [InlineData("42P01", "Database.NotMigrated")] // undefined_table
+    [InlineData("3D000", "Database.NotMigrated")] // invalid_catalog_name
+    [InlineData(null, "Database.Unavailable")]    // connection failure
+    public async Task DatabaseProblems_AreToolErrorsThatSayWhatToDo(string? sqlState, string code)
+    {
+        _profiles.Failure = new FakeDbException(sqlState);
+
+        var result = await CallAsync("get_profile", []);
+
+        result.IsError.ShouldBe(expected: true);
+        Text(result).ShouldContain(code);
+    }
+
+    [Fact]
+    public async Task DatabaseProblem_WrappedByEf_IsStillExplained()
+    {
+        _profiles.Failure = new InvalidOperationException("EF wrapper", new FakeDbException("42P01"));
+
+        Text(await CallAsync("find_jobs", [])).ShouldContain("Database.NotMigrated");
+    }
+
+    [Fact]
+    public async Task OtherDatabaseErrors_AreNotDisguised()
+    {
+        _profiles.Failure = new FakeDbException("23505"); // unique_violation: a bug, not a setup problem
+
+        var text = Text(await CallAsync("get_profile", []));
+
+        text.ShouldNotContain("Database.");
+        text.ShouldContain("An error occurred");
+    }
+
     private static Domain.Jobs.JobAd JobAd(string id) =>
         Domain.Jobs.JobAd.Create(id, "Utvecklare", "Text", new Domain.Jobs.JobAdDetails(
             new Uri("https://arbetsformedlingen.se/platsbanken/annonser/" + id),

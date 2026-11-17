@@ -24,7 +24,7 @@ public static class JobTools
         [Description("How many matches to return, 1-50. Keep it small; 25 is usually enough.")] int top = 25,
         [Description("How many of the newest ads to fetch and score, 1-500.")] int searchLimit = 200,
         CancellationToken cancellationToken = default) =>
-        (await handler.HandleAsync(new FindJobsQuery(top, searchLimit), cancellationToken)).ValueOrToolError();
+        (await ToolResults.Guard(handler.HandleAsync(new FindJobsQuery(top, searchLimit), cancellationToken))).ValueOrToolError();
 
     [McpServerTool(Name = "get_job_ad", ReadOnly = true, Idempotent = true)]
     [Description(
@@ -35,7 +35,7 @@ public static class JobTools
         GetJobAdHandler handler,
         [Description("The adId from find_jobs, e.g. \"31744367\".")] string adId,
         CancellationToken cancellationToken = default) =>
-        (await handler.HandleAsync(adId, cancellationToken)).ValueOrToolError();
+        (await ToolResults.Guard(handler.HandleAsync(adId, cancellationToken))).ValueOrToolError();
 
     [McpServerTool(Name = "save_assessment", Destructive = false, Idempotent = true)]
     [Description(
@@ -49,5 +49,5 @@ public static class JobTools
         [Description("0-100: the chance of getting the job.")] int chance,
         [Description("Why, in a few sentences. At most 1,000 characters.")] string summary,
         CancellationToken cancellationToken = default) =>
-        (await handler.HandleAsync(new SaveAssessmentCommand(adId, chance, summary), cancellationToken)).ValueOrToolError();
+        (await ToolResults.Guard(handler.HandleAsync(new SaveAssessmentCommand(adId, chance, summary), cancellationToken))).ValueOrToolError();
 }
