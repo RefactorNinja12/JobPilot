@@ -73,7 +73,7 @@ public sealed class SkillToolsTests : IAsyncLifetime
     {
         var tools = await _client.ListToolsAsync(cancellationToken: Ct);
 
-        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile"], ignoreOrder: true);
+        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile", "set_preferences"], ignoreOrder: true);
     }
 
     [Fact]
@@ -186,6 +186,41 @@ public sealed class SkillToolsTests : IAsyncLifetime
 
         result.IsError.ShouldBe(expected: true);
         Text(result).ShouldContain("Profile.SkillNotFound");
+    }
+
+    [Fact]
+    public async Task SetPreferences_WithCommute_IsStoredInTheProfile()
+    {
+        var result = await CallAsync("set_preferences", new(StringComparer.Ordinal)
+        {
+            ["acceptsFullTime"] = true,
+            ["acceptsPartTime"] = false,
+            ["excludeStaffingAgencies"] = true,
+            ["homeLatitude"] = 57.7089,
+            ["homeLongitude"] = 11.9746,
+            ["maxDistanceKm"] = 40,
+        });
+
+        result.IsError.ShouldNotBe(expected: true, customMessage: Text(result));
+        var preferences = _profiles.Profile.ShouldNotBeNull().Preferences;
+        preferences.AcceptsPartTime.ShouldBeFalse();
+        preferences.CommuteLimit.ShouldNotBeNull().MaxDistanceKm.ShouldBe(40);
+    }
+
+    [Fact]
+    public async Task SetPreferences_PartialCommute_IsAToolError()
+    {
+        var result = await CallAsync("set_preferences", new(StringComparer.Ordinal)
+        {
+            ["acceptsFullTime"] = true,
+            ["acceptsPartTime"] = true,
+            ["excludeStaffingAgencies"] = false,
+            ["maxDistanceKm"] = 40,
+        });
+
+        result.IsError.ShouldBe(expected: true);
+        Text(result).ShouldContain("together");
+        _profiles.Profile.ShouldBeNull();
     }
 
     [Fact]
