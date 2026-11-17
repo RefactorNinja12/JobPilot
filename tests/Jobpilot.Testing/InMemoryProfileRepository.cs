@@ -1,10 +1,10 @@
 using Jobpilot.Application.Profiles;
 using Jobpilot.Domain.Profiles;
 
-namespace Jobpilot.Mcp.IntegrationTests;
+namespace Jobpilot.Testing;
 
-/// <summary>Stands in for the PostgreSQL repository, so the MCP tests need no database.</summary>
-internal sealed class InMemoryProfileRepository : IProfileRepository
+/// <summary>Stands in for the PostgreSQL repository, so host tests need no database.</summary>
+public sealed class InMemoryProfileRepository : IProfileRepository
 {
     public Profile? Profile { get; private set; }
 

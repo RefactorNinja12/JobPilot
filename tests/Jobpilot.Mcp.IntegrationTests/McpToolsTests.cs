@@ -256,7 +256,8 @@ public sealed class McpToolsTests : IAsyncLifetime
         {
             ["occupations"] = new[] { new { taxonomyId = "7wdX_4rv_33z", label = "Backend-utvecklare" } },
         });
-        _jobSearch.Ads.AddRange([JobAd("java"), JobAd("csharp")]);
+        _jobSearch.Ads.Add(JobAd("java"));
+        _jobSearch.Ads.Add(JobAd("csharp"));
         _enrichments.SkillsByAd["java"] = ["Java"];
         _enrichments.SkillsByAd["csharp"] = ["C#", "Kafka"];
 

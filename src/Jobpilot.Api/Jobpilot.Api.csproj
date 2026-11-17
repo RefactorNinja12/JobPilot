@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <UserSecretsId>jobpilot-api</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Jobpilot.Application\Jobpilot.Application.csproj" />
+    <ProjectReference Include="..\Jobpilot.Infrastructure\Jobpilot.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Jobpilot.Api.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

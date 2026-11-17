@@ -1,9 +1,9 @@
 using Jobpilot.Application.Abstractions.Enrichments;
 
-namespace Jobpilot.Mcp.IntegrationTests;
+namespace Jobpilot.Testing;
 
-/// <summary>Stands in for the PostgreSQL store, so the MCP tests need no database.</summary>
-internal sealed class InMemorySkillVocabularyStore : ISkillVocabularyStore
+/// <summary>Stands in for the PostgreSQL store, so host tests need no database.</summary>
+public sealed class InMemorySkillVocabularyStore : ISkillVocabularyStore
 {
     public SkillVocabulary? Vocabulary { get; set; }
 

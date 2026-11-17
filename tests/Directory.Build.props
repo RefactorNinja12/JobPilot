@@ -1,21 +1,26 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-  <!-- Shared setup for every test project -->
-  <PropertyGroup>
+  <!-- Shared setup for every test project. Jobpilot.Testing is a plain library of fakes, not a test project. -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' != 'Jobpilot.Testing'">
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <ItemGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Jobpilot.Testing'">
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' != 'Jobpilot.Testing'">
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="Shouldly" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(MSBuildProjectName)' != 'Jobpilot.Testing'">
     <Using Include="Xunit" />
     <Using Include="Shouldly" />
   </ItemGroup>

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- In-memory fakes shared by the host test projects (Mcp, Api), so each does not keep its own copy. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Jobpilot.Application\Jobpilot.Application.csproj" />
+  </ItemGroup>
+
+</Project>
