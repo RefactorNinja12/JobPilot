@@ -26,3 +26,14 @@ Claude Code picks up the `jobpilot` server from `.mcp.json`. Then ask, for examp
 
 The local database has no password and is only reachable from this machine. `docker compose down -v`
 deletes it.
+
+## Docker images
+
+```bash
+docker build --target worker -t jobpilot-worker .
+docker build --target mcp -t jobpilot-mcp .
+```
+
+Both run as a non-root user on chiseled Ubuntu. They need `ConnectionStrings__Jobpilot`; the MCP server listens
+on port 8080 (`/mcp`, and `/health` for probes).
+
