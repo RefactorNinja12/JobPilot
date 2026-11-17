@@ -62,6 +62,44 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Jobpilot.Domain.Profiles.Profile", b =>
                 {
+                    b.OwnsMany("Jobpilot.Domain.Jobs.Occupation", "TargetOccupations", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer")
+                                .HasColumnName("id");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
+
+                            b1.Property<string>("Label")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("label");
+
+                            b1.Property<Guid>("ProfileId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("profile_id");
+
+                            b1.Property<string>("TaxonomyId")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)")
+                                .HasColumnName("taxonomy_id");
+
+                            b1.HasKey("Id")
+                                .HasName("pk_profile_occupations");
+
+                            b1.HasIndex("ProfileId")
+                                .HasDatabaseName("ix_profile_occupations_profile_id");
+
+                            b1.ToTable("profile_occupations", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProfileId")
+                                .HasConstraintName("fk_profile_occupations_profiles_profile_id");
+                        });
+
                     b.OwnsMany("Jobpilot.Domain.Profiles.ProfileSkill", "Skills", b1 =>
                         {
                             b1.Property<int>("Id")
@@ -105,6 +143,8 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Skills");
+
+                    b.Navigation("TargetOccupations");
                 });
 #pragma warning restore 612, 618
         }

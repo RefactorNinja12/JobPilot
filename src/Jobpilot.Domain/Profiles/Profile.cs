@@ -1,4 +1,5 @@
 using Jobpilot.Domain.Common;
+using Jobpilot.Domain.Jobs;
 
 namespace Jobpilot.Domain.Profiles;
 
@@ -8,13 +9,20 @@ namespace Jobpilot.Domain.Profiles;
 /// </summary>
 public sealed class Profile
 {
+    /// <summary>Upper bound for <see cref="TargetOccupations"/>, so a job search stays focused.</summary>
+    public const int MaxTargetOccupations = 10;
+
     private readonly List<ProfileSkill> _skills = [];
+    private readonly List<Occupation> _targetOccupations = [];
 
     private Profile(Guid id) => Id = id;
 
     public Guid Id { get; }
 
     public IReadOnlyList<ProfileSkill> Skills => _skills.AsReadOnly();
+
+    /// <summary>The Taxonomy occupations to search job ads for, e.g. "Backend-utvecklare". Empty until chosen.</summary>
+    public IReadOnlyList<Occupation> TargetOccupations => _targetOccupations.AsReadOnly();
 
     /// <summary>Dealbreakers used to filter job ads. New profiles start with <see cref="JobPreferences.None"/>.</summary>
     public JobPreferences Preferences { get; private set; } = JobPreferences.None;
@@ -61,6 +69,25 @@ public sealed class Profile
         }
 
         _skills.RemoveAt(index);
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Replaces the target occupations. Duplicates (same Taxonomy id) are dropped, keeping the first.
+    /// Empty clears them. Fails if more than <see cref="MaxTargetOccupations"/> remain.
+    /// </summary>
+    public Result SetTargetOccupations(IEnumerable<Occupation> occupations)
+    {
+        ArgumentNullException.ThrowIfNull(occupations);
+
+        var distinct = occupations.DistinctBy(o => o.TaxonomyId, StringComparer.Ordinal).ToList();
+        if (distinct.Count > MaxTargetOccupations)
+        {
+            return ProfileErrors.TooManyTargetOccupations;
+        }
+
+        _targetOccupations.Clear();
+        _targetOccupations.AddRange(distinct);
         return Result.Success();
     }
 
