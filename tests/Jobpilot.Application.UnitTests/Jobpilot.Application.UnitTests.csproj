@@ -4,4 +4,8 @@
     <ProjectReference Include="..\..\src\Jobpilot.Application\Jobpilot.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
 </Project>
