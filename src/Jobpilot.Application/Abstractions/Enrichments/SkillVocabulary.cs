@@ -39,6 +39,9 @@ public sealed class SkillVocabulary
 
     public int Count => _concepts.Count;
 
+    /// <summary>All concepts, cleaned and merged as described on <see cref="Create"/>.</summary>
+    public IReadOnlyList<SkillConcept> Concepts => _concepts;
+
     /// <summary>
     /// Builds a vocabulary from raw concepts. Blank names and terms are dropped, names and terms are trimmed,
     /// and concepts with the same name (ignoring case) are merged. The first spelling of the name is kept.
