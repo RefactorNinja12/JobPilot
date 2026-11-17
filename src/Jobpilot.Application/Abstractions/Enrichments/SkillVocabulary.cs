@@ -14,14 +14,25 @@ public sealed class SkillVocabulary
     // Every name and term, case-insensitive, pointing to the concept it belongs to.
     private readonly Dictionary<string, SkillConcept> _byTerm;
 
+    // The same, normalised (see Normalize), for spellings like "c sharp" that differ only in spaces and dashes.
+    private readonly Dictionary<string, SkillConcept> _byNormalizedTerm;
+
+    // Per concept, its name and terms normalised once, so a search does not normalise ~65k terms each time.
+    private readonly List<(SkillConcept Concept, string[] Normalized)> _searchable;
+
     private SkillVocabulary(DateTimeOffset builtAt, IReadOnlyList<SkillConcept> concepts)
     {
         BuiltAt = builtAt;
         _concepts = concepts;
         _byTerm = new Dictionary<string, SkillConcept>(StringComparer.OrdinalIgnoreCase);
+        _byNormalizedTerm = new Dictionary<string, SkillConcept>(StringComparer.Ordinal);
+        _searchable = new List<(SkillConcept, string[])>(concepts.Count);
+
         foreach (var concept in concepts)
         {
             _byTerm[concept.Name] = concept;
+            _byNormalizedTerm.TryAdd(Normalize(concept.Name), concept);
+            _searchable.Add((concept, [Normalize(concept.Name), .. concept.Terms.Select(Normalize)]));
         }
 
         // Names win over terms: a term that equals another concept's name keeps pointing to that concept.
@@ -30,6 +41,7 @@ public sealed class SkillVocabulary
             foreach (var term in concept.Terms)
             {
                 _byTerm.TryAdd(term, concept);
+                _byNormalizedTerm.TryAdd(Normalize(term), concept);
             }
         }
     }
@@ -65,14 +77,24 @@ public sealed class SkillVocabulary
     }
 
     /// <summary>
-    /// Finds the concept whose name or term equals <paramref name="text"/>, ignoring case and surrounding spaces.
+    /// Finds the concept whose name or term equals <paramref name="text"/>, ignoring case and surrounding spaces,
+    /// and failing that, equals it once normalised (so "c sharp" finds "C#" through its term "c-sharp").
     /// Use it to turn what the user typed ("apache kafka") into the concept name ("Kafka").
     /// </summary>
-    public SkillConcept? Find(string? text) =>
-        string.IsNullOrWhiteSpace(text) ? null : _byTerm.GetValueOrDefault(text.Trim());
+    public SkillConcept? Find(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        var trimmed = text.Trim();
+        return _byTerm.GetValueOrDefault(trimmed) ?? _byNormalizedTerm.GetValueOrDefault(Normalize(trimmed));
+    }
 
     /// <summary>
-    /// Concepts whose name or a term contains <paramref name="query"/>, ignoring case. Best first:
+    /// Concepts whose name or a term contains <paramref name="query"/>, both normalised (ignoring case, spaces, dashes,
+    /// underscores and slashes). Best first:
     /// exact match, then name or term starting with the query, then the rest; shorter names first within each group.
     /// </summary>
     public IReadOnlyList<SkillConcept> Search(string? query, int maxResults = 10)
@@ -80,14 +102,14 @@ public sealed class SkillVocabulary
         ArgumentOutOfRangeException.ThrowIfLessThan(maxResults, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(maxResults, MaxSearchResults);
 
-        var q = query?.Trim();
-        if (string.IsNullOrEmpty(q))
+        var q = query is null ? string.Empty : Normalize(query);
+        if (q.Length == 0)
         {
             return [];
         }
 
-        return [.. _concepts
-            .Select(c => (Concept: c, Rank: Rank(c, q)))
+        return [.. _searchable
+            .Select(c => (c.Concept, Rank: Rank(c.Normalized, q)))
             .Where(x => x.Rank is not null)
             .OrderBy(x => x.Rank)
             .ThenBy(x => x.Concept.Name.Length)
@@ -96,18 +118,26 @@ public sealed class SkillVocabulary
             .Select(x => x.Concept)];
     }
 
-    // Called for every concept on each search, so it avoids allocating.
-    private static int? Rank(SkillConcept concept, string query)
+    /// <summary>
+    /// Lower case without spaces, dashes, underscores and slashes, so "C Sharp", "c-sharp" and "csharp" compare equal.
+    /// Dots, "#" and "+" are kept: they tell ".net", "c#" and "c++" apart from "net" and "c".
+    /// In the real vocabulary only 38 of ~65k forms collide, all spellings of the same thing ("Data warehouse").
+    /// </summary>
+    internal static string Normalize(string text) =>
+        string.Concat(text.Where(c => !char.IsWhiteSpace(c) && c is not ('-' or '_' or '/'))).ToLowerInvariant();
+
+    // Best rank over the concept's normalised name and terms; called for every concept on each search.
+    private static int? Rank(string[] normalized, string query)
     {
-        var best = Rank(concept.Name, query);
-        foreach (var term in concept.Terms)
+        int? best = null;
+        foreach (var text in normalized)
         {
-            if (best == 0)
+            var rank = Rank(text, query);
+            if (rank == 0)
             {
-                break;
+                return 0;
             }
 
-            var rank = Rank(term, query);
             if (rank < best || best is null)
             {
                 best = rank;
@@ -119,16 +149,16 @@ public sealed class SkillVocabulary
 
     private static int? Rank(string text, string query)
     {
-        if (text.Equals(query, StringComparison.OrdinalIgnoreCase))
+        if (text.Equals(query, StringComparison.Ordinal))
         {
             return 0;
         }
 
-        if (text.StartsWith(query, StringComparison.OrdinalIgnoreCase))
+        if (text.StartsWith(query, StringComparison.Ordinal))
         {
             return 1;
         }
 
-        return text.Contains(query, StringComparison.OrdinalIgnoreCase) ? 2 : null;
+        return text.Contains(query, StringComparison.Ordinal) ? 2 : null;
     }
 }

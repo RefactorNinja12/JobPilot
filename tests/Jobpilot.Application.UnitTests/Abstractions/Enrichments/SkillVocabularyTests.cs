@@ -125,4 +125,43 @@ public class SkillVocabularyTests
     [InlineData(SkillVocabulary.MaxSearchResults + 1)]
     public void Search_WithMaxResultsOutOfRange_Throws(int maxResults) =>
         Should.Throw<ArgumentOutOfRangeException>(() => _vocabulary.Search("c", maxResults));
+
+    [Theory]
+    [InlineData("c sharp", "C#")]
+    [InlineData("C-Sharp", "C#")]
+    [InlineData("apache  kafka", "Kafka")]
+    [InlineData("postgre-sql", "Postgresql")]
+    public void Find_IgnoresSpacesAndDashes(string typed, string expected) =>
+        _vocabulary.Find(typed)!.Name.ShouldBe(expected);
+
+    [Fact]
+    public void Find_ExactSpellingWinsOverNormalisedMatch()
+    {
+        // "Ci/cd" and "Ci cd" normalise alike; the exact spelling decides.
+        var vocabulary = SkillVocabulary.Create(DateTimeOffset.UnixEpoch,
+        [
+            new SkillConcept("Ci/cd", ["ci/cd"]),
+            new SkillConcept("Ci cd pipelines", ["ci cd"]),
+        ]);
+
+        vocabulary.Find("ci cd")!.Name.ShouldBe("Ci cd pipelines");
+        vocabulary.Find("CI-CD")!.Name.ShouldBe("Ci/cd");
+    }
+
+    [Theory]
+    [InlineData("c sharp")]
+    [InlineData("C SHARP")]
+    [InlineData("c-sh")]
+    public void Search_IgnoresSpacesAndDashes(string query) =>
+        Names(_vocabulary.Search(query)).ShouldContain("C#", StringComparer.Ordinal);
+
+    [Fact]
+    public void Search_KeepsDotsAndHashes_SoDotNetIsNotJustNet() =>
+        Names(_vocabulary.Search(".net")).ShouldBe([".net", "C#.net", "Asp.net"], ignoreOrder: true);
+
+    [Theory]
+    [InlineData(" ")]
+    [InlineData(" - / ")]
+    public void Search_OnlySeparators_ReturnsNothing(string query) =>
+        _vocabulary.Search(query).ShouldBeEmpty();
 }
