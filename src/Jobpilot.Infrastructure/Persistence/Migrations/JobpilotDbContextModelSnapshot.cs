@@ -112,6 +112,27 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
                     b.ToTable("skill_vocabularies", (string)null);
                 });
 
+            modelBuilder.Entity("Jobpilot.Infrastructure.Persistence.Usage.ToolUsage", b =>
+                {
+                    b.Property<DateOnly>("Day")
+                        .HasColumnType("date")
+                        .HasColumnName("day");
+
+                    b.Property<string>("Tool")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tool");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("integer")
+                        .HasColumnName("count");
+
+                    b.HasKey("Day", "Tool")
+                        .HasName("pk_tool_usage");
+
+                    b.ToTable("tool_usage", (string)null);
+                });
+
             modelBuilder.Entity("Jobpilot.Domain.Profiles.Profile", b =>
                 {
                     b.OwnsMany("Jobpilot.Domain.Jobs.Occupation", "TargetOccupations", b1 =>

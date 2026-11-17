@@ -1,5 +1,6 @@
 using Jobpilot.Application;
 using Jobpilot.Infrastructure;
+using Jobpilot.Mcp.Limits;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,10 +12,14 @@ builder.Services
 
 // Streamable HTTP, stateless by default in this SDK version: no session affinity needed in the cluster.
 // Reached only over Tailscale; there is no authentication in the app itself yet.
+// Caps the costly tools per day to protect the user's token budget (see DailyLimitOptions).
+builder.Services.Configure<DailyLimitOptions>(builder.Configuration.GetSection(DailyLimitOptions.SectionName));
+
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()
-    .WithToolsFromAssembly();
+    .WithToolsFromAssembly()
+    .WithDailyLimits();
 
 var app = builder.Build();
 

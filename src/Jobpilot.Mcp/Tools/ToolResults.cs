@@ -28,11 +28,14 @@ internal static class ToolResults
         {
             return await handler;
         }
-        catch (Exception ex) when (FindDbException(ex) is { } db && Explain(db) is { } message)
+        catch (Exception ex) when (ExplainDatabaseProblem(ex) is { } message)
         {
             throw new McpException(message, ex);
         }
     }
+
+    /// <summary>What the user should do about a database problem in <paramref name="ex"/>, or null if it is not one.</summary>
+    public static string? ExplainDatabaseProblem(Exception ex) => FindDbException(ex) is { } db ? Explain(db) : null;
 
     private static string? Explain(DbException ex) => ex.SqlState switch
     {
