@@ -1,3 +1,4 @@
+using Jobpilot.Domain.Locations;
 using Jobpilot.Domain.Profiles;
 using Jobpilot.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -91,5 +92,52 @@ public sealed class ProfilePersistenceTests(PostgresFixture postgres) : IAsyncLi
         }
 
         (await LoadAsync(profile.Id)).Skills.ShouldBe([SkillOf("C#", SkillLevel.Expert, 6)]);
+    }
+
+    private static JobPreferences PreferencesWithCommute(int maxDistanceKm) =>
+        JobPreferences.Create(
+            acceptsFullTime: true,
+            acceptsPartTime: false,
+            excludeStaffingAgencies: true,
+            CommuteLimit.Create(Coordinates.Create(57.7089, 11.9746).Value, maxDistanceKm).Value).Value;
+
+    [Fact]
+    public async Task Preferences_RoundTripWithCommuteLimit()
+    {
+        var profile = Profile.Create();
+        profile.UpdatePreferences(PreferencesWithCommute(40));
+        await SaveAsync(profile);
+
+        (await LoadAsync(profile.Id)).Preferences.ShouldBe(PreferencesWithCommute(40));
+    }
+
+    [Fact]
+    public async Task PreferenceChanges_ArePersisted()
+    {
+        var profile = Profile.Create();
+        profile.UpdatePreferences(PreferencesWithCommute(40));
+        await SaveAsync(profile);
+
+        await using (var db = NewContext())
+        {
+            var tracked = await db.Profiles.SingleAsync(p => p.Id == profile.Id, Ct);
+            tracked.UpdatePreferences(JobPreferences.None);
+            await db.SaveChangesAsync(Ct);
+        }
+
+        (await LoadAsync(profile.Id)).Preferences.ShouldBe(JobPreferences.None);
+    }
+
+    [Fact]
+    public async Task ProfileStoredWithoutPreferences_LoadsWithNone()
+    {
+        // A row written without the column, like profiles that existed before it, gets the migration default.
+        var id = Guid.CreateVersion7();
+        await using (var db = NewContext())
+        {
+            await db.Database.ExecuteSqlAsync($"INSERT INTO profiles (id) VALUES ({id})", Ct);
+        }
+
+        (await LoadAsync(id)).Preferences.ShouldBe(JobPreferences.None);
     }
 }

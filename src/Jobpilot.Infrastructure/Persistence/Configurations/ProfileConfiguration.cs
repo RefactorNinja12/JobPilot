@@ -5,8 +5,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Jobpilot.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// Profile and its skills. Skills are part of the aggregate, so they are owned: saved and loaded with the profile.
-/// Preferences are not mapped yet; a loaded profile has <see cref="JobPreferences.None"/>.
+/// Profile, its skills and its preferences. Skills are part of the aggregate, so they are owned: saved and loaded
+/// with the profile. Preferences are one jsonb column (see <see cref="JobPreferencesJson"/>): dealbreakers are
+/// applied in code, never queried in SQL, and the domain types stay free of EF constructors.
 /// </summary>
 internal sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
 {
@@ -16,7 +17,9 @@ internal sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).ValueGeneratedNever();
 
-        builder.Ignore(p => p.Preferences);
+        builder.Property(p => p.Preferences)
+            .HasColumnType("jsonb")
+            .HasConversion(p => JobPreferencesJson.Serialize(p), json => JobPreferencesJson.Deserialize(json));
 
         builder.OwnsMany(p => p.Skills, skills =>
         {

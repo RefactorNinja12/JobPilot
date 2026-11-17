@@ -28,6 +28,11 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Preferences")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("preferences");
+
                     b.HasKey("Id")
                         .HasName("pk_profiles");
 
