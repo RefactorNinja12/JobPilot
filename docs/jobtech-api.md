@@ -89,3 +89,13 @@ and `Kafka` ← `kafka`, `apache kafka`.
 **Decision:** a profile skill is keyed by its Enrichments concept label. The user picks skills from
 this dictionary (searching the terms), so ads and profile share one vocabulary and match exactly.
 Taxonomy stays in use for occupation ids.
+
+## Occupations: Taxonomy autocomplete
+
+Checked 2026-11-17. `GET /v1/taxonomy/suggesters/autocomplete?type=occupation-name&query-string=...&limit=...`
+answers in ~0.1 s with `[{ "taxonomy/id", "taxonomy/type", "taxonomy/preferred-label" }]`. It matches alternative
+labels too: `programmerare` finds `Systemutvecklare/Programmerare` (`fg7B_yov_smw`). The ids are the ones JobSearch
+takes as `occupation-name`: that day `fg7B_yov_smw` had 424 ads, `Backend-utvecklare` (`7wdX_4rv_33z`) 75 and
+`Fullstack-utvecklare` (`71Ji_irM_rSJ`) 66. The `main/concepts?preferred-label=` endpoint also works but is slower
+(~0.9 s) and needs the exact label.
+

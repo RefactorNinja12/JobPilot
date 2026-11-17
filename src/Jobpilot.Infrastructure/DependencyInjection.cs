@@ -1,9 +1,11 @@
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Application.Abstractions.JobSearch;
+using Jobpilot.Application.Abstractions.Taxonomy;
 using Jobpilot.Application.Profiles;
 using Jobpilot.Infrastructure.JobTech;
 using Jobpilot.Infrastructure.JobTech.Enrichments;
 using Jobpilot.Infrastructure.JobTech.JobSearch;
+using Jobpilot.Infrastructure.JobTech.Taxonomy;
 using Jobpilot.Infrastructure.Persistence;
 using Jobpilot.Infrastructure.Persistence.Profiles;
 using Jobpilot.Infrastructure.Persistence.SkillVocabularies;
@@ -44,6 +46,11 @@ public static class DependencyInjection
         services.AddHttpClient<ISkillVocabularyClient, SkillVocabularyClient>((provider, http) =>
                 http.BaseAddress = provider.GetRequiredService<IOptions<EnrichmentsOptions>>().Value.BaseUrl)
             .AddResilience(enrichments);
+
+        var taxonomy = AddApiOptions<TaxonomyOptions>(services, configuration, TaxonomyOptions.SectionName);
+        services.AddHttpClient<IOccupationSearch, TaxonomyClient>((provider, http) =>
+                http.BaseAddress = provider.GetRequiredService<IOptions<TaxonomyOptions>>().Value.BaseUrl)
+            .AddResilience(taxonomy);
 
         AddPersistence(services, configuration);
 
