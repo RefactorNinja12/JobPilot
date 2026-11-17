@@ -32,4 +32,16 @@ export function respondWithJobs(body: JsonBodyType, status = 200) {
   server.use(http.get('/api/jobs', () => HttpResponse.json(body, { status })))
 }
 
+/** Answers GET /api/jobs/{adId} with the given body and status, like Jobpilot.Api. Returns the requests seen. */
+export function respondWithJob(body: JsonBodyType, status = 200) {
+  const requests: string[] = []
+  server.use(
+    http.get('/api/jobs/:adId', ({ params }) => {
+      requests.push(String(params.adId))
+      return HttpResponse.json(body, { status })
+    }),
+  )
+  return requests
+}
+
 export const server = setupServer()

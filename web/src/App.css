@@ -116,6 +116,33 @@ h1 {
   color: var(--error);
 }
 
+.toggle {
+  margin-top: 10px;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--link);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: var(--chip-missing);
+}
+
+.description {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.description p {
+  margin: 0;
+  white-space: pre-line; /* keep the ad's own line breaks */
+}
+
 @media (max-width: 520px) {
   .job {
     flex-direction: column;
