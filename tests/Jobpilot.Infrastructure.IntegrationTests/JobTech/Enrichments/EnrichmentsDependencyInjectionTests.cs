@@ -87,6 +87,20 @@ public sealed class EnrichmentsDependencyInjectionTests : IDisposable
         result.IsSuccess.ShouldBeTrue();
     }
 
+    [Fact]
+    public async Task VocabularyClient_UsesEnrichmentsBaseUrl()
+    {
+        _server.Given(Request.Create().WithPath("/synonymdictionary").UsingGet())
+            .RespondWith(Response.Create().WithBody("""
+                { "build_datetime": "2025-06-17T10:01:51", "items": [{ "concept": "C#", "term": "c#" }] }
+                """));
+        ResolveClient(_server.Url);
+
+        var result = await _provider!.GetRequiredService<ISkillVocabularyClient>().GetCompetenciesAsync(Ct);
+
+        result.Value.Find("c#")!.Name.ShouldBe("C#");
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("/relative")]

@@ -31,6 +31,12 @@ public static class DependencyInjection
                 http.BaseAddress = provider.GetRequiredService<IOptions<EnrichmentsOptions>>().Value.BaseUrl)
             .AddResilience(enrichments);
 
+        // Same API and settings as EnrichmentsClient. The download is ~7 MB and takes ~6 s,
+        // within the default 10 s attempt timeout.
+        services.AddHttpClient<ISkillVocabularyClient, SkillVocabularyClient>((provider, http) =>
+                http.BaseAddress = provider.GetRequiredService<IOptions<EnrichmentsOptions>>().Value.BaseUrl)
+            .AddResilience(enrichments);
+
         return services;
     }
 
