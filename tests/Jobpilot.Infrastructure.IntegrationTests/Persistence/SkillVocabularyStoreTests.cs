@@ -1,7 +1,6 @@
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Jobpilot.Infrastructure.IntegrationTests.Persistence;
@@ -18,16 +17,7 @@ public sealed class SkillVocabularyStoreTests(PostgresFixture postgres) : IAsync
 
     public async ValueTask InitializeAsync()
     {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>(StringComparer.Ordinal)
-            {
-                ["ConnectionStrings:Jobpilot"] = postgres.ConnectionString,
-                // AddInfrastructure validates the JobTech options; they are not used here.
-                ["JobTech:JobSearch:BaseUrl"] = "https://jobsearch.example/",
-                ["JobTech:Enrichments:BaseUrl"] = "https://enrichments.example/",
-            })
-            .Build();
-        _provider = new ServiceCollection().AddInfrastructure(configuration).BuildServiceProvider();
+        _provider = postgres.BuildServices();
 
         await using var scope = _provider.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<JobpilotDbContext>();
