@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: jobpilot
+resources:
+  - namespace.yaml
+  - postgres.yaml
+  - worker.yaml
+  - mcp.yaml
+# The jobpilot-db Secret (POSTGRES_PASSWORD, connection-string) is created by scripts/deploy-local.sh,
+# never committed.

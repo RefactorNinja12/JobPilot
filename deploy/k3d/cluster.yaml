@@ -1,0 +1,15 @@
+# k3d cluster for Jobpilot. Created by scripts/deploy-local.sh.
+# No ports are published: the MCP server is reached with kubectl port-forward, and later over Tailscale.
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: jobpilot
+servers: 1
+agents: 0
+options:
+  k3s:
+    extraArgs:
+      # Traefik is not used: nothing is exposed through an ingress.
+      - arg: --disable=traefik
+        nodeFilters:
+          - server:*
