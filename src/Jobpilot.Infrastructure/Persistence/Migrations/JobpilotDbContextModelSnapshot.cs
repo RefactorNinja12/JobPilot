@@ -39,6 +39,31 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
                     b.ToTable("profiles", (string)null);
                 });
 
+            modelBuilder.Entity("Jobpilot.Infrastructure.Persistence.AdCompetencies.CachedAdCompetencies", b =>
+                {
+                    b.Property<string>("AdId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("ad_id");
+
+                    b.Property<string>("CompetenciesJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("competencies");
+
+                    b.Property<DateTimeOffset>("EnrichedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("enriched_at");
+
+                    b.HasKey("AdId")
+                        .HasName("pk_ad_competencies");
+
+                    b.HasIndex("EnrichedAt")
+                        .HasDatabaseName("ix_ad_competencies_enriched_at");
+
+                    b.ToTable("ad_competencies", (string)null);
+                });
+
             modelBuilder.Entity("Jobpilot.Infrastructure.Persistence.SkillVocabularies.StoredSkillVocabulary", b =>
                 {
                     b.Property<int>("Id")

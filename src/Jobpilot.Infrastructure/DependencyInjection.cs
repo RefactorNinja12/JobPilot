@@ -9,11 +9,13 @@ using Jobpilot.Infrastructure.JobTech.Enrichments;
 using Jobpilot.Infrastructure.JobTech.JobSearch;
 using Jobpilot.Infrastructure.JobTech.Taxonomy;
 using Jobpilot.Infrastructure.Persistence;
+using Jobpilot.Infrastructure.Persistence.AdCompetencies;
 using Jobpilot.Infrastructure.Persistence.Profiles;
 using Jobpilot.Infrastructure.Persistence.SkillVocabularies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace Jobpilot.Infrastructure;
@@ -81,6 +83,8 @@ public static class DependencyInjection
 
         services.AddScoped<IProfileRepository, ProfileRepository>();
         services.AddScoped<ISkillVocabularyStore, SkillVocabularyStore>();
+        services.AddScoped<IAdCompetencyCache, AdCompetencyCache>();
+        services.TryAddSingleton(TimeProvider.System);
     }
 
     /// <summary>Adds the standard resilience pipeline, tuned by "{api}:Resilience" when that section exists.</summary>
