@@ -11,13 +11,14 @@ namespace Jobpilot.Application.Jobs.FindJobs;
 
 /// <summary>
 /// The matching funnel, all deterministic: newest ads for the profile's occupations, then dealbreakers, then skills
-/// from Enrichments (only for ads that passed), then fit score. Returns the top few as compact summaries,
+/// from Enrichments (only for ads that passed, and only once per ad thanks to the cache), then fit score. Returns the top few as compact summaries,
 /// so Claude only ever reads a short list.
 /// </summary>
 public sealed class FindJobsHandler(
     IProfileRepository profiles,
     IJobSearchClient jobSearch,
     IEnrichmentsClient enrichments,
+    IAdCompetencyCache competencyCache,
     IStaffingAgencyDirectory staffingAgencies)
 {
     /// <summary>Claude's token budget allows 25-50 ads per run.</summary>
@@ -53,11 +54,39 @@ public sealed class FindJobsHandler(
         }
 
         // Dealbreakers first: rejected ads never cost an Enrichments call.
+        var (passed, rejected) = ApplyDealbreakers(profile.Preferences, found.Value.Ads);
+
+        var competencies = await ExtractCompetenciesAsync(passed.ConvertAll(p => p.Ad), cancellationToken);
+        if (competencies.IsFailure)
+        {
+            return competencies.Error;
+        }
+
+        var matches = passed
+            .Select(p => ToMatch(p.Ad, p.Verdict, profile, competencies.Value.ByAd.GetValueOrDefault(p.Ad.Id, [])))
+            .OrderByDescending(m => m.FitScore)
+            .ThenByDescending(m => m.PublishedAt)
+            .Take(query.Top)
+            .ToList();
+
+        return new FindJobsResult(
+            matches,
+            found.Value.Ads.Count,
+            found.Value.SkippedCount,
+            rejected,
+            passed.Count,
+            competencies.Value.NewlyAnalysed);
+    }
+
+    private (List<(JobAd Ad, DealbreakerVerdict Verdict)> Passed, Dictionary<string, int> Rejected) ApplyDealbreakers(
+        JobPreferences preferences,
+        IReadOnlyList<JobAd> ads)
+    {
         var rejected = new Dictionary<string, int>(StringComparer.Ordinal);
         var passed = new List<(JobAd Ad, DealbreakerVerdict Verdict)>();
-        foreach (var ad in found.Value.Ads)
+        foreach (var ad in ads)
         {
-            var verdict = profile.Preferences.Check(ad, staffingAgencies.IsStaffingAgency(ad.Employer));
+            var verdict = preferences.Check(ad, staffingAgencies.IsStaffingAgency(ad.Employer));
             if (verdict.Passes)
             {
                 passed.Add((ad, verdict));
@@ -70,29 +99,23 @@ public sealed class FindJobsHandler(
             }
         }
 
-        var competencies = await ExtractCompetenciesAsync(passed.ConvertAll(p => p.Ad), cancellationToken);
-        if (competencies.IsFailure)
-        {
-            return competencies.Error;
-        }
-
-        var matches = passed
-            .Select(p => ToMatch(p.Ad, p.Verdict, profile, competencies.Value.GetValueOrDefault(p.Ad.Id, [])))
-            .OrderByDescending(m => m.FitScore)
-            .ThenByDescending(m => m.PublishedAt)
-            .Take(query.Top)
-            .ToList();
-
-        return new FindJobsResult(matches, found.Value.Ads.Count, found.Value.SkippedCount, rejected, passed.Count);
+        return (passed, rejected);
     }
 
-    /// <summary>Competencies per ad id, fetched in batches of at most <see cref="EnrichmentQuery.MaxAdsLimit"/>.</summary>
-    private async Task<Result<Dictionary<string, IReadOnlyList<ExtractedCompetency>>>> ExtractCompetenciesAsync(
+    /// <summary>
+    /// Competencies per ad id: cached ones as they are, the rest from Enrichments in batches of at most
+    /// <see cref="EnrichmentQuery.MaxAdsLimit"/>. Each batch is cached as soon as it arrives, so a failure later on
+    /// does not waste the batches before it.
+    /// </summary>
+    private async Task<Result<(Dictionary<string, IReadOnlyList<ExtractedCompetency>> ByAd, int NewlyAnalysed)>> ExtractCompetenciesAsync(
         List<JobAd> ads,
         CancellationToken cancellationToken)
     {
-        var byAd = new Dictionary<string, IReadOnlyList<ExtractedCompetency>>(StringComparer.Ordinal);
-        foreach (var batch in ads.Chunk(EnrichmentQuery.MaxAdsLimit))
+        var cached = await competencyCache.GetAsync([.. ads.Select(a => a.Id)], cancellationToken);
+        var byAd = new Dictionary<string, IReadOnlyList<ExtractedCompetency>>(cached, StringComparer.Ordinal);
+        var uncached = ads.Where(a => !byAd.ContainsKey(a.Id)).ToList();
+
+        foreach (var batch in uncached.Chunk(EnrichmentQuery.MaxAdsLimit))
         {
             var enriched = await enrichments.ExtractCompetenciesAsync(EnrichmentQuery.Create(batch).Value, cancellationToken);
             if (enriched.IsFailure)
@@ -100,13 +123,14 @@ public sealed class FindJobsHandler(
                 return enriched.Error;
             }
 
+            await competencyCache.SaveAsync(enriched.Value, cancellationToken);
             foreach (var ad in enriched.Value)
             {
                 byAd[ad.AdId] = ad.Competencies;
             }
         }
 
-        return byAd;
+        return (byAd, uncached.Count);
     }
 
     private static JobMatch ToMatch(

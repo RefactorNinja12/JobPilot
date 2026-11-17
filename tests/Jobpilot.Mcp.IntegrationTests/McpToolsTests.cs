@@ -43,6 +43,7 @@ public sealed class McpToolsTests : IAsyncLifetime
             services.AddSingleton<Application.Abstractions.Taxonomy.IOccupationSearch>(new FakeOccupationSearch());
             services.AddSingleton<Application.Abstractions.JobSearch.IJobSearchClient>(_jobSearch);
             services.AddSingleton<Application.Abstractions.Enrichments.IEnrichmentsClient>(_enrichments);
+            services.AddSingleton<Application.Abstractions.Enrichments.IAdCompetencyCache>(new InMemoryAdCompetencyCache());
         }));
 
         var transport = new HttpClientTransport(

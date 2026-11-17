@@ -22,6 +22,7 @@ public class FindJobsHandlerTests
     private readonly IJobSearchClient _jobSearch = Substitute.For<IJobSearchClient>();
     private readonly IEnrichmentsClient _enrichments = Substitute.For<IEnrichmentsClient>();
     private readonly IStaffingAgencyDirectory _agencies = Substitute.For<IStaffingAgencyDirectory>();
+    private readonly InMemoryAdCompetencyCache _cache = new();
     private readonly Profile _profile = Profile.Create();
     private readonly Dictionary<string, (string Label, double Prediction)[]> _skillsByAd = new(StringComparer.Ordinal);
     private readonly FindJobsHandler _handler;
@@ -41,7 +42,7 @@ public class FindJobsHandlerTests
                     [.. _skillsByAd.GetValueOrDefault(ad.Id, []).Select(s => new ExtractedCompetency(s.Label, s.Prediction))])),
             ]));
 
-        _handler = new FindJobsHandler(_profiles, _jobSearch, _enrichments, _agencies);
+        _handler = new FindJobsHandler(_profiles, _jobSearch, _enrichments, _cache, _agencies);
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -177,6 +178,49 @@ public class FindJobsHandlerTests
         result.Matches.Count.ShouldBe(50);
         await _enrichments.Received(1).ExtractCompetenciesAsync(Arg.Is<EnrichmentQuery>(q => q.Ads.Count == 100), Arg.Any<CancellationToken>());
         await _enrichments.Received(1).ExtractCompetenciesAsync(Arg.Is<EnrichmentQuery>(q => q.Ads.Count == 50), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Find_CachedAds_AreNotSentToEnrichmentsAgain()
+    {
+        Found(Ad("cached"), Ad("new"));
+        _cache.Stored["cached"] = [new ExtractedCompetency("C#", 0.9)];
+        Requests("new", ("Java", 0.9));
+
+        var result = (await FindAsync()).Value;
+
+        result.NewlyAnalysed.ShouldBe(1);
+        result.Matches.Single(m => m.AdId == "cached").FitScore.ShouldBe(100);
+        await _enrichments.Received(1).ExtractCompetenciesAsync(
+            Arg.Is<EnrichmentQuery>(q => q.Ads.Count == 1 && q.Ads[0].Id == "new"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Find_NewResults_AreCached_SoTheNextSearchSkipsEnrichments()
+    {
+        Found(Ad("1"));
+        Requests("1", ("C#", 0.9));
+
+        (await FindAsync()).Value.NewlyAnalysed.ShouldBe(1);
+        var second = (await FindAsync()).Value;
+
+        second.NewlyAnalysed.ShouldBe(0);
+        second.Matches.ShouldHaveSingleItem().FitScore.ShouldBe(100);
+        await _enrichments.ReceivedWithAnyArgs(1).ExtractCompetenciesAsync(default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Find_EnrichmentsFailsOnALaterBatch_KeepsTheEarlierBatchesCached()
+    {
+        Found([.. Enumerable.Range(0, 150).Select(i => Ad(i.ToString(CultureInfo.InvariantCulture)))]);
+        var unavailable = Error.Unavailable("Enrichments.Unavailable", "Enrichments could not be used: timeout.");
+        _enrichments.ExtractCompetenciesAsync(Arg.Is<EnrichmentQuery>(q => q.Ads.Count == 50), Arg.Any<CancellationToken>())
+            .Returns(unavailable);
+
+        (await FindAsync(searchLimit: 150)).Error.ShouldBe(unavailable);
+
+        _cache.Stored.Count.ShouldBe(100);
     }
 
     [Fact]

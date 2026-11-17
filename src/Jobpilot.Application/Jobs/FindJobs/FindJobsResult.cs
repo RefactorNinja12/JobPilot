@@ -5,9 +5,11 @@ namespace Jobpilot.Application.Jobs.FindJobs;
 /// <param name="Skipped">Ads JobSearch returned that could not be read.</param>
 /// <param name="Rejected">Ads removed by dealbreakers, per reason, e.g. { "TooFarAway": 42 }. An ad counts once per broken rule.</param>
 /// <param name="Passed">Ads that passed the dealbreakers and were scored.</param>
+/// <param name="NewlyAnalysed">Of those, how many were sent to Enrichments; the rest came from the cache.</param>
 public sealed record FindJobsResult(
     IReadOnlyList<JobMatch> Matches,
     int Fetched,
     int Skipped,
     IReadOnlyDictionary<string, int> Rejected,
-    int Passed);
+    int Passed,
+    int NewlyAnalysed);
