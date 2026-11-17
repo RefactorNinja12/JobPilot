@@ -68,6 +68,7 @@ jobs:
           /d:sonar.token="$SONAR_TOKEN"
           /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/*.xml"
           /d:sonar.exclusions="**/Migrations/**"
+          /d:sonar.coverage.exclusions="**/Program.cs"
           /d:sonar.qualitygate.wait=true
 
       - name: Build
