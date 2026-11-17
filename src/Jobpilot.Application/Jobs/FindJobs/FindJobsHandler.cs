@@ -1,6 +1,8 @@
+using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Application.Abstractions.Employers;
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Application.Abstractions.JobSearch;
+using Jobpilot.Application.Jobs.SaveAssessment;
 using Jobpilot.Application.Profiles;
 using Jobpilot.Domain.Common;
 using Jobpilot.Domain.Jobs;
@@ -19,6 +21,7 @@ public sealed class FindJobsHandler(
     IJobSearchClient jobSearch,
     IEnrichmentsClient enrichments,
     IAdCompetencyCache competencyCache,
+    IAssessmentStore assessments,
     IStaffingAgencyDirectory staffingAgencies)
 {
     /// <summary>Claude's token budget allows 25-50 ads per run.</summary>
@@ -68,6 +71,10 @@ public sealed class FindJobsHandler(
             .ThenByDescending(m => m.PublishedAt)
             .Take(query.Top)
             .ToList();
+
+        // Only the few returned matches are looked up; Claude skips the ones it has assessed before.
+        var assessed = await assessments.GetAsync([.. matches.Select(m => m.AdId)], cancellationToken);
+        matches = matches.ConvertAll(m => assessed.TryGetValue(m.AdId, out var a) ? m with { Assessment = AssessmentView.From(a) } : m);
 
         return new FindJobsResult(
             matches,
