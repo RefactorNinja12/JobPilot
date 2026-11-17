@@ -69,11 +69,11 @@ public sealed class SkillToolsTests : IAsyncLifetime
     private sealed record Added(string Name, bool InVocabulary);
 
     [Fact]
-    public async Task Server_ListsTheSkillTools()
+    public async Task Server_ListsTheTools()
     {
         var tools = await _client.ListToolsAsync(cancellationToken: Ct);
 
-        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill"], ignoreOrder: true);
+        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "get_profile"], ignoreOrder: true);
     }
 
     [Fact]
@@ -132,6 +132,27 @@ public sealed class SkillToolsTests : IAsyncLifetime
 
         result.IsError.ShouldBe(expected: true);
         Text(result).ShouldContain("Profile.SkillAlreadyAdded");
+    }
+
+    [Fact]
+    public async Task GetProfile_BeforeAnySkill_IsEmpty()
+    {
+        var profile = Read<JsonElement>(await CallAsync("get_profile", []));
+
+        profile.GetProperty("skills").GetArrayLength().ShouldBe(0);
+        profile.GetProperty("preferences").GetProperty("acceptsFullTime").GetBoolean().ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task GetProfile_ShowsAddedSkills()
+    {
+        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "apache kafka", ["level"] = "Advanced", ["yearsOfExperience"] = 3 });
+
+        var skill = Read<JsonElement>(await CallAsync("get_profile", [])).GetProperty("skills").EnumerateArray().ShouldHaveSingleItem();
+
+        skill.GetProperty("name").GetString().ShouldBe("Kafka");
+        skill.GetProperty("level").GetString().ShouldBe("Advanced");
+        skill.GetProperty("yearsOfExperience").GetInt32().ShouldBe(3);
     }
 
     [Fact]
