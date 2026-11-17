@@ -1,6 +1,7 @@
 import { http, HttpResponse, type JsonBodyType } from 'msw'
 import { setupServer } from 'msw/node'
 import type { FindJobsResult, JobMatch } from '../api/jobs'
+import type { Profile } from '../api/profile'
 
 /** A match as GET /api/jobs returns it; override what a test cares about. */
 export function aMatch(overrides: Partial<JobMatch> = {}): JobMatch {
@@ -42,6 +43,28 @@ export function respondWithJob(body: JsonBodyType, status = 200) {
     }),
   )
   return requests
+}
+
+export function aProfile(overrides: Partial<Profile> = {}): Profile {
+  return {
+    skills: [
+      { name: 'C#', level: 'Expert', yearsOfExperience: 8 },
+      { name: 'Kafka', level: 'Beginner', yearsOfExperience: 0 },
+    ],
+    targetOccupations: [{ taxonomyId: '7wdX_4rv_33z', label: 'Backend-utvecklare' }],
+    preferences: {
+      acceptsFullTime: true,
+      acceptsPartTime: false,
+      excludeStaffingAgencies: true,
+      commute: { homeLatitude: 57.7089, homeLongitude: 11.9746, maxDistanceKm: 40 },
+    },
+    ...overrides,
+  }
+}
+
+/** Answers GET /api/profile, like Jobpilot.Api. */
+export function respondWithProfile(body: JsonBodyType, status = 200) {
+  server.use(http.get('/api/profile', () => HttpResponse.json(body, { status })))
 }
 
 export const server = setupServer()

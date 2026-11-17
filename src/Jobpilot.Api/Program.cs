@@ -18,5 +18,6 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.MapGet("/health", () => Results.Ok("healthy"));
 app.MapJobEndpoints();
+app.MapProfileEndpoints();
 
 await app.RunAsync();
