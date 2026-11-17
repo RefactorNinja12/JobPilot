@@ -128,7 +128,7 @@ public class FindJobsHandlerTests
             acceptsPartTime: false,
             excludeStaffingAgencies: true,
             CommuteLimit.Create(_stockholm, 50).Value).Value);
-        _agencies.IsStaffingAgency(Arg.Is<Employer>(e => e.OrganizationNumber == "5566778899")).Returns(true);
+        _agencies.IsStaffingAgency(Arg.Is<Employer>(e => e.OrganizationNumber == "5566778899")).Returns(returnThis: true);
         Found(
             Ad("ok", workplace: _stockholm),
             Ad("far", workplace: _goteborg),
