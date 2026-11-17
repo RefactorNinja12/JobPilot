@@ -80,7 +80,7 @@ public sealed class McpToolsTests : IAsyncLifetime
     {
         var tools = await _client.ListToolsAsync(cancellationToken: Ct);
 
-        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile", "set_preferences", "search_occupations", "set_occupations", "find_jobs"], ignoreOrder: true);
+        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile", "set_preferences", "search_occupations", "set_occupations", "find_jobs", "get_job_ad"], ignoreOrder: true);
     }
 
     [Fact]
@@ -275,6 +275,26 @@ public sealed class McpToolsTests : IAsyncLifetime
         result.IsError.ShouldBe(expected: true);
         Text(result).ShouldContain("FindJobs.NoOccupations");
         Text(result).ShouldContain("set_occupations");
+    }
+
+    [Fact]
+    public async Task GetJobAd_ReturnsTheFullText()
+    {
+        _jobSearch.Ads.Add(JobAd("31744367"));
+
+        var ad = Read<JsonElement>(await CallAsync("get_job_ad", new(StringComparer.Ordinal) { ["adId"] = "31744367" }));
+
+        ad.GetProperty("adId").GetString().ShouldBe("31744367");
+        ad.GetProperty("description").GetString().ShouldBe("Text");
+    }
+
+    [Fact]
+    public async Task GetJobAd_Unknown_IsAToolError()
+    {
+        var result = await CallAsync("get_job_ad", new(StringComparer.Ordinal) { ["adId"] = "0000000" });
+
+        result.IsError.ShouldBe(expected: true);
+        Text(result).ShouldContain("JobSearch.AdNotFound");
     }
 
     private static Domain.Jobs.JobAd JobAd(string id) =>

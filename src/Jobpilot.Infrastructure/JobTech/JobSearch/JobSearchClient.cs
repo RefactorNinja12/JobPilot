@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -11,7 +12,8 @@ namespace Jobpilot.Infrastructure.JobTech.JobSearch;
 
 /// <summary>
 /// Calls GET /search page by page, newest first, until <see cref="JobSearchQuery.MaxResults"/> ads
-/// or the last page. Expects <see cref="HttpClient.BaseAddress"/> to be the JobSearch root URL.
+/// or the last page, and GET /ad/{id} for a single ad. Expects <see cref="HttpClient.BaseAddress"/>
+/// to be the JobSearch root URL.
 /// </summary>
 public sealed class JobSearchClient(HttpClient httpClient) : IJobSearchClient
 {
@@ -76,20 +78,49 @@ public sealed class JobSearchClient(HttpClient httpClient) : IJobSearchClient
         return new Uri(uri.ToString(), UriKind.Relative);
     }
 
+    public async Task<Result<JobAd>> GetAdAsync(string adId, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(adId);
+
+        var id = adId.Trim();
+        var ad = await GetJsonAsync<JobSearchAdDto>(
+            new Uri("ad/" + Uri.EscapeDataString(id), UriKind.Relative),
+            notFound: JobSearchErrors.AdNotFound(id),
+            cancellationToken);
+        return ad.IsFailure ? ad.Error : JobSearchAdMapper.ToJobAd(ad.Value);
+    }
+
     private async Task<Result<IReadOnlyList<JobSearchAdDto>>> FetchPageAsync(Uri uri, CancellationToken cancellationToken)
+    {
+        var page = await GetJsonAsync<JobSearchResponseDto>(uri, notFound: null, cancellationToken);
+        if (page.IsFailure)
+        {
+            return page.Error;
+        }
+
+        return page.Value.Hits is { } hits ? Result.Success(hits) : JobSearchErrors.InvalidResponse;
+    }
+
+    /// <summary>GETs and reads JSON, turning transport problems into errors. 404 gives <paramref name="notFound"/> when set.</summary>
+    private async Task<Result<T>> GetJsonAsync<T>(Uri uri, Error? notFound, CancellationToken cancellationToken)
+        where T : class
     {
         try
         {
             using var response = await httpClient.GetAsync(uri, cancellationToken);
-            if (!response.IsSuccessStatusCode)
+            if (response.StatusCode == HttpStatusCode.NotFound && notFound is not null)
             {
-                return JobSearchErrors.Unavailable($"HTTP {(int)response.StatusCode}");
+                return notFound;
             }
 
-            var body = await response.Content.ReadFromJsonAsync<JobSearchResponseDto>(JobTechJson.Options, cancellationToken);
-            return body?.Hits is { } hits
-                ? Result.Success(hits)
-                : JobSearchErrors.InvalidResponse;
+            if (!response.IsSuccessStatusCode)
+            {
+                return JobSearchErrors.Unavailable(
+                    string.Create(CultureInfo.InvariantCulture, $"HTTP {(int)response.StatusCode}"));
+            }
+
+            var body = await response.Content.ReadFromJsonAsync<T>(JobTechJson.Options, cancellationToken);
+            return body is null ? JobSearchErrors.InvalidResponse : Result.Success(body);
         }
         catch (HttpRequestException ex)
         {

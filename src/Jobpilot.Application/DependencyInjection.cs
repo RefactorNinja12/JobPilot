@@ -1,4 +1,5 @@
 using Jobpilot.Application.Jobs.FindJobs;
+using Jobpilot.Application.Jobs.GetJobAd;
 using Jobpilot.Application.Occupations.Search;
 using Jobpilot.Application.Profiles.AddSkill;
 using Jobpilot.Application.Profiles.GetProfile;
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<SetOccupationsHandler>();
         services.AddScoped<SearchOccupationsHandler>();
         services.AddScoped<FindJobsHandler>();
+        services.AddScoped<GetJobAdHandler>();
         services.AddScoped<RefreshSkillVocabularyHandler>();
         services.AddScoped<SearchSkillsHandler>();
         return services;
