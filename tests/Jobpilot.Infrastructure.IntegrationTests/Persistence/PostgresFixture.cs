@@ -24,6 +24,7 @@ public sealed class PostgresFixture : IAsyncLifetime
                 // AddInfrastructure validates the JobTech options; they are not used by database tests.
                 ["JobTech:JobSearch:BaseUrl"] = "https://jobsearch.example/",
                 ["JobTech:Enrichments:BaseUrl"] = "https://enrichments.example/",
+                ["JobTech:Taxonomy:BaseUrl"] = "https://taxonomy.example/",
             })
             .Build();
         return new ServiceCollection().AddInfrastructure(configuration).BuildServiceProvider();
