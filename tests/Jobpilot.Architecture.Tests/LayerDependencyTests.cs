@@ -63,6 +63,17 @@ public class LayerDependencyTests
     }
 
     [Fact]
+    public void Application_ShouldNotDependOnEntityFramework()
+    {
+        var result = Types.InAssembly(_applicationAssembly)
+            .ShouldNot()
+            .HaveDependencyOn("Microsoft.EntityFrameworkCore")
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue(FailingTypes(result));
+    }
+
+    [Fact]
     public void Infrastructure_ShouldNotDependOnEntryPoints()
     {
         var result = Types.InAssembly(_infrastructureAssembly)
