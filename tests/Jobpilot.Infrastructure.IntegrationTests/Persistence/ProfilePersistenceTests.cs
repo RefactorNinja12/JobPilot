@@ -1,3 +1,4 @@
+using Jobpilot.Domain.Jobs;
 using Jobpilot.Domain.Locations;
 using Jobpilot.Domain.Profiles;
 using Jobpilot.Infrastructure.Persistence;
@@ -139,5 +140,26 @@ public sealed class ProfilePersistenceTests(PostgresFixture postgres) : IAsyncLi
         }
 
         (await LoadAsync(id)).Preferences.ShouldBe(JobPreferences.None);
+    }
+
+    [Fact]
+    public async Task TargetOccupations_RoundTripAndCanBeReplaced()
+    {
+        var backend = Occupation.Create("7wdX_4rv_33z", "Backend-utvecklare").Value;
+        var fullstack = Occupation.Create("71Ji_irM_rSJ", "Fullstack-utvecklare").Value;
+        var profile = Profile.Create();
+        profile.SetTargetOccupations([backend, fullstack]);
+        await SaveAsync(profile);
+
+        (await LoadAsync(profile.Id)).TargetOccupations.ShouldBe([backend, fullstack], ignoreOrder: true);
+
+        await using (var db = NewContext())
+        {
+            var tracked = await db.Profiles.SingleAsync(p => p.Id == profile.Id, Ct);
+            tracked.SetTargetOccupations([fullstack]);
+            await db.SaveChangesAsync(Ct);
+        }
+
+        (await LoadAsync(profile.Id)).TargetOccupations.ShouldBe([fullstack]);
     }
 }

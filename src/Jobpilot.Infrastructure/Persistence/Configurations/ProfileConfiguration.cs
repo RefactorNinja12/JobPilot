@@ -1,3 +1,4 @@
+using Jobpilot.Domain.Jobs;
 using Jobpilot.Domain.Profiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -5,8 +6,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Jobpilot.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// Profile, its skills and its preferences. Skills are part of the aggregate, so they are owned: saved and loaded
-/// with the profile. Preferences are one jsonb column (see <see cref="JobPreferencesJson"/>): dealbreakers are
+/// Profile, its skills, target occupations and preferences. Skills and occupations are part of the aggregate, so they
+/// are owned: saved and loaded with the profile. Preferences are one jsonb column (see <see cref="JobPreferencesJson"/>): dealbreakers are
 /// applied in code, never queried in SQL, and the domain types stay free of EF constructors.
 /// </summary>
 internal sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
@@ -40,5 +41,19 @@ internal sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
         });
 
         builder.Navigation(p => p.Skills).HasField("_skills").UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.OwnsMany(p => p.TargetOccupations, occupations =>
+        {
+            occupations.ToTable("profile_occupations");
+            occupations.WithOwner().HasForeignKey("ProfileId");
+            occupations.Property<int>("Id");
+            occupations.HasKey("Id");
+            occupations.Property(o => o.TaxonomyId).HasMaxLength(50);
+            occupations.Property(o => o.Label).HasMaxLength(200);
+        });
+
+        builder.Navigation(p => p.TargetOccupations)
+            .HasField("_targetOccupations")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
