@@ -6,5 +6,6 @@ resources:
   - postgres.yaml
   - worker.yaml
   - mcp.yaml
+  - mcp-tailscale.yaml
 # The jobpilot-db Secret (POSTGRES_PASSWORD, connection-string) is created by scripts/deploy-local.sh,
 # never committed.
