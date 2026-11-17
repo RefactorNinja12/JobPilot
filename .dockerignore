@@ -1,0 +1,16 @@
+# Only what the Worker and Mcp images need to build.
+**/bin/
+**/obj/
+.git/
+.github/
+.husky/
+.vscode/
+.idea/
+docs/
+tests/
+web/
+TestResults/
+**/*.md
+**/appsettings.Development.json
+**/Properties/launchSettings.json
+compose.yaml
