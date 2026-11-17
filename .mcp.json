@@ -28,6 +28,10 @@
         "SONARQUBE_TOKEN": "${SONAR_TOKEN}",
         "SONARQUBE_ORG": "refactorninja12"
       }
+    },
+    "jobpilot": {
+      "type": "http",
+      "url": "http://localhost:5199/mcp"
     }
   }
 }
