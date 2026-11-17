@@ -1,12 +1,6 @@
-import { useEffect, useState } from 'react'
-import { fetchProfile, type Preferences, type Profile, type SkillLevel } from './api/profile'
-
-const levelText: Record<SkillLevel, string> = {
-  Beginner: 'Nybörjare',
-  Intermediate: 'Medel',
-  Advanced: 'Avancerad',
-  Expert: 'Expert',
-}
+import { useCallback, useEffect, useState } from 'react'
+import { fetchProfile, type Preferences, type Profile } from './api/profile'
+import { SkillsEditor } from './SkillsEditor'
 
 function workingHours(p: Preferences) {
   if (p.acceptsFullTime && p.acceptsPartTime) return 'Heltid och deltid'
@@ -23,15 +17,19 @@ export function ProfilePage() {
   const [profile, setProfile] = useState<Profile>()
   const [failed, setFailed] = useState(false)
 
-  useEffect(() => {
-    const controller = new AbortController()
-    fetchProfile(controller.signal)
+  const load = useCallback((signal?: AbortSignal) => {
+    fetchProfile(signal)
       .then(setProfile)
       .catch(() => {
-        if (!controller.signal.aborted) setFailed(true)
+        if (!signal?.aborted) setFailed(true)
       })
-    return () => controller.abort()
   }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    load(controller.signal)
+    return () => controller.abort()
+  }, [load])
 
   if (failed) return <p role="alert" className="error">Kunde inte hämta profilen. Kör API:t?</p>
   if (!profile) return <p aria-busy="true">Hämtar profilen…</p>
@@ -40,28 +38,7 @@ export function ProfilePage() {
     <div className="profile">
       <section aria-labelledby="skills-heading">
         <h2 id="skills-heading">Kompetenser</h2>
-        {profile.skills.length === 0 ? (
-          <p className="muted">Inga kompetenser än. Be Claude lägga till dem (add_skill).</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Kompetens</th>
-                <th scope="col">Nivå</th>
-                <th scope="col">År</th>
-              </tr>
-            </thead>
-            <tbody>
-              {profile.skills.map((skill) => (
-                <tr key={skill.name}>
-                  <td>{skill.name}</td>
-                  <td>{levelText[skill.level]}</td>
-                  <td>{skill.yearsOfExperience}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <SkillsEditor skills={profile.skills} onChanged={() => load()} />
       </section>
 
       <section aria-labelledby="occupations-heading">
