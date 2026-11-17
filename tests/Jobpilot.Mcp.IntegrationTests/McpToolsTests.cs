@@ -45,6 +45,7 @@ public sealed class McpToolsTests : IAsyncLifetime
             services.AddSingleton<Application.Abstractions.Enrichments.IEnrichmentsClient>(_enrichments);
             services.AddSingleton<Application.Abstractions.Enrichments.IAdCompetencyCache>(new InMemoryAdCompetencyCache());
             services.AddSingleton<Application.Abstractions.Assessments.IAssessmentStore>(new InMemoryAssessmentStore());
+            services.AddSingleton<Application.Abstractions.Usage.IToolUsageCounter>(new InMemoryToolUsageCounter());
         }));
 
         var transport = new HttpClientTransport(
