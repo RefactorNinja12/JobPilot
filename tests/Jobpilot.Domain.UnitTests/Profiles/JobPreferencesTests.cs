@@ -25,11 +25,11 @@ public class JobPreferencesTests
     [InlineData(false, true)]
     [InlineData(true, true)]
     public void Create_WithAtLeastOneExtent_Succeeds(bool fullTime, bool partTime) =>
-        JobPreferences.Create(fullTime, partTime, false).IsSuccess.ShouldBeTrue();
+        JobPreferences.Create(fullTime, partTime, excludeStaffingAgencies: false).IsSuccess.ShouldBeTrue();
 
     [Fact]
     public void Create_AcceptingNeitherFullNorPartTime_FailsWithNoEmploymentExtentAccepted() =>
-        JobPreferences.Create(false, false, false).Error.ShouldBe(JobPreferencesErrors.NoEmploymentExtentAccepted);
+        JobPreferences.Create(acceptsFullTime: false, acceptsPartTime: false, excludeStaffingAgencies: false).Error.ShouldBe(JobPreferencesErrors.NoEmploymentExtentAccepted);
 
     [Fact]
     public void None_HasNoRequirements()
@@ -44,7 +44,7 @@ public class JobPreferencesTests
 
     [Fact]
     public void Create_WithoutCommuteLimit_HasNoCommuteRequirement() =>
-        JobPreferences.Create(true, true, false).Value.CommuteLimit.ShouldBeNull();
+        JobPreferences.Create(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false).Value.CommuteLimit.ShouldBeNull();
 
     [Fact]
     public void Create_WithCommuteLimit_KeepsIt()
@@ -52,13 +52,13 @@ public class JobPreferencesTests
         var home = Coordinates.Create(59.3293, 18.0686).Value;
         var limit = CommuteLimit.Create(home, 40).Value;
 
-        var preferences = JobPreferences.Create(true, true, false, limit).Value;
+        var preferences = JobPreferences.Create(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, limit).Value;
 
         preferences.CommuteLimit.ShouldBe(limit);
     }
 
     [Fact]
     public void Preferences_WithSameValues_AreEqual() =>
-        JobPreferences.Create(true, false, true).Value
-            .ShouldBe(JobPreferences.Create(true, false, true).Value);
+        JobPreferences.Create(acceptsFullTime: true, acceptsPartTime: false, excludeStaffingAgencies: true).Value
+            .ShouldBe(JobPreferences.Create(acceptsFullTime: true, acceptsPartTime: false, excludeStaffingAgencies: true).Value);
 }

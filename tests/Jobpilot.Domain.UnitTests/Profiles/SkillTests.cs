@@ -58,7 +58,7 @@ public class SkillTests
     {
         var skill = Skill.Create("C#").Value;
 
-        skill.Equals(null).ShouldBeFalse();
+        skill.Equals(other: null).ShouldBeFalse();
         (skill == null).ShouldBeFalse();
         (null == skill).ShouldBeFalse();
     }

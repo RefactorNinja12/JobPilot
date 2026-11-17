@@ -20,7 +20,7 @@ public class WorkplaceTests
     [Fact]
     public void Create_WithoutCoordinates_IsValidButHasNoCoordinates()
     {
-        var workplace = Workplace.Create("Sundbyberg", null);
+        var workplace = Workplace.Create("Sundbyberg", coordinates: null);
 
         workplace.HasCoordinates.ShouldBeFalse();
         workplace.Municipality.ShouldBe("Sundbyberg");

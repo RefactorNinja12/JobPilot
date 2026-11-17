@@ -19,7 +19,7 @@ public class ProfileSkillTests
 
     [Fact]
     public void Create_WithoutSkill_FailsWithSkillMissing() =>
-        ProfileSkill.Create(null, SkillLevel.Beginner, 0).Error.ShouldBe(ProfileSkillErrors.SkillMissing);
+        ProfileSkill.Create(skill: null, SkillLevel.Beginner, 0).Error.ShouldBe(ProfileSkillErrors.SkillMissing);
 
     [Theory]
     [InlineData(0)]

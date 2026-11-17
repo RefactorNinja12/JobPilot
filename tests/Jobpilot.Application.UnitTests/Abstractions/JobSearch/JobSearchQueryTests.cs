@@ -30,7 +30,7 @@ public class JobSearchQueryTests
 
     [Fact]
     public void Create_WithNullOccupations_FailsWithNoOccupations() =>
-        JobSearchQuery.Create(null, 10).Error.ShouldBe(JobSearchQueryErrors.NoOccupations);
+        JobSearchQuery.Create(occupationIds: null, 10).Error.ShouldBe(JobSearchQueryErrors.NoOccupations);
 
     [Fact]
     public void Create_WithEmptyOccupations_FailsWithNoOccupations() =>

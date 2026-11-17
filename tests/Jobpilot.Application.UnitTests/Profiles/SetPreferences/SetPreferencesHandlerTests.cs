@@ -68,23 +68,23 @@ public class SetPreferencesHandlerTests
         await _profiles.Received(1).SaveChangesAsync(Ct);
     }
 
-    public static TheoryData<bool, bool, CommuteInput?, string> InvalidInput => new()
-    {
-        { false, false, null, "JobPreferences.NoEmploymentExtentAccepted" },
-        { true, false, new CommuteInput(91, 11.97, 40), "Coordinates.LatitudeOutOfRange" },
-        { true, false, new CommuteInput(57.7, 181, 40), "Coordinates.LongitudeOutOfRange" },
-        { true, false, new CommuteInput(57.7, 11.97, 0), "CommuteLimit.DistanceOutOfRange" },
-        { true, false, new CommuteInput(57.7, 11.97, 501), "CommuteLimit.DistanceOutOfRange" },
-    };
-
+    // Primitive values only, so each row shows up separately in Test Explorer.
     [Theory]
-    [MemberData(nameof(InvalidInput))]
+    [InlineData(false, false, null, null, null, "JobPreferences.NoEmploymentExtentAccepted")]
+    [InlineData(true, false, 91.0, 11.97, 40, "Coordinates.LatitudeOutOfRange")]
+    [InlineData(true, false, 57.7, 181.0, 40, "Coordinates.LongitudeOutOfRange")]
+    [InlineData(true, false, 57.7, 11.97, 0, "CommuteLimit.DistanceOutOfRange")]
+    [InlineData(true, false, 57.7, 11.97, 501, "CommuteLimit.DistanceOutOfRange")]
     public async Task Set_InvalidInput_FailsAsValidationWithoutSaving(
         bool fullTime,
         bool partTime,
-        CommuteInput? commute,
+        double? homeLatitude,
+        double? homeLongitude,
+        int? maxDistanceKm,
         string code)
     {
+        var commute = maxDistanceKm is { } km ? new CommuteInput(homeLatitude!.Value, homeLongitude!.Value, km) : null;
+
         var error = (await SetAsync(fullTime, partTime, commute: commute)).Error;
 
         error.Code.ShouldBe(code);

@@ -14,7 +14,7 @@ public sealed record Workplace
         Coordinates = coordinates;
     }
 
-    public static Workplace Unknown { get; } = new(null, null);
+    public static Workplace Unknown { get; } = new(municipality: null, coordinates: null);
 
     public string? Municipality { get; }
 
