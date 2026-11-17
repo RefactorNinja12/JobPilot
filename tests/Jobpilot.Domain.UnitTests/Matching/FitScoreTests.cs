@@ -86,6 +86,30 @@ public class FitScoreTests
         score.Value.ShouldBe(22);
     }
 
+    [Fact]
+    public void GenericSkills_AreIgnored_InScoreAndLists()
+    {
+        // Without the filter: 0.9 earned of 0.9 + 0.9 + 0.9 = 33.
+        var score = FitScore.Calculate(
+            [Own("C#", SkillLevel.Expert)],
+            [Wants("C#", 0.9), Wants("Systemutveckling", 0.9), Wants("teknik", 0.9)]);
+
+        score.Value.ShouldBe(100);
+        score.Matched.ShouldBe(["C#"]);
+        score.Missing.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void OnlyGenericSkills_ScoresZero_LikeAnAdWithNoSkills() =>
+        FitScore.Calculate([Own("Design", SkillLevel.Expert)], [Wants("Design")]).Value.ShouldBe(0);
+
+    [Theory]
+    [InlineData("Svenska")]
+    [InlineData("Universitetsutbildning")]
+    [InlineData("Svenskt medborgarskap")]
+    public void RealRequirements_StillCountAsMissing(string requirement) =>
+        FitScore.Calculate([Own("C#", SkillLevel.Expert)], [Wants("C#"), Wants(requirement)]).Missing.ShouldBe([requirement]);
+
     private sealed class FitScoreComparer : IEqualityComparer<FitScore>
     {
         public bool Equals(FitScore? x, FitScore? y) =>
