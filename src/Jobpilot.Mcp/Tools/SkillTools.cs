@@ -1,5 +1,8 @@
 using System.ComponentModel;
 using Jobpilot.Application.Profiles.AddSkill;
+using Jobpilot.Application.Profiles.GetProfile;
+using Jobpilot.Application.Profiles.RemoveSkill;
+using Jobpilot.Application.Profiles.UpdateSkill;
 using Jobpilot.Application.SkillVocabularies.Search;
 using Jobpilot.Domain.Profiles;
 using ModelContextProtocol;
@@ -7,7 +10,7 @@ using ModelContextProtocol.Server;
 
 namespace Jobpilot.Mcp.Tools;
 
-/// <summary>Skill tools: find the exact skill name, then add it to the profile.</summary>
+/// <summary>Skill tools: find the exact skill name, then add, update or remove it in the profile.</summary>
 [McpServerToolType]
 public static class SkillTools
 {
@@ -41,6 +44,29 @@ public static class SkillTools
         return (await handler.HandleAsync(new AddSkillCommand(name, ParseLevel(level), yearsOfExperience), cancellationToken))
             .ValueOrToolError();
     }
+
+    [McpServerTool(Name = "update_skill", Destructive = false, Idempotent = true)]
+    [Description(
+        "Changes level and years of experience for a skill already in the profile. " +
+        "The skill can be named by its exact name or a synonym, e.g. \"apache kafka\" for Kafka.")]
+    public static async Task<ProfileSkillView> UpdateSkill(
+        UpdateSkillHandler handler,
+        [Description("Skill name or synonym, e.g. \"Kafka\".")] string name,
+        [Description("New level: Beginner, Intermediate, Advanced or Expert.")] string level,
+        [Description("New number of whole years of hands-on experience, 0-50.")] int yearsOfExperience,
+        CancellationToken cancellationToken = default) =>
+        (await handler.HandleAsync(new UpdateSkillCommand(name, ParseLevel(level), yearsOfExperience), cancellationToken))
+            .ValueOrToolError();
+
+    [McpServerTool(Name = "remove_skill", Destructive = true, Idempotent = false)]
+    [Description(
+        "Removes a skill from the profile. Ask the user to confirm first. " +
+        "The skill can be named by its exact name or a synonym. Returns the name it was stored under.")]
+    public static async Task<string> RemoveSkill(
+        RemoveSkillHandler handler,
+        [Description("Skill name or synonym, e.g. \"Kafka\".")] string name,
+        CancellationToken cancellationToken = default) =>
+        (await handler.HandleAsync(name, cancellationToken)).ValueOrToolError();
 
     // Names only: Enum.TryParse would also accept numbers such as "3".
     private static SkillLevel ParseLevel(string? level) =>

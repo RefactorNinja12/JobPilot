@@ -14,17 +14,13 @@ public sealed class AddSkillHandler(IProfileRepository profiles, ISkillVocabular
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        // Without a stored vocabulary nothing can be matched; the skill is still added under the typed name.
-        var vocabulary = await vocabularies.GetAsync(cancellationToken);
-        var concept = vocabulary?.Find(command.Name);
-
-        var skill = Skill.Create(concept?.Name ?? command.Name);
-        if (skill.IsFailure)
+        var resolved = await SkillLookup.ResolveAsync(vocabularies, command.Name, cancellationToken);
+        if (resolved.IsFailure)
         {
-            return skill.Error;
+            return resolved.Error;
         }
 
-        var profileSkill = ProfileSkill.Create(skill.Value, command.Level, command.YearsOfExperience);
+        var profileSkill = ProfileSkill.Create(resolved.Value.Skill, command.Level, command.YearsOfExperience);
         if (profileSkill.IsFailure)
         {
             return profileSkill.Error;
@@ -44,6 +40,6 @@ public sealed class AddSkillHandler(IProfileRepository profiles, ISkillVocabular
         }
 
         await profiles.SaveChangesAsync(cancellationToken);
-        return new AddedSkill(skill.Value.Name, InVocabulary: concept is not null);
+        return new AddedSkill(resolved.Value.Skill.Name, resolved.Value.InVocabulary);
     }
 }
