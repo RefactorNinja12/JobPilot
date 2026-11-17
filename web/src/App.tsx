@@ -1,14 +1,25 @@
 import { JobsPage } from './JobsPage'
+import { ProfilePage } from './ProfilePage'
+import { useHashRoute } from './useHashRoute'
 import './App.css'
 
 export default function App() {
+  const route = useHashRoute()
+
   return (
     <main>
       <header>
         <h1>Jobpilot</h1>
-        <p className="tagline">Jobb som matchar din profil, bäst först.</p>
+        <nav aria-label="Huvudmeny">
+          <a href="#/" aria-current={route === 'jobs' ? 'page' : undefined}>
+            Jobb
+          </a>
+          <a href="#/profil" aria-current={route === 'profile' ? 'page' : undefined}>
+            Profil
+          </a>
+        </nav>
       </header>
-      <JobsPage />
+      {route === 'jobs' ? <JobsPage /> : <ProfilePage />}
     </main>
   )
 }
