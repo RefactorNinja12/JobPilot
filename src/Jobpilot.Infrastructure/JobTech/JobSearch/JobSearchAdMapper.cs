@@ -50,7 +50,7 @@ public static class JobSearchAdMapper
             ToWorkplace(dto.WorkplaceAddress),
             occupation.Value,
             ToWorkingHours(dto.WorkingHoursType),
-            ToSwedishTime(published),
+            SwedishTime.FromLocal(published),
             DateOnly.FromDateTime(deadline));
 
         return JobAd.Create(dto.Id, dto.Headline, dto.Description?.Text, details);
@@ -83,7 +83,4 @@ public static class JobSearchAdMapper
         PartTimeConceptId => WorkingHours.PartTime,
         _ => WorkingHours.Unknown,
     };
-
-    private static DateTimeOffset ToSwedishTime(DateTime local) =>
-        new(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), SwedishTime.Zone.GetUtcOffset(local));
 }
