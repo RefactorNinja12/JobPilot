@@ -1,19 +1,17 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { ProfilePage } from './ProfilePage'
 import { aProfile, respondWithProfile } from './test/server'
 
 describe('ProfilePage', () => {
-  it('lists skills with level and years', async () => {
+  it('lists skills with editable level and years', async () => {
     respondWithProfile(aProfile())
 
     render(<ProfilePage />)
 
-    const rows = within(await screen.findByRole('table')).getAllByRole('row').slice(1)
-    expect(rows.map((row) => within(row).getAllByRole('cell').map((cell) => cell.textContent))).toEqual([
-      ['C#', 'Expert', '8'],
-      ['Kafka', 'Nybörjare', '0'],
-    ])
+    expect(await screen.findByRole('combobox', { name: 'Nivå för C#' })).toHaveValue('Expert')
+    expect(screen.getByRole('spinbutton', { name: 'År med C#' })).toHaveValue(8)
+    expect(screen.getByRole('combobox', { name: 'Nivå för Kafka' })).toHaveValue('Beginner')
   })
 
   it('shows target occupations and dealbreakers in plain Swedish', async () => {

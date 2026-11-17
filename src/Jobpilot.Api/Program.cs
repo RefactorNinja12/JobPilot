@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Jobpilot.Api.Endpoints;
 using Jobpilot.Application;
 using Jobpilot.Infrastructure;
@@ -13,9 +14,17 @@ builder.Services
     .AddInfrastructure(builder.Configuration)
     .AddProblemDetails();
 
+// Skill levels travel as names ("Expert"), never as numbers.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
+
 var app = builder.Build();
 
-app.UseExceptionHandler();
+// Unexpected exceptions become a 500 ProblemDetails; a malformed request (e.g. a level sent as a number) keeps its 400.
+app.UseExceptionHandler(new ExceptionHandlerOptions
+{
+    StatusCodeSelector = exception => exception is BadHttpRequestException bad ? bad.StatusCode : StatusCodes.Status500InternalServerError,
+});
 app.MapGet("/health", () => Results.Ok("healthy"));
 app.MapJobEndpoints();
 app.MapProfileEndpoints();

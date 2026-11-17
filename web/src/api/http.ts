@@ -13,8 +13,18 @@ export class ApiError extends Error {
   }
 }
 
-export async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(url, { signal })
+export function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
+  return sendJson<T>('GET', url, undefined, signal)
+}
+
+/** Sends a request with an optional JSON body and reads the JSON answer. */
+export async function sendJson<T>(method: string, url: string, body?: unknown, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(url, {
+    method,
+    signal,
+    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as { code?: string; detail?: string }
     throw new ApiError(response.status, problem.code, problem.detail ?? `HTTP ${response.status}`)

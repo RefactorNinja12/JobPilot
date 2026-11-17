@@ -219,3 +219,74 @@ nav a[aria-current='page'] {
     flex-direction: column;
   }
 }
+
+.add-skill {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.add-skill input[aria-label='Kompetens'] {
+  flex: 1 1 200px;
+}
+
+.profile input,
+.profile select,
+.profile button {
+  font: inherit;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--text);
+}
+
+.profile input[type='number'] {
+  width: 4.5em;
+}
+
+.profile button {
+  cursor: pointer;
+  color: var(--link);
+}
+
+.profile button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.profile button.danger {
+  color: var(--error);
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notice {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--assessment);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+

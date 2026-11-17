@@ -67,4 +67,29 @@ export function respondWithProfile(body: JsonBodyType, status = 200) {
   server.use(http.get('/api/profile', () => HttpResponse.json(body, { status })))
 }
 
+type SkillApiCall = { method: string; url: string; body: unknown }
+
+/**
+ * Fakes the skill endpoints of Jobpilot.Api. Each mutation answers with the given status and body; search
+ * answers with the given suggestions. Returns the calls made, so tests can check what was sent.
+ */
+export function respondToSkillCalls(options: {
+  suggestions?: { name: string; terms: string[] }[]
+  answer?: { status: number; body: JsonBodyType }
+}) {
+  const calls: SkillApiCall[] = []
+  const answer = options.answer ?? { status: 200, body: { name: 'Kafka', inVocabulary: true } }
+  const record = async (request: Request) => {
+    calls.push({ method: request.method, url: request.url, body: request.method === 'DELETE' ? null : await request.json() })
+    return HttpResponse.json(answer.body, { status: answer.status })
+  }
+  server.use(
+    http.get('/api/skills/search', () => HttpResponse.json(options.suggestions ?? [])),
+    http.post('/api/profile/skills', ({ request }) => record(request)),
+    http.put('/api/profile/skills', ({ request }) => record(request)),
+    http.delete('/api/profile/skills', ({ request }) => record(request)),
+  )
+  return calls
+}
+
 export const server = setupServer()
