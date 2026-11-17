@@ -14,7 +14,8 @@ public sealed record FitScore(int Value, IReadOnlyList<string> Matched, IReadOnl
     /// <summary>
     /// Each requested skill counts by its weight. A skill in the profile earns that weight times its level factor;
     /// a missing one earns nothing. The score is earned weight over total weight. Years of experience are not
-    /// used yet. An ad with no requested skills scores 0: there is nothing to match on.
+    /// used yet. Broad terms in <see cref="GenericSkills"/> are left out entirely. An ad with no requested skills
+    /// scores 0: there is nothing to match on.
     /// </summary>
     public static FitScore Calculate(IReadOnlyList<ProfileSkill> profileSkills, IReadOnlyList<RequestedSkill> requested)
     {
@@ -23,7 +24,7 @@ public sealed record FitScore(int Value, IReadOnlyList<string> Matched, IReadOnl
 
         // An ad can list the same skill twice (different terms); count each skill once, at its highest weight.
         var distinct = requested
-            .Where(r => r.Weight > 0)
+            .Where(r => r.Weight > 0 && !GenericSkills.Contains(r.Skill))
             .GroupBy(r => r.Skill)
             .Select(g => g.MaxBy(r => r.Weight)!)
             .OrderByDescending(r => r.Weight)
