@@ -1,3 +1,4 @@
+using System.Globalization;
 using Jobpilot.Application.Abstractions.Employers;
 using Jobpilot.Domain.Jobs;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +17,9 @@ public sealed class StaffingAgencyDirectoryTests : IDisposable
     private IStaffingAgencyDirectory Resolve(params string[] organizationNumbers)
     {
         var settings = organizationNumbers
-            .Select((n, i) => KeyValuePair.Create<string, string?>($"StaffingAgencies:OrganizationNumbers:{i}", n));
+            .Select((n, i) => KeyValuePair.Create<string, string?>(
+                string.Create(CultureInfo.InvariantCulture, $"StaffingAgencies:OrganizationNumbers:{i}"),
+                n));
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
         _provider = new ServiceCollection().AddInfrastructure(configuration).BuildServiceProvider();
         return _provider.GetRequiredService<IStaffingAgencyDirectory>();
@@ -37,7 +40,7 @@ public sealed class StaffingAgencyDirectoryTests : IDisposable
 
     [Fact]
     public void EmployerWithoutNumber_IsNotAStaffingAgency() =>
-        Resolve("556677-8899").IsStaffingAgency(EmployerWith(null)).ShouldBeFalse();
+        Resolve("556677-8899").IsStaffingAgency(EmployerWith(organizationNumber: null)).ShouldBeFalse();
 
     [Fact]
     public void EmptyList_MatchesNobody() =>
