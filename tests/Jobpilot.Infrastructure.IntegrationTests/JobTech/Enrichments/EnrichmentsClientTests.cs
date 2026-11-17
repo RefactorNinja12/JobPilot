@@ -75,6 +75,19 @@ public sealed class EnrichmentsClientTests : IDisposable
     }
 
     [Fact]
+    public async Task Extract_SendsContentLength_NotAChunkedBody()
+    {
+        // The real Enrichments API answers HTTP 400 to chunked request bodies.
+        RespondWith(Body(Real("1")));
+
+        await _client.ExtractCompetenciesAsync(Query("1"), Ct);
+
+        var headers = _server.LogEntries.ShouldHaveSingleItem().RequestMessage!.Headers!;
+        headers.ShouldContainKey("Content-Length");
+        headers.ShouldNotContainKey("Transfer-Encoding");
+    }
+
+    [Fact]
     public async Task Extract_MapsCompetenciesFromRealResponse()
     {
         RespondWith(Body(Real("1")));

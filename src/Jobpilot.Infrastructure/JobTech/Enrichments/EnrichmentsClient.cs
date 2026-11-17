@@ -62,7 +62,11 @@ public sealed class EnrichmentsClient(HttpClient httpClient) : IEnrichmentsClien
     {
         try
         {
-            using var response = await httpClient.PostAsJsonAsync(_enrichPath, request, JobTechJson.Options, cancellationToken);
+            // Enrichments rejects chunked request bodies with HTTP 400, and PostAsJsonAsync streams (chunked).
+            // Buffering first sends a Content-Length instead.
+            using var content = JsonContent.Create(request, options: JobTechJson.Options);
+            await content.LoadIntoBufferAsync(cancellationToken);
+            using var response = await httpClient.PostAsync(_enrichPath, content, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 return EnrichmentsErrors.Unavailable(
