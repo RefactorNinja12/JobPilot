@@ -3,6 +3,8 @@ using Jobpilot.Application.Abstractions.JobSearch;
 using Jobpilot.Infrastructure.JobTech;
 using Jobpilot.Infrastructure.JobTech.Enrichments;
 using Jobpilot.Infrastructure.JobTech.JobSearch;
+using Jobpilot.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -11,6 +13,9 @@ namespace Jobpilot.Infrastructure;
 
 public static class DependencyInjection
 {
+    /// <summary>Name of the PostgreSQL connection string ("ConnectionStrings:Jobpilot").</summary>
+    public const string ConnectionStringName = "Jobpilot";
+
     /// <summary>
     /// Registers the JobTech clients. Each gets the standard resilience pipeline
     /// (retries with backoff on 5xx/429/timeouts, attempt and total timeouts, circuit breaker),
@@ -37,8 +42,19 @@ public static class DependencyInjection
                 http.BaseAddress = provider.GetRequiredService<IOptions<EnrichmentsOptions>>().Value.BaseUrl)
             .AddResilience(enrichments);
 
+        AddPersistence(services, configuration);
+
         return services;
     }
+
+    /// <summary>
+    /// Registers <see cref="JobpilotDbContext"/> on PostgreSQL. The connection string is read when the context is
+    /// first created, so hosts that never touch the database start without one.
+    /// </summary>
+    private static void AddPersistence(IServiceCollection services, IConfiguration configuration) =>
+        services.AddDbContext<JobpilotDbContext>(options => options.UseNpgsql(
+            configuration.GetConnectionString(ConnectionStringName)
+            ?? throw new InvalidOperationException($"ConnectionStrings:{ConnectionStringName} is not configured.")));
 
     /// <summary>Adds the standard resilience pipeline, tuned by "{api}:Resilience" when that section exists.</summary>
     private static void AddResilience(this IHttpClientBuilder builder, IConfigurationSection api)
