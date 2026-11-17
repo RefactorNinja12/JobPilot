@@ -60,7 +60,7 @@ public sealed class SkillToolsTests : IAsyncLifetime
 
     private static T Read<T>(CallToolResult result)
     {
-        result.IsError.ShouldNotBe(true, Text(result));
+        result.IsError.ShouldNotBe(expected: true, customMessage: Text(result));
         return JsonSerializer.Deserialize<T>(Text(result), _json)!;
     }
 
@@ -91,7 +91,7 @@ public sealed class SkillToolsTests : IAsyncLifetime
 
         var result = await CallAsync("search_skills", new(StringComparer.Ordinal) { ["text"] = "kafka" });
 
-        result.IsError.ShouldBe(true);
+        result.IsError.ShouldBe(expected: true);
         Text(result).ShouldContain("SearchSkills.VocabularyNotLoaded");
     }
 
@@ -118,7 +118,7 @@ public sealed class SkillToolsTests : IAsyncLifetime
     {
         var result = await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "C#", ["level"] = level, ["yearsOfExperience"] = 1 });
 
-        result.IsError.ShouldBe(true);
+        result.IsError.ShouldBe(expected: true);
         Text(result).ShouldContain("Unknown level");
         _profiles.Profile.ShouldBeNull();
     }
@@ -130,7 +130,7 @@ public sealed class SkillToolsTests : IAsyncLifetime
 
         var result = await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "c-sharp", ["level"] = "Advanced", ["yearsOfExperience"] = 3 });
 
-        result.IsError.ShouldBe(true);
+        result.IsError.ShouldBe(expected: true);
         Text(result).ShouldContain("Profile.SkillAlreadyAdded");
     }
 

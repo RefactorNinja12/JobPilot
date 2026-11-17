@@ -45,7 +45,7 @@ public static class SkillTools
     // Names only: Enum.TryParse would also accept numbers such as "3".
     private static SkillLevel ParseLevel(string? level) =>
         Enum.GetValues<SkillLevel>()
-            .Select(l => (SkillLevel?)l)
+            .Cast<SkillLevel?>()
             .FirstOrDefault(l => string.Equals(l.ToString(), level?.Trim(), StringComparison.OrdinalIgnoreCase))
         ?? throw new McpException($"Unknown level '{level}'. Use Beginner, Intermediate, Advanced or Expert.");
 }
