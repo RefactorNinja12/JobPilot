@@ -1,0 +1,95 @@
+using Jobpilot.Domain.Profiles;
+using Jobpilot.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace Jobpilot.Infrastructure.IntegrationTests.Persistence;
+
+/// <summary>Saves and loads profiles through the real migrations on a PostgreSQL container.</summary>
+[Collection(PostgresTestGroup.Name)]
+public sealed class ProfilePersistenceTests(PostgresFixture postgres) : IAsyncLifetime
+{
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    public async ValueTask InitializeAsync()
+    {
+        await using var db = NewContext();
+        await db.Database.MigrateAsync(Ct);
+    }
+
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+    private JobpilotDbContext NewContext()
+    {
+        var options = new DbContextOptionsBuilder<JobpilotDbContext>();
+        JobpilotDbContext.Configure(options, postgres.ConnectionString);
+        return new JobpilotDbContext(options.Options);
+    }
+
+    private static ProfileSkill SkillOf(string name, SkillLevel level, int years) =>
+        ProfileSkill.Create(Skill.Create(name).Value, level, years).Value;
+
+    private async Task<Profile> SaveAsync(Profile profile)
+    {
+        await using var db = NewContext();
+        db.Profiles.Add(profile);
+        await db.SaveChangesAsync(Ct);
+        return profile;
+    }
+
+    private async Task<Profile> LoadAsync(Guid id)
+    {
+        await using var db = NewContext();
+        return await db.Profiles.SingleAsync(p => p.Id == id, Ct);
+    }
+
+    [Fact]
+    public void Migrations_CoverTheModel()
+    {
+        using var db = NewContext();
+
+        db.Database.HasPendingModelChanges().ShouldBeFalse("Run 'dotnet ef migrations add' for the model change.");
+    }
+
+    [Fact]
+    public async Task Profile_RoundTripsWithSkills()
+    {
+        var profile = Profile.Create();
+        profile.AddSkill(SkillOf("C#", SkillLevel.Expert, 8)).IsSuccess.ShouldBeTrue();
+        profile.AddSkill(SkillOf("Postgresql", SkillLevel.Intermediate, 2)).IsSuccess.ShouldBeTrue();
+        await SaveAsync(profile);
+
+        var loaded = await LoadAsync(profile.Id);
+
+        loaded.Skills.ShouldBe(
+            [SkillOf("C#", SkillLevel.Expert, 8), SkillOf("Postgresql", SkillLevel.Intermediate, 2)],
+            ignoreOrder: true);
+        loaded.Preferences.ShouldBe(JobPreferences.None);
+    }
+
+    [Fact]
+    public async Task Profile_WithoutSkills_RoundTrips()
+    {
+        var profile = await SaveAsync(Profile.Create());
+
+        (await LoadAsync(profile.Id)).Skills.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task SkillChanges_ArePersisted()
+    {
+        var profile = Profile.Create();
+        profile.AddSkill(SkillOf("C#", SkillLevel.Advanced, 5));
+        profile.AddSkill(SkillOf("Kafka", SkillLevel.Beginner, 0));
+        await SaveAsync(profile);
+
+        await using (var db = NewContext())
+        {
+            var tracked = await db.Profiles.SingleAsync(p => p.Id == profile.Id, Ct);
+            tracked.UpdateSkill(SkillOf("C#", SkillLevel.Expert, 6)).IsSuccess.ShouldBeTrue();
+            tracked.RemoveSkill(Skill.Create("kafka").Value).IsSuccess.ShouldBeTrue();
+            await db.SaveChangesAsync(Ct);
+        }
+
+        (await LoadAsync(profile.Id)).Skills.ShouldBe([SkillOf("C#", SkillLevel.Expert, 6)]);
+    }
+}
