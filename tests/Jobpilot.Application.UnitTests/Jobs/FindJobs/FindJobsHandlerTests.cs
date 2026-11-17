@@ -1,4 +1,5 @@
 using System.Globalization;
+using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Application.Abstractions.Employers;
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Application.Abstractions.JobSearch;
@@ -7,6 +8,7 @@ using Jobpilot.Application.Profiles;
 using Jobpilot.Domain.Common;
 using Jobpilot.Domain.Jobs;
 using Jobpilot.Domain.Locations;
+using Jobpilot.Domain.Matching;
 using Jobpilot.Domain.Profiles;
 using NSubstitute;
 
@@ -23,6 +25,7 @@ public class FindJobsHandlerTests
     private readonly IEnrichmentsClient _enrichments = Substitute.For<IEnrichmentsClient>();
     private readonly IStaffingAgencyDirectory _agencies = Substitute.For<IStaffingAgencyDirectory>();
     private readonly InMemoryAdCompetencyCache _cache = new();
+    private readonly IAssessmentStore _assessments = Substitute.For<IAssessmentStore>();
     private readonly Profile _profile = Profile.Create();
     private readonly Dictionary<string, (string Label, double Prediction)[]> _skillsByAd = new(StringComparer.Ordinal);
     private readonly FindJobsHandler _handler;
@@ -42,7 +45,10 @@ public class FindJobsHandlerTests
                     [.. _skillsByAd.GetValueOrDefault(ad.Id, []).Select(s => new ExtractedCompetency(s.Label, s.Prediction))])),
             ]));
 
-        _handler = new FindJobsHandler(_profiles, _jobSearch, _enrichments, _cache, _agencies);
+        _assessments.GetAsync(Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<string, AiAssessment>(StringComparer.Ordinal));
+
+        _handler = new FindJobsHandler(_profiles, _jobSearch, _enrichments, _cache, _assessments, _agencies);
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -221,6 +227,24 @@ public class FindJobsHandlerTests
         (await FindAsync(searchLimit: 150)).Error.ShouldBe(unavailable);
 
         _cache.Stored.Count.ShouldBe(100);
+    }
+
+    [Fact]
+    public async Task Find_ShowsEarlierAssessments_OnTheMatchesThatHaveOne()
+    {
+        Found(Ad("assessed"), Ad("new"));
+        var assessedAt = new DateTimeOffset(2026, 11, 17, 18, 0, 0, TimeSpan.Zero);
+        _assessments.GetAsync(Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<string, AiAssessment>(StringComparer.Ordinal)
+            {
+                ["assessed"] = AiAssessment.Create("assessed", 70, "Strong C# match.", assessedAt).Value,
+            });
+
+        var matches = (await FindAsync()).Value.Matches;
+
+        matches.Single(m => m.AdId == "assessed").Assessment.ShouldBe(
+            new Application.Jobs.SaveAssessment.AssessmentView(70, "Strong C# match.", assessedAt));
+        matches.Single(m => m.AdId == "new").Assessment.ShouldBeNull();
     }
 
     [Fact]

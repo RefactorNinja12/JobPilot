@@ -44,6 +44,7 @@ public sealed class McpToolsTests : IAsyncLifetime
             services.AddSingleton<Application.Abstractions.JobSearch.IJobSearchClient>(_jobSearch);
             services.AddSingleton<Application.Abstractions.Enrichments.IEnrichmentsClient>(_enrichments);
             services.AddSingleton<Application.Abstractions.Enrichments.IAdCompetencyCache>(new InMemoryAdCompetencyCache());
+            services.AddSingleton<Application.Abstractions.Assessments.IAssessmentStore>(new InMemoryAssessmentStore());
         }));
 
         var transport = new HttpClientTransport(
@@ -81,7 +82,7 @@ public sealed class McpToolsTests : IAsyncLifetime
     {
         var tools = await _client.ListToolsAsync(cancellationToken: Ct);
 
-        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile", "set_preferences", "search_occupations", "set_occupations", "find_jobs", "get_job_ad"], ignoreOrder: true);
+        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile", "set_preferences", "search_occupations", "set_occupations", "find_jobs", "get_job_ad", "save_assessment"], ignoreOrder: true);
     }
 
     [Fact]
@@ -296,6 +297,38 @@ public sealed class McpToolsTests : IAsyncLifetime
 
         result.IsError.ShouldBe(expected: true);
         Text(result).ShouldContain("JobSearch.AdNotFound");
+    }
+
+    [Fact]
+    public async Task SaveAssessment_IsShownByFindJobs()
+    {
+        await CallAsync("set_occupations", new(StringComparer.Ordinal)
+        {
+            ["occupations"] = new[] { new { taxonomyId = "7wdX_4rv_33z", label = "Backend-utvecklare" } },
+        });
+        _jobSearch.Ads.Add(JobAd("31744367"));
+
+        var saved = await CallAsync("save_assessment", new(StringComparer.Ordinal)
+        {
+            ["adId"] = "31744367",
+            ["chance"] = 65,
+            ["summary"] = "Good C# match; Kafka is missing.",
+        });
+
+        saved.IsError.ShouldNotBe(expected: true, customMessage: Text(saved));
+        var assessment = Read<JsonElement>(await CallAsync("find_jobs", []))
+            .GetProperty("matches")[0].GetProperty("assessment");
+        assessment.GetProperty("chance").GetInt32().ShouldBe(65);
+        assessment.GetProperty("summary").GetString().ShouldBe("Good C# match; Kafka is missing.");
+    }
+
+    [Fact]
+    public async Task SaveAssessment_ChanceOutOfRange_IsAToolError()
+    {
+        var result = await CallAsync("save_assessment", new(StringComparer.Ordinal) { ["adId"] = "1", ["chance"] = 150, ["summary"] = "Ok." });
+
+        result.IsError.ShouldBe(expected: true);
+        Text(result).ShouldContain("AiAssessment.ChanceOutOfRange");
     }
 
     private static Domain.Jobs.JobAd JobAd(string id) =>
