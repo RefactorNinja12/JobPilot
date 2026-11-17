@@ -1,3 +1,4 @@
+using System.Globalization;
 using Jobpilot.Domain.Common;
 using Jobpilot.Domain.Jobs;
 using Jobpilot.Domain.Profiles;
@@ -9,7 +10,10 @@ public class ProfileTargetOccupationsTests
     private static readonly Occupation _backend = Occupation.Create("7wdX_4rv_33z", "Backend-utvecklare").Value;
     private static readonly Occupation _fullstack = Occupation.Create("71Ji_irM_rSJ", "Fullstack-utvecklare").Value;
 
-    private static Occupation Numbered(int i) => Occupation.Create($"id-{i}", $"Yrke {i}").Value;
+    private static Occupation Numbered(int i) =>
+        Occupation.Create(
+            string.Create(CultureInfo.InvariantCulture, $"id-{i}"),
+            string.Create(CultureInfo.InvariantCulture, $"Yrke {i}")).Value;
 
     [Fact]
     public void NewProfile_HasNoTargetOccupations() =>
