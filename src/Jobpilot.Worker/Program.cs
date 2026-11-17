@@ -1,5 +1,6 @@
 using Jobpilot.Application;
 using Jobpilot.Infrastructure;
+using Jobpilot.Infrastructure.Persistence;
 using Jobpilot.Worker;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -11,4 +12,8 @@ builder.Services
     .AddSingleton(TimeProvider.System)
     .AddHostedService<SkillVocabularyRefresher>();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+
+// The Worker owns the schema: migrate before any background work touches the database.
+await host.Services.MigrateDatabaseAsync();
+await host.RunAsync();
