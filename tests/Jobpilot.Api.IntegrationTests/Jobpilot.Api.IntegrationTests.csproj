@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Jobpilot.Api\Jobpilot.Api.csproj" />
+    <ProjectReference Include="..\Jobpilot.Testing\Jobpilot.Testing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Jobpilot.Testing" />
+  </ItemGroup>
+
+</Project>

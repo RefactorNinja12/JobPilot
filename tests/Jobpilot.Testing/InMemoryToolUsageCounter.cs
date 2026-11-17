@@ -1,9 +1,9 @@
 using Jobpilot.Application.Abstractions.Usage;
 
-namespace Jobpilot.Mcp.IntegrationTests;
+namespace Jobpilot.Testing;
 
 /// <summary>A dictionary standing in for the database-backed usage counter.</summary>
-internal sealed class InMemoryToolUsageCounter : IToolUsageCounter
+public sealed class InMemoryToolUsageCounter : IToolUsageCounter
 {
     private readonly Dictionary<(DateOnly Day, string Tool), int> _counts = [];
 

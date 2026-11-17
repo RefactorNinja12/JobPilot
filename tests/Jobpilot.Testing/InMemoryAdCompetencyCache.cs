@@ -1,11 +1,11 @@
 using Jobpilot.Application.Abstractions.Enrichments;
 
-namespace Jobpilot.Mcp.IntegrationTests;
+namespace Jobpilot.Testing;
 
 /// <summary>A dictionary standing in for the database-backed cache.</summary>
-internal sealed class InMemoryAdCompetencyCache : IAdCompetencyCache
+public sealed class InMemoryAdCompetencyCache : IAdCompetencyCache
 {
-    public Dictionary<string, IReadOnlyList<ExtractedCompetency>> Stored { get; } = new(StringComparer.Ordinal);
+    public IDictionary<string, IReadOnlyList<ExtractedCompetency>> Stored { get; } = new Dictionary<string, IReadOnlyList<ExtractedCompetency>>(StringComparer.Ordinal);
 
     public Task<IReadOnlyDictionary<string, IReadOnlyList<ExtractedCompetency>>> GetAsync(
         IReadOnlyCollection<string> adIds,

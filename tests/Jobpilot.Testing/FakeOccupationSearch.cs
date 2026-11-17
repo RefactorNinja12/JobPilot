@@ -2,10 +2,10 @@ using Jobpilot.Application.Abstractions.Taxonomy;
 using Jobpilot.Domain.Common;
 using Jobpilot.Domain.Jobs;
 
-namespace Jobpilot.Mcp.IntegrationTests;
+namespace Jobpilot.Testing;
 
 /// <summary>Stands in for the Taxonomy API: matches labels containing the text.</summary>
-internal sealed class FakeOccupationSearch : IOccupationSearch
+public sealed class FakeOccupationSearch : IOccupationSearch
 {
     private static readonly Occupation[] _all =
     [

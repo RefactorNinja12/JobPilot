@@ -1,10 +1,10 @@
 using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Domain.Matching;
 
-namespace Jobpilot.Mcp.IntegrationTests;
+namespace Jobpilot.Testing;
 
 /// <summary>A dictionary standing in for the database-backed assessment store.</summary>
-internal sealed class InMemoryAssessmentStore : IAssessmentStore
+public sealed class InMemoryAssessmentStore : IAssessmentStore
 {
     private readonly Dictionary<string, AiAssessment> _stored = new(StringComparer.Ordinal);
 
