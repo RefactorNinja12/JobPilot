@@ -73,7 +73,7 @@ public sealed class SkillToolsTests : IAsyncLifetime
     {
         var tools = await _client.ListToolsAsync(cancellationToken: Ct);
 
-        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "get_profile"], ignoreOrder: true);
+        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile"], ignoreOrder: true);
     }
 
     [Fact]
@@ -153,6 +153,39 @@ public sealed class SkillToolsTests : IAsyncLifetime
         skill.GetProperty("name").GetString().ShouldBe("Kafka");
         skill.GetProperty("level").GetString().ShouldBe("Advanced");
         skill.GetProperty("yearsOfExperience").GetInt32().ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task UpdateSkill_BySynonym_ChangesTheStoredSkill()
+    {
+        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "Kafka", ["level"] = "Beginner", ["yearsOfExperience"] = 1 });
+
+        var result = await CallAsync("update_skill", new(StringComparer.Ordinal) { ["name"] = "apache kafka", ["level"] = "Expert", ["yearsOfExperience"] = 4 });
+
+        result.IsError.ShouldNotBe(expected: true, customMessage: Text(result));
+        var skill = _profiles.Profile.ShouldNotBeNull().Skills.ShouldHaveSingleItem();
+        skill.Level.ShouldBe(Domain.Profiles.SkillLevel.Expert);
+        skill.YearsOfExperience.ShouldBe(4);
+    }
+
+    [Fact]
+    public async Task RemoveSkill_RemovesItAndReturnsTheStoredName()
+    {
+        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "Kafka", ["level"] = "Beginner", ["yearsOfExperience"] = 1 });
+
+        var result = await CallAsync("remove_skill", new(StringComparer.Ordinal) { ["name"] = "apache kafka" });
+
+        Text(result).ShouldContain("Kafka");
+        _profiles.Profile.ShouldNotBeNull().Skills.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task RemoveSkill_NotInProfile_IsAToolError()
+    {
+        var result = await CallAsync("remove_skill", new(StringComparer.Ordinal) { ["name"] = "Kafka" });
+
+        result.IsError.ShouldBe(expected: true);
+        Text(result).ShouldContain("Profile.SkillNotFound");
     }
 
     [Fact]
