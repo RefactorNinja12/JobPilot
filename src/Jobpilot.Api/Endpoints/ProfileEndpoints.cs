@@ -1,4 +1,5 @@
 using Jobpilot.Application.Occupations.Search;
+using Jobpilot.Application.Places.Search;
 using Jobpilot.Application.Profiles.AddSkill;
 using Jobpilot.Application.Profiles.GetProfile;
 using Jobpilot.Application.Profiles.RemoveSkill;
@@ -46,6 +47,10 @@ internal static class ProfileEndpoints
         // Suggestions from the Taxonomy occupation list while typing a job title.
         app.MapGet("/api/occupations/search", async (SearchOccupationsHandler handler, string? q, int? max, CancellationToken cancellationToken) =>
             (await handler.HandleAsync(new SearchOccupationsQuery(q, max ?? 10), cancellationToken)).ToHttpResult());
+
+        // Suggestions from the embedded place list while typing a home town; the coordinates feed the commute limit.
+        app.MapGet("/api/places/search", (SearchPlacesHandler handler, string? q, int? max) =>
+            handler.Handle(new SearchPlacesQuery(q, max ?? 8)).ToHttpResult());
 
         return app;
     }
