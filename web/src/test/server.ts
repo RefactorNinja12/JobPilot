@@ -1,7 +1,7 @@
 import { http, HttpResponse, type JsonBodyType } from 'msw'
 import { setupServer } from 'msw/node'
 import type { FindJobsResult, JobMatch } from '../api/jobs'
-import type { Profile } from '../api/profile'
+import type { Occupation, Profile } from '../api/profile'
 
 /** A match as GET /api/jobs returns it; override what a test cares about. */
 export function aMatch(overrides: Partial<JobMatch> = {}): JobMatch {
@@ -88,6 +88,28 @@ export function respondToSkillCalls(options: {
     http.post('/api/profile/skills', ({ request }) => record(request)),
     http.put('/api/profile/skills', ({ request }) => record(request)),
     http.delete('/api/profile/skills', ({ request }) => record(request)),
+  )
+  return calls
+}
+
+type OccupationApiCall = { method: string; body: unknown }
+
+/**
+ * Fakes the occupation endpoints of Jobpilot.Api: search answers with the given suggestions, PUT with the given
+ * status and body (by default the list it was sent). Returns the PUTs made, so tests can check what was sent.
+ */
+export function respondToOccupationCalls(options: {
+  suggestions?: Occupation[]
+  answer?: { status: number; body: JsonBodyType }
+}) {
+  const calls: OccupationApiCall[] = []
+  server.use(
+    http.get('/api/occupations/search', () => HttpResponse.json(options.suggestions ?? [])),
+    http.put('/api/profile/occupations', async ({ request }) => {
+      const body = (await request.json()) as JsonBodyType
+      calls.push({ method: request.method, body })
+      return HttpResponse.json(options.answer?.body ?? body, { status: options.answer?.status ?? 200 })
+    }),
   )
   return calls
 }

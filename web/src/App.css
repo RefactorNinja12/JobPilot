@@ -281,6 +281,30 @@ nav a[aria-current='page'] {
   background: var(--assessment);
 }
 
+.occupation {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.profile .occupation button.remove {
+  padding: 0 4px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.profile .occupation button.remove:hover {
+  color: var(--error);
+}
+
+.occupation-search {
+  width: 100%;
+  max-width: 360px;
+  margin-top: 8px;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

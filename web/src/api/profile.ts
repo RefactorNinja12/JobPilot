@@ -41,3 +41,12 @@ export function removeSkill(name: string): Promise<string> {
 export function searchSkills(text: string, signal?: AbortSignal): Promise<SkillSuggestion[]> {
   return getJson<SkillSuggestion[]>(`/api/skills/search?q=${encodeURIComponent(text)}`, signal)
 }
+
+/** Replaces the occupations job ads are searched for (at most 10). Answers with the stored list. */
+export function setOccupations(occupations: Occupation[]): Promise<Occupation[]> {
+  return sendJson<Occupation[]>('PUT', '/api/profile/occupations', occupations)
+}
+
+export function searchOccupations(text: string, signal?: AbortSignal): Promise<Occupation[]> {
+  return getJson<Occupation[]>(`/api/occupations/search?q=${encodeURIComponent(text)}`, signal)
+}
