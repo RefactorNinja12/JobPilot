@@ -38,6 +38,7 @@ describe('ProfilePage', () => {
 
     expect(await screen.findByText(/Inga kompetenser än/)).toBeInTheDocument()
     expect(screen.getByText(/Inga yrken valda/)).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Sök yrke' })).toBeInTheDocument()
     expect(screen.getByText('Heltid och deltid')).toBeInTheDocument()
     expect(screen.getByText('Visas')).toBeInTheDocument()
     expect(screen.getByText('Ingen gräns')).toBeInTheDocument()

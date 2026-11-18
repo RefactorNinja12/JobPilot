@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchProfile, type Preferences, type Profile } from './api/profile'
+import { OccupationsEditor } from './OccupationsEditor'
 import { SkillsEditor } from './SkillsEditor'
 
 function workingHours(p: Preferences) {
@@ -43,17 +44,7 @@ export function ProfilePage() {
 
       <section aria-labelledby="occupations-heading">
         <h2 id="occupations-heading">Yrken du söker</h2>
-        {profile.targetOccupations.length === 0 ? (
-          <p className="muted">Inga yrken valda. Be Claude välja dem (search_occupations och set_occupations).</p>
-        ) : (
-          <ul className="skills">
-            {profile.targetOccupations.map((o) => (
-              <li key={o.taxonomyId} className="skill skill-matched">
-                {o.label}
-              </li>
-            ))}
-          </ul>
-        )}
+        <OccupationsEditor occupations={profile.targetOccupations} onChanged={() => load()} />
       </section>
 
       <section aria-labelledby="preferences-heading">
