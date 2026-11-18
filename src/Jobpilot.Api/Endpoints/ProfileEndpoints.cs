@@ -3,6 +3,7 @@ using Jobpilot.Application.Profiles.AddSkill;
 using Jobpilot.Application.Profiles.GetProfile;
 using Jobpilot.Application.Profiles.RemoveSkill;
 using Jobpilot.Application.Profiles.SetOccupations;
+using Jobpilot.Application.Profiles.SetPreferences;
 using Jobpilot.Application.Profiles.UpdateSkill;
 using Jobpilot.Application.SkillVocabularies.Search;
 
@@ -36,6 +37,11 @@ internal static class ProfileEndpoints
         // Target occupations: the whole list is replaced, as with set_occupations over MCP.
         profile.MapPut("/occupations", async (SetOccupationsHandler handler, OccupationView[] occupations, CancellationToken cancellationToken) =>
             (await handler.HandleAsync(occupations, cancellationToken)).ToHttpResult());
+
+        // Dealbreakers, all at once as with set_preferences over MCP. Same shape as "preferences" in GET /api/profile;
+        // "commute": null removes the distance limit.
+        profile.MapPut("/preferences", async (SetPreferencesHandler handler, SetPreferencesCommand command, CancellationToken cancellationToken) =>
+            (await handler.HandleAsync(command, cancellationToken)).ToHttpResult());
 
         // Suggestions from the Taxonomy occupation list while typing a job title.
         app.MapGet("/api/occupations/search", async (SearchOccupationsHandler handler, string? q, int? max, CancellationToken cancellationToken) =>
