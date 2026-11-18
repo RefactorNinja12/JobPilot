@@ -1,22 +1,79 @@
-import { useState, type FormEvent } from 'react'
-import { ApiError } from './api/http'
-import { setPreferences, type Preferences } from './api/profile'
+import { useEffect, useState, type FormEvent } from "react";
+import { ApiError } from "./api/http";
+import {
+  searchPlaces,
+  setPreferences,
+  type Place,
+  type Preferences,
+} from "./api/profile";
 
-const message = (e: unknown) => (e instanceof ApiError ? e.message : 'Något gick fel. Försök igen.')
+const message = (e: unknown) =>
+  e instanceof ApiError ? e.message : "Något gick fel. Försök igen.";
 
 /** Three decimals is about 100 m: plenty for a distance limit in km, and no more precise than it needs to be. */
-const round = (degrees: number) => Math.round(degrees * 1000) / 1000
+const round = (degrees: number) => Math.round(degrees * 1000) / 1000;
+
+/** Home by place name: suggestions while typing, and choosing one fills in the coordinates. */
+function PlacePicker({ onPick }: { onPick: (place: Place) => void }) {
+  const [text, setText] = useState("");
+  const [suggestions, setSuggestions] = useState<Place[]>([]);
+  const searching = text.trim().length >= 2;
+
+  useEffect(() => {
+    if (!searching) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      searchPlaces(text, controller.signal).then(setSuggestions, () =>
+        setSuggestions([]),
+      );
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [text, searching]);
+
+  const pick = (place: Place) => {
+    setText("");
+    setSuggestions([]);
+    onPick(place);
+  };
+
+  return (
+    <div>
+      <label>
+        Sök ort
+        <input
+          placeholder="t.ex. Kvissleby"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+      </label>
+      {searching && suggestions.length > 0 && (
+        <ul className="suggestions" aria-label="Ortsförslag">
+          {suggestions.map((place) => (
+            <li key={`${place.name}-${place.latitude}-${place.longitude}`}>
+              <button type="button" onClick={() => pick(place)}>
+                {place.name}, {place.municipality}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 /** Form state: numbers as typed, so a field can be empty while editing. */
 type Draft = {
-  acceptsFullTime: boolean
-  acceptsPartTime: boolean
-  excludeStaffingAgencies: boolean
-  limitCommute: boolean
-  maxDistanceKm: string
-  homeLatitude: string
-  homeLongitude: string
-}
+  acceptsFullTime: boolean;
+  acceptsPartTime: boolean;
+  excludeStaffingAgencies: boolean;
+  limitCommute: boolean;
+  maxDistanceKm: string;
+  homeLatitude: string;
+  homeLongitude: string;
+};
 
 function toDraft(p: Preferences): Draft {
   return {
@@ -25,9 +82,9 @@ function toDraft(p: Preferences): Draft {
     excludeStaffingAgencies: p.excludeStaffingAgencies,
     limitCommute: p.commute !== null,
     maxDistanceKm: String(p.commute?.maxDistanceKm ?? 30),
-    homeLatitude: p.commute ? String(p.commute.homeLatitude) : '',
-    homeLongitude: p.commute ? String(p.commute.homeLongitude) : '',
-  }
+    homeLatitude: p.commute ? String(p.commute.homeLatitude) : "",
+    homeLongitude: p.commute ? String(p.commute.homeLongitude) : "",
+  };
 }
 
 function toPreferences(d: Draft): Preferences {
@@ -36,62 +93,98 @@ function toPreferences(d: Draft): Preferences {
     acceptsPartTime: d.acceptsPartTime,
     excludeStaffingAgencies: d.excludeStaffingAgencies,
     commute: d.limitCommute
-      ? { homeLatitude: Number(d.homeLatitude), homeLongitude: Number(d.homeLongitude), maxDistanceKm: Number(d.maxDistanceKm) }
+      ? {
+          homeLatitude: Number(d.homeLatitude),
+          homeLongitude: Number(d.homeLongitude),
+          maxDistanceKm: Number(d.maxDistanceKm),
+        }
       : null,
-  }
+  };
 }
 
 /** Dealbreakers: ads that break them are never shown. Saved all at once, as Claude does with set_preferences. */
-export function PreferencesEditor({ preferences, onChanged }: { preferences: Preferences; onChanged: () => void }) {
-  const [draft, setDraft] = useState(() => toDraft(preferences))
-  const [error, setError] = useState<string>()
-  const [locating, setLocating] = useState(false)
+export function PreferencesEditor({
+  preferences,
+  onChanged,
+}: {
+  preferences: Preferences;
+  onChanged: () => void;
+}) {
+  const [draft, setDraft] = useState(() => toDraft(preferences));
+  const [error, setError] = useState<string>();
+  const [locating, setLocating] = useState(false);
 
-  const update = (changes: Partial<Draft>) => setDraft((d) => ({ ...d, ...changes }))
-  const changed = JSON.stringify(toPreferences(draft)) !== JSON.stringify(toPreferences(toDraft(preferences)))
-  const noHours = !draft.acceptsFullTime && !draft.acceptsPartTime
+  const update = (changes: Partial<Draft>) =>
+    setDraft((d) => ({ ...d, ...changes }));
+  const changed =
+    JSON.stringify(toPreferences(draft)) !==
+    JSON.stringify(toPreferences(toDraft(preferences)));
+  const noHours = !draft.acceptsFullTime && !draft.acceptsPartTime;
 
   const useMyPosition = () => {
-    setError(undefined)
-    setLocating(true)
+    setError(undefined);
+    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setLocating(false)
-        update({ homeLatitude: String(round(position.coords.latitude)), homeLongitude: String(round(position.coords.longitude)) })
+        setLocating(false);
+        update({
+          homeLatitude: String(round(position.coords.latitude)),
+          homeLongitude: String(round(position.coords.longitude)),
+        });
       },
       () => {
-        setLocating(false)
-        setError('Kunde inte hämta din position. Fyll i latitud och longitud själv.')
+        setLocating(false);
+        setError(
+          "Kunde inte hämta din position. Fyll i latitud och longitud själv.",
+        );
       },
-    )
-  }
+    );
+  };
 
   const onSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    setError(undefined)
-    setPreferences(toPreferences(draft)).then(onChanged, (err: unknown) => setError(message(err)))
-  }
+    e.preventDefault();
+    setError(undefined);
+    setPreferences(toPreferences(draft)).then(onChanged, (err: unknown) =>
+      setError(message(err)),
+    );
+  };
 
   return (
-    <form className="preferences-form" onSubmit={onSubmit} aria-label="Dina krav">
+    <form
+      className="preferences-form"
+      onSubmit={onSubmit}
+      aria-label="Dina krav"
+    >
       <fieldset>
         <legend>Arbetstid</legend>
         <label>
-          <input type="checkbox" checked={draft.acceptsFullTime} onChange={(e) => update({ acceptsFullTime: e.target.checked })} />
+          <input
+            type="checkbox"
+            checked={draft.acceptsFullTime}
+            onChange={(e) => update({ acceptsFullTime: e.target.checked })}
+          />
           Heltid
         </label>
         <label>
-          <input type="checkbox" checked={draft.acceptsPartTime} onChange={(e) => update({ acceptsPartTime: e.target.checked })} />
+          <input
+            type="checkbox"
+            checked={draft.acceptsPartTime}
+            onChange={(e) => update({ acceptsPartTime: e.target.checked })}
+          />
           Deltid
         </label>
-        {noHours && <p className="muted">Välj minst en, annars visas inga annonser.</p>}
+        {noHours && (
+          <p className="muted">Välj minst en, annars visas inga annonser.</p>
+        )}
       </fieldset>
 
       <label>
         <input
           type="checkbox"
           checked={draft.excludeStaffingAgencies}
-          onChange={(e) => update({ excludeStaffingAgencies: e.target.checked })}
+          onChange={(e) =>
+            update({ excludeStaffingAgencies: e.target.checked })
+          }
         />
         Dölj annonser från bemanningsföretag
       </label>
@@ -99,11 +192,23 @@ export function PreferencesEditor({ preferences, onChanged }: { preferences: Pre
       <fieldset>
         <legend>Pendling</legend>
         <label>
-          <input type="checkbox" checked={draft.limitCommute} onChange={(e) => update({ limitCommute: e.target.checked })} />
+          <input
+            type="checkbox"
+            checked={draft.limitCommute}
+            onChange={(e) => update({ limitCommute: e.target.checked })}
+          />
           Begränsa avståndet från hemmet
         </label>
         {draft.limitCommute && (
           <div className="commute">
+            <PlacePicker
+              onPick={(place) =>
+                update({
+                  homeLatitude: String(round(place.latitude)),
+                  homeLongitude: String(round(place.longitude)),
+                })
+              }
+            />
             <label>
               Högst (km fågelvägen)
               <input
@@ -139,9 +244,9 @@ export function PreferencesEditor({ preferences, onChanged }: { preferences: Pre
                 onChange={(e) => update({ homeLongitude: e.target.value })}
               />
             </label>
-            {'geolocation' in navigator && (
+            {"geolocation" in navigator && (
               <button type="button" onClick={useMyPosition} disabled={locating}>
-                {locating ? 'Hämtar position…' : 'Använd min position'}
+                {locating ? "Hämtar position…" : "Använd min position"}
               </button>
             )}
           </div>
@@ -159,5 +264,5 @@ export function PreferencesEditor({ preferences, onChanged }: { preferences: Pre
         </p>
       )}
     </form>
-  )
+  );
 }
