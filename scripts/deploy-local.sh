@@ -26,9 +26,10 @@ fi
 echo "==> Building images"
 docker build --target worker -t jobpilot-worker:local "$ROOT"
 docker build --target mcp -t jobpilot-mcp:local "$ROOT"
+docker build --target web -t jobpilot-web:local "$ROOT"
 
 echo "==> Importing images into the cluster"
-k3d image import jobpilot-worker:local jobpilot-mcp:local --cluster "$CLUSTER"
+k3d image import jobpilot-worker:local jobpilot-mcp:local jobpilot-web:local --cluster "$CLUSTER"
 
 kc apply -f "$ROOT/deploy/k8s/namespace.yaml"
 
@@ -60,10 +61,11 @@ echo "==> Applying manifests"
 kc apply -k "$ROOT/deploy/k8s"
 
 # Same image tags on every build, so restart to pick up the new images.
-kc -n "$NAMESPACE" rollout restart deployment/worker deployment/mcp
+kc -n "$NAMESPACE" rollout restart deployment/worker deployment/mcp deployment/web
 kc -n "$NAMESPACE" rollout status statefulset/postgres --timeout=180s
 kc -n "$NAMESPACE" rollout status deployment/worker --timeout=180s
 kc -n "$NAMESPACE" rollout status deployment/mcp --timeout=180s
+kc -n "$NAMESPACE" rollout status deployment/web --timeout=180s
 
 cat <<MSG
 
@@ -72,5 +74,9 @@ Jobpilot is running in k3d cluster "$CLUSTER".
                then http://localhost:5199/mcp (the "jobpilot" entry in .mcp.json)
   Over Tailscale (when the operator is installed): https://jobpilot.<tailnet>.ts.net/mcp
                the address is in: kubectl --context $CONTEXT -n $NAMESPACE get ingress mcp
+  Web UI:      kubectl --context $CONTEXT -n $NAMESPACE port-forward svc/web 5299:80
+               then http://localhost:5299
+  Over Tailscale: https://jobpilot-web.<tailnet>.ts.net
+               the address is in: kubectl --context $CONTEXT -n $NAMESPACE get ingress web
   Worker log:  kubectl --context $CONTEXT -n $NAMESPACE logs deploy/worker -f
 MSG

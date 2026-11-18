@@ -119,12 +119,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Build only; nothing is pushed yet. The shared build stage is cached between the two targets.
+      # Build only; nothing is pushed yet. The shared build stage is cached between the targets.
       - name: Build worker image
         run: docker build --target worker -t jobpilot-worker:ci .
 
       - name: Build mcp image
         run: docker build --target mcp -t jobpilot-mcp:ci .
+
+      - name: Build web image
+        run: docker build --target web -t jobpilot-web:ci .
 
       - name: Render k8s manifests
         run: kubectl kustomize deploy/k8s > /dev/null
@@ -134,7 +137,7 @@ jobs:
 
       - name: Images run as non-root
         run: |
-          for image in jobpilot-worker:ci jobpilot-mcp:ci; do
+          for image in jobpilot-worker:ci jobpilot-mcp:ci jobpilot-web:ci; do
             user=$(docker image inspect "$image" --format '{{.Config.User}}')
             echo "$image runs as user '$user'"
             if [ -z "$user" ] || [ "$user" = "0" ] || [ "$user" = "root" ]; then
