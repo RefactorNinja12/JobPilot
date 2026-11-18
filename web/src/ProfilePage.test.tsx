@@ -14,15 +14,17 @@ describe('ProfilePage', () => {
     expect(screen.getByRole('combobox', { name: 'Nivå för Kafka' })).toHaveValue('Beginner')
   })
 
-  it('shows target occupations and dealbreakers in plain Swedish', async () => {
+  it('shows target occupations and editable dealbreakers', async () => {
     respondWithProfile(aProfile())
 
     render(<ProfilePage />)
 
     expect(await screen.findByText('Backend-utvecklare')).toBeInTheDocument()
-    expect(screen.getByText('Bara heltid')).toBeInTheDocument()
-    expect(screen.getByText('Visas inte')).toBeInTheDocument()
-    expect(screen.getByText('Högst 40 km fågelvägen från hemmet (57.71, 11.97)')).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'Heltid' })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Deltid' })).not.toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Dölj annonser från bemanningsföretag' })).toBeChecked()
+    expect(screen.getByRole('spinbutton', { name: 'Högst (km fågelvägen)' })).toHaveValue(40)
+    expect(screen.getByRole('spinbutton', { name: 'Latitud' })).toHaveValue(57.7089)
   })
 
   it('explains what to do when the profile is empty', async () => {
@@ -39,9 +41,9 @@ describe('ProfilePage', () => {
     expect(await screen.findByText(/Inga kompetenser än/)).toBeInTheDocument()
     expect(screen.getByText(/Inga yrken valda/)).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Sök yrke' })).toBeInTheDocument()
-    expect(screen.getByText('Heltid och deltid')).toBeInTheDocument()
-    expect(screen.getByText('Visas')).toBeInTheDocument()
-    expect(screen.getByText('Ingen gräns')).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'Deltid' })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Begränsa avståndet från hemmet' })).not.toBeChecked()
+    expect(screen.queryByRole('spinbutton', { name: 'Latitud' })).not.toBeInTheDocument()
   })
 
   it('says when the profile could not be loaded', async () => {
@@ -50,13 +52,5 @@ describe('ProfilePage', () => {
     render(<ProfilePage />)
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Kunde inte hämta profilen')
-  })
-
-  it('describes part-time only', async () => {
-    respondWithProfile(aProfile({ preferences: { ...aProfile().preferences, acceptsFullTime: false, acceptsPartTime: true } }))
-
-    render(<ProfilePage />)
-
-    expect(await screen.findByText('Bara deltid')).toBeInTheDocument()
   })
 })

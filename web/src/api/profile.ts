@@ -50,3 +50,8 @@ export function setOccupations(occupations: Occupation[]): Promise<Occupation[]>
 export function searchOccupations(text: string, signal?: AbortSignal): Promise<Occupation[]> {
   return getJson<Occupation[]>(`/api/occupations/search?q=${encodeURIComponent(text)}`, signal)
 }
+
+/** Replaces all dealbreakers; commute null removes the distance limit. Answers with what was stored. */
+export function setPreferences(preferences: Preferences): Promise<Preferences> {
+  return sendJson<Preferences>('PUT', '/api/profile/preferences', preferences)
+}
