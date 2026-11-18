@@ -2,6 +2,7 @@ using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Application.Abstractions.Employers;
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Application.Abstractions.JobSearch;
+using Jobpilot.Application.Abstractions.Places;
 using Jobpilot.Application.Abstractions.Taxonomy;
 using Jobpilot.Application.Abstractions.Usage;
 using Jobpilot.Application.Profiles;
@@ -16,6 +17,7 @@ using Jobpilot.Infrastructure.Persistence.Assessments;
 using Jobpilot.Infrastructure.Persistence.Profiles;
 using Jobpilot.Infrastructure.Persistence.SkillVocabularies;
 using Jobpilot.Infrastructure.Persistence.Usage;
+using Jobpilot.Infrastructure.Places;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,6 +40,8 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
+
+        services.AddSingleton<IPlaceDirectory, EmbeddedPlaceDirectory>();
 
         var jobSearch = AddApiOptions<JobSearchOptions>(services, configuration, JobSearchOptions.SectionName);
         services.AddHttpClient<IJobSearchClient, JobSearchClient>((provider, http) =>
