@@ -114,4 +114,17 @@ export function respondToOccupationCalls(options: {
   return calls
 }
 
+/** Fakes PUT /api/profile/preferences: answers with the given status and body, by default what it was sent. */
+export function respondToPreferenceCalls(answer?: { status: number; body: JsonBodyType }) {
+  const sent: unknown[] = []
+  server.use(
+    http.put('/api/profile/preferences', async ({ request }) => {
+      const body = (await request.json()) as JsonBodyType
+      sent.push(body)
+      return HttpResponse.json(answer?.body ?? body, { status: answer?.status ?? 200 })
+    }),
+  )
+  return sent
+}
+
 export const server = setupServer()

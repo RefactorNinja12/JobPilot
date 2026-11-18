@@ -76,19 +76,48 @@ nav a[aria-current='page'] {
   font-size: 0.85rem;
 }
 
-.preferences {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 6px 16px;
-  margin: 0;
+.preferences-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
 }
 
-.preferences dt {
+.preferences-form fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.preferences-form legend {
+  margin-bottom: 4px;
   color: var(--muted);
 }
 
-.preferences dd {
+.preferences-form label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preferences-form fieldset > p {
+  flex-basis: 100%;
   margin: 0;
+}
+
+.commute {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  flex-basis: 100%;
+}
+
+.commute input[step='any'] {
+  width: 7em;
 }
 
 .job {
