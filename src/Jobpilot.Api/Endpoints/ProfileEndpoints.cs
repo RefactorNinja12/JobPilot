@@ -1,6 +1,8 @@
+using Jobpilot.Application.Occupations.Search;
 using Jobpilot.Application.Profiles.AddSkill;
 using Jobpilot.Application.Profiles.GetProfile;
 using Jobpilot.Application.Profiles.RemoveSkill;
+using Jobpilot.Application.Profiles.SetOccupations;
 using Jobpilot.Application.Profiles.UpdateSkill;
 using Jobpilot.Application.SkillVocabularies.Search;
 
@@ -30,6 +32,14 @@ internal static class ProfileEndpoints
         // Suggestions while typing a skill name.
         app.MapGet("/api/skills/search", async (SearchSkillsHandler handler, string? q, int? max, CancellationToken cancellationToken) =>
             (await handler.HandleAsync(new SearchSkillsQuery(q, max ?? 8), cancellationToken)).ToHttpResult());
+
+        // Target occupations: the whole list is replaced, as with set_occupations over MCP.
+        profile.MapPut("/occupations", async (SetOccupationsHandler handler, OccupationView[] occupations, CancellationToken cancellationToken) =>
+            (await handler.HandleAsync(occupations, cancellationToken)).ToHttpResult());
+
+        // Suggestions from the Taxonomy occupation list while typing a job title.
+        app.MapGet("/api/occupations/search", async (SearchOccupationsHandler handler, string? q, int? max, CancellationToken cancellationToken) =>
+            (await handler.HandleAsync(new SearchOccupationsQuery(q, max ?? 10), cancellationToken)).ToHttpResult());
 
         return app;
     }
