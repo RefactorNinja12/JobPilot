@@ -1,0 +1,19 @@
+# Puts the web UI on the tailnet with HTTPS, through the Tailscale Kubernetes Operator:
+#   https://jobpilot-web.<tailnet>.ts.net
+# Reachable only from devices in the tailnet; nothing is published on the host.
+# Needs the operator (installed by scripts/deploy-local.sh when the operator-oauth Secret exists) and
+# MagicDNS + HTTPS certificates enabled for the tailnet. Without the operator this Ingress is simply ignored.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: web
+      port:
+        name: http
+  tls:
+    - hosts:
+        - jobpilot-web # the MagicDNS name: jobpilot-web.<tailnet>.ts.net
