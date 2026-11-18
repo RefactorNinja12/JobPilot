@@ -1,4 +1,4 @@
-# Only what the Worker and Mcp images need to build.
+# Only what the images need to build.
 **/bin/
 **/obj/
 .git/
@@ -8,7 +8,8 @@
 .idea/
 docs/
 tests/
-web/
+web/node_modules/
+web/dist/
 TestResults/
 **/*.md
 **/appsettings.Development.json
