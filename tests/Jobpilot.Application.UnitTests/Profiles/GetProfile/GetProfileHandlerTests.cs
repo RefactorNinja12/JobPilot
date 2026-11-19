@@ -37,8 +37,8 @@ public class GetProfileHandlerTests
     public async Task Get_MapsSkillsAndPreferences()
     {
         var profile = Profile.Create();
-        profile.AddSkill(ProfileSkill.Create(Skill.Create("Kafka").Value, SkillLevel.Advanced, 3).Value);
-        profile.AddSkill(ProfileSkill.Create(Skill.Create("C#").Value, SkillLevel.Expert, 8).Value);
+        profile.AddSkill(ProfileSkill.Create(Skill.Create("Kafka").Value, SkillLevel.Advanced).Value);
+        profile.AddSkill(ProfileSkill.Create(Skill.Create("C#").Value, SkillLevel.Expert).Value);
         profile.UpdatePreferences(JobPreferences.Create(
             acceptsFullTime: true,
             acceptsPartTime: false,
@@ -52,8 +52,8 @@ public class GetProfileHandlerTests
         view.TargetOccupations.ShouldBe([new OccupationView("7wdX_4rv_33z", "Backend-utvecklare")]);
 
         view.Skills.ShouldBe([
-            new ProfileSkillView("Kafka", "Advanced", 3),
-            new ProfileSkillView("C#", "Expert", 8),
+            new ProfileSkillView("Kafka", "Advanced"),
+            new ProfileSkillView("C#", "Expert"),
         ]);
         view.Preferences.ShouldBe(new PreferencesView(
             AcceptsFullTime: true,

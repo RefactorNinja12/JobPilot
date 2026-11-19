@@ -27,8 +27,8 @@ public sealed class ProfilePersistenceTests(PostgresFixture postgres) : IAsyncLi
         return new JobpilotDbContext(options.Options);
     }
 
-    private static ProfileSkill SkillOf(string name, SkillLevel level, int years) =>
-        ProfileSkill.Create(Skill.Create(name).Value, level, years).Value;
+    private static ProfileSkill SkillOf(string name, SkillLevel level) =>
+        ProfileSkill.Create(Skill.Create(name).Value, level).Value;
 
     private async Task<Profile> SaveAsync(Profile profile)
     {
@@ -56,14 +56,14 @@ public sealed class ProfilePersistenceTests(PostgresFixture postgres) : IAsyncLi
     public async Task Profile_RoundTripsWithSkills()
     {
         var profile = Profile.Create();
-        profile.AddSkill(SkillOf("C#", SkillLevel.Expert, 8)).IsSuccess.ShouldBeTrue();
-        profile.AddSkill(SkillOf("Postgresql", SkillLevel.Intermediate, 2)).IsSuccess.ShouldBeTrue();
+        profile.AddSkill(SkillOf("C#", SkillLevel.Expert)).IsSuccess.ShouldBeTrue();
+        profile.AddSkill(SkillOf("Postgresql", SkillLevel.Intermediate)).IsSuccess.ShouldBeTrue();
         await SaveAsync(profile);
 
         var loaded = await LoadAsync(profile.Id);
 
         loaded.Skills.ShouldBe(
-            [SkillOf("C#", SkillLevel.Expert, 8), SkillOf("Postgresql", SkillLevel.Intermediate, 2)],
+            [SkillOf("C#", SkillLevel.Expert), SkillOf("Postgresql", SkillLevel.Intermediate)],
             ignoreOrder: true);
         loaded.Preferences.ShouldBe(JobPreferences.None);
     }
@@ -80,19 +80,19 @@ public sealed class ProfilePersistenceTests(PostgresFixture postgres) : IAsyncLi
     public async Task SkillChanges_ArePersisted()
     {
         var profile = Profile.Create();
-        profile.AddSkill(SkillOf("C#", SkillLevel.Advanced, 5));
-        profile.AddSkill(SkillOf("Kafka", SkillLevel.Beginner, 0));
+        profile.AddSkill(SkillOf("C#", SkillLevel.Advanced));
+        profile.AddSkill(SkillOf("Kafka", SkillLevel.Beginner));
         await SaveAsync(profile);
 
         await using (var db = NewContext())
         {
             var tracked = await db.Profiles.SingleAsync(p => p.Id == profile.Id, Ct);
-            tracked.UpdateSkill(SkillOf("C#", SkillLevel.Expert, 6)).IsSuccess.ShouldBeTrue();
+            tracked.UpdateSkill(SkillOf("C#", SkillLevel.Expert)).IsSuccess.ShouldBeTrue();
             tracked.RemoveSkill(Skill.Create("kafka").Value).IsSuccess.ShouldBeTrue();
             await db.SaveChangesAsync(Ct);
         }
 
-        (await LoadAsync(profile.Id)).Skills.ShouldBe([SkillOf("C#", SkillLevel.Expert, 6)]);
+        (await LoadAsync(profile.Id)).Skills.ShouldBe([SkillOf("C#", SkillLevel.Expert)]);
     }
 
     private static JobPreferences PreferencesWithCommute(int maxDistanceKm) =>

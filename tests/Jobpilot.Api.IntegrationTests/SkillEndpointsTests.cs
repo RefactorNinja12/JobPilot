@@ -40,8 +40,8 @@ public sealed class SkillEndpointsTests : IAsyncDisposable
         await _factory.DisposeAsync();
     }
 
-    private Task<HttpResponseMessage> AddAsync(string name, string level = "Advanced", int years = 3) =>
-        _http.PostAsJsonAsync("/api/profile/skills", new { name, level, yearsOfExperience = years }, Ct);
+    private Task<HttpResponseMessage> AddAsync(string name, string level = "Advanced") =>
+        _http.PostAsJsonAsync("/api/profile/skills", new { name, level }, Ct);
 
     private static async Task<string?> CodeAsync(HttpResponseMessage response) =>
         (await response.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("code").GetString();
@@ -51,7 +51,7 @@ public sealed class SkillEndpointsTests : IAsyncDisposable
     [Fact]
     public async Task Add_BySynonym_StoresTheConceptName()
     {
-        using var response = await AddAsync("apache kafka", "Expert", 5);
+        using var response = await AddAsync("apache kafka", "Expert");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var added = await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
@@ -75,22 +75,21 @@ public sealed class SkillEndpointsTests : IAsyncDisposable
     public async Task Add_LevelAsNumber_IsRejected()
     {
         using var response = await _http.PostAsJsonAsync(
-            "/api/profile/skills", new { name = "Kafka", level = 3, yearsOfExperience = 1 }, Ct);
+            "/api/profile/skills", new { name = "Kafka", level = 3 }, Ct);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         _profiles.Profile.ShouldBeNull();
     }
 
     [Fact]
-    public async Task Update_ChangesLevelAndYears()
+    public async Task Update_ChangesTheLevel()
     {
-        (await AddAsync("Kafka", "Beginner", 1)).Dispose();
+        (await AddAsync("Kafka", "Beginner")).Dispose();
 
         using var response = await _http.PutAsJsonAsync(
-            "/api/profile/skills", new { name = "kafka", level = "Expert", yearsOfExperience = 4 }, Ct);
+            "/api/profile/skills", new { name = "kafka", level = "Expert" }, Ct);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        StoredSkill().YearsOfExperience.ShouldBe(4);
         StoredSkill().Level.ShouldBe(SkillLevel.Expert);
     }
 
@@ -98,7 +97,7 @@ public sealed class SkillEndpointsTests : IAsyncDisposable
     public async Task Update_Unknown_Is404()
     {
         using var response = await _http.PutAsJsonAsync(
-            "/api/profile/skills", new { name = "Rust", level = "Expert", yearsOfExperience = 4 }, Ct);
+            "/api/profile/skills", new { name = "Rust", level = "Expert" }, Ct);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await CodeAsync(response)).ShouldBe("Profile.SkillNotFound");

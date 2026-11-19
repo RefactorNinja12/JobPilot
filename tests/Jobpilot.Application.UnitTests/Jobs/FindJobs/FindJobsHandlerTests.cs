@@ -32,7 +32,7 @@ public class FindJobsHandlerTests
 
     public FindJobsHandlerTests()
     {
-        _profile.AddSkill(ProfileSkill.Create(Skill.Create("C#").Value, SkillLevel.Expert, 8).Value);
+        _profile.AddSkill(ProfileSkill.Create(Skill.Create("C#").Value, SkillLevel.Expert).Value);
         _profile.SetTargetOccupations([Occupation.Create("7wdX_4rv_33z", "Backend-utvecklare").Value]);
         _profiles.GetAsync(Arg.Any<CancellationToken>()).Returns(_profile);
 

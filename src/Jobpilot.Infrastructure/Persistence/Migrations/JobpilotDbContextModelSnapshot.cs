@@ -226,10 +226,6 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
                                 .HasColumnType("character varying(100)")
                                 .HasColumnName("skill_name");
 
-                            b1.Property<int>("YearsOfExperience")
-                                .HasColumnType("integer")
-                                .HasColumnName("years_of_experience");
-
                             b1.HasKey("Id")
                                 .HasName("pk_profile_skills");
 

@@ -3,28 +3,22 @@ using Jobpilot.Domain.Common;
 namespace Jobpilot.Domain.Profiles;
 
 /// <summary>
-/// The user's relation to a <see cref="Skill"/>: self-assessed level and years of experience.
-/// Immutable value object. Level and years are independent (an expert can have few years).
+/// The user's relation to a <see cref="Skill"/>: self-assessed level, i.e. what the user feels
+/// they can do with it, not how long or where they have used it. Immutable value object.
 /// </summary>
 public sealed record ProfileSkill
 {
-    public const int MaxYearsOfExperience = 50;
-
-    private ProfileSkill(Skill skill, SkillLevel level, int yearsOfExperience)
+    private ProfileSkill(Skill skill, SkillLevel level)
     {
         Skill = skill;
         Level = level;
-        YearsOfExperience = yearsOfExperience;
     }
 
     public Skill Skill { get; }
 
     public SkillLevel Level { get; }
 
-    /// <summary>Whole years of hands-on experience. 0 means known but not used professionally.</summary>
-    public int YearsOfExperience { get; }
-
-    public static Result<ProfileSkill> Create(Skill? skill, SkillLevel level, int yearsOfExperience)
+    public static Result<ProfileSkill> Create(Skill? skill, SkillLevel level)
     {
         if (skill is null)
         {
@@ -36,11 +30,6 @@ public sealed record ProfileSkill
             return ProfileSkillErrors.LevelInvalid;
         }
 
-        if (yearsOfExperience is < 0 or > MaxYearsOfExperience)
-        {
-            return ProfileSkillErrors.YearsOutOfRange;
-        }
-
-        return new ProfileSkill(skill, level, yearsOfExperience);
+        return new ProfileSkill(skill, level);
     }
 }

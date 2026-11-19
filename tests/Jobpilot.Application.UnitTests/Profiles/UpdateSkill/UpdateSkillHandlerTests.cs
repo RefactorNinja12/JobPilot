@@ -17,7 +17,7 @@ public class UpdateSkillHandlerTests
 
     public UpdateSkillHandlerTests()
     {
-        _profile.AddSkill(ProfileSkill.Create(Skill.Create("Kafka").Value, SkillLevel.Beginner, 1).Value);
+        _profile.AddSkill(ProfileSkill.Create(Skill.Create("Kafka").Value, SkillLevel.Beginner).Value);
         _profiles.GetAsync(Arg.Any<CancellationToken>()).Returns(_profile);
         _vocabularies.GetAsync(Arg.Any<CancellationToken>()).Returns(SkillVocabulary.Create(
             DateTimeOffset.UnixEpoch,
@@ -27,21 +27,20 @@ public class UpdateSkillHandlerTests
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private Task<Result<ProfileSkillView>> UpdateAsync(string name, SkillLevel level = SkillLevel.Expert, int years = 4) =>
-        _handler.HandleAsync(new UpdateSkillCommand(name, level, years), Ct);
+    private Task<Result<ProfileSkillView>> UpdateAsync(string name, SkillLevel level = SkillLevel.Expert) =>
+        _handler.HandleAsync(new UpdateSkillCommand(name, level), Ct);
 
     [Theory]
     [InlineData("Kafka")]
     [InlineData("apache kafka")]
     [InlineData(" KAFKA ")]
-    public async Task Update_ByNameOrSynonym_ReplacesLevelAndYears(string name)
+    public async Task Update_ByNameOrSynonym_ReplacesTheLevel(string name)
     {
         var result = await UpdateAsync(name);
 
-        result.Value.ShouldBe(new ProfileSkillView("Kafka", "Expert", 4));
+        result.Value.ShouldBe(new ProfileSkillView("Kafka", "Expert"));
         var skill = _profile.Skills.ShouldHaveSingleItem();
         skill.Level.ShouldBe(SkillLevel.Expert);
-        skill.YearsOfExperience.ShouldBe(4);
         await _profiles.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -64,11 +63,11 @@ public class UpdateSkillHandlerTests
     }
 
     [Theory]
-    [InlineData("", 3, "Skill.NameEmpty")]
-    [InlineData("Kafka", 51, "ProfileSkill.YearsOutOfRange")]
-    public async Task Update_InvalidInput_FailsWithoutChangingTheProfile(string name, int years, string code)
+    [InlineData("", SkillLevel.Expert, "Skill.NameEmpty")]
+    [InlineData("Kafka", (SkillLevel)0, "ProfileSkill.LevelInvalid")]
+    public async Task Update_InvalidInput_FailsWithoutChangingTheProfile(string name, SkillLevel level, string code)
     {
-        (await UpdateAsync(name, years: years)).Error.Code.ShouldBe(code);
+        (await UpdateAsync(name, level)).Error.Code.ShouldBe(code);
 
         _profile.Skills.ShouldHaveSingleItem().Level.ShouldBe(SkillLevel.Beginner);
         await _profiles.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());

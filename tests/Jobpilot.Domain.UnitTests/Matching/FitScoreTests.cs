@@ -7,7 +7,7 @@ public class FitScoreTests
 {
     private static Skill S(string name) => Skill.Create(name).Value;
 
-    private static ProfileSkill Own(string name, SkillLevel level) => ProfileSkill.Create(S(name), level, 3).Value;
+    private static ProfileSkill Own(string name, SkillLevel level) => ProfileSkill.Create(S(name), level).Value;
 
     private static RequestedSkill Wants(string name, double weight = 1.0) => new(S(name), weight);
 
