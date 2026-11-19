@@ -29,9 +29,10 @@ internal sealed class AssessmentStore(JobpilotDbContext db) : IAssessmentStore
             StringComparer.Ordinal);
     }
 
-    public async Task SaveAsync(AiAssessment assessment, CancellationToken cancellationToken)
+    public async Task SaveAsync(AiAssessment assessment, AdSnapshot ad, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(assessment);
+        ArgumentNullException.ThrowIfNull(ad);
 
         var row = await db.Set<StoredAssessment>().FindAsync([assessment.AdId], cancellationToken);
         if (row is null)
@@ -43,6 +44,12 @@ internal sealed class AssessmentStore(JobpilotDbContext db) : IAssessmentStore
         row.Chance = assessment.Chance;
         row.Summary = assessment.Summary;
         row.AssessedAt = assessment.AssessedAt.ToUniversalTime();
+        row.Headline = ad.Headline;
+        row.Employer = ad.Employer;
+        row.Municipality = ad.Municipality;
+        row.Url = ad.Url.AbsoluteUri;
+        row.PublishedAt = ad.PublishedAt.ToUniversalTime();
+        row.ApplicationDeadline = ad.ApplicationDeadline;
         await db.SaveChangesAsync(cancellationToken);
     }
 }
