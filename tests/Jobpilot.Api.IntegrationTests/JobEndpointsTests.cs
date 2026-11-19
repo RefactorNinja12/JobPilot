@@ -7,6 +7,7 @@ using Jobpilot.Application.Abstractions.JobSearch;
 using Jobpilot.Application.Profiles;
 using Jobpilot.Domain.Common;
 using Jobpilot.Domain.Jobs;
+using Jobpilot.Domain.Matching;
 using Jobpilot.Domain.Profiles;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -20,6 +21,7 @@ public sealed class JobEndpointsTests : IAsyncDisposable
     private readonly InMemoryProfileRepository _profiles = new();
     private readonly FakeJobSearch _jobSearch = new();
     private readonly FakeEnrichments _enrichments = new();
+    private readonly InMemoryAssessmentStore _assessments = new();
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _http;
 
@@ -31,7 +33,7 @@ public sealed class JobEndpointsTests : IAsyncDisposable
             services.AddSingleton<IJobSearchClient>(_jobSearch);
             services.AddSingleton<IEnrichmentsClient>(_enrichments);
             services.AddSingleton<IAdCompetencyCache>(new InMemoryAdCompetencyCache());
-            services.AddSingleton<IAssessmentStore>(new InMemoryAssessmentStore());
+            services.AddSingleton<IAssessmentStore>(_assessments);
         }));
         _http = _factory.CreateClient();
     }
@@ -64,6 +66,38 @@ public sealed class JobEndpointsTests : IAsyncDisposable
 
     private static async Task<JsonElement> ProblemAsync(HttpResponseMessage response) =>
         await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
+
+    private async Task AssessedAsync(string id, int chance) =>
+        await _assessments.SaveAsync(
+            AiAssessment.Create(id, chance, "Why " + id, new DateTimeOffset(2026, 11, 17, 18, 0, 0, TimeSpan.Zero)).Value,
+            AdSnapshot.From(Ad(id)),
+            Ct);
+
+    [Fact]
+    public async Task GetAssessed_ReturnsEveryAssessedAd_BestChanceFirst_WithoutSearchingJobTech()
+    {
+        await AssessedAsync("poor", 15);
+        await AssessedAsync("good", 80);
+        _jobSearch.Failure = Error.Unavailable("JobSearch.Down", "Should not be called.");
+
+        var body = await _http.GetFromJsonAsync<JsonElement>("/api/jobs/assessed", Ct);
+
+        body.EnumerateArray().Select(j => j.GetProperty("adId").GetString()).ShouldBe(["good", "poor"]);
+        var good = body[0];
+        good.GetProperty("headline").GetString().ShouldBe("Utvecklare good");
+        good.GetProperty("employer").GetString().ShouldBe("Arbetsgivare");
+        good.GetProperty("applicationDeadline").GetString().ShouldBe("2026-12-01");
+        good.GetProperty("chance").GetInt32().ShouldBe(80);
+        good.GetProperty("summary").GetString().ShouldBe("Why good");
+    }
+
+    [Fact]
+    public async Task GetAssessed_NothingAssessed_IsAnEmptyList()
+    {
+        var body = await _http.GetFromJsonAsync<JsonElement>("/api/jobs/assessed", Ct);
+
+        body.GetArrayLength().ShouldBe(0);
+    }
 
     [Fact]
     public async Task GetJobs_ReturnsRankedMatchesAsCamelCaseJson()
