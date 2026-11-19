@@ -29,6 +29,7 @@ public static class ProfileTools
         [Description("Show full-time jobs.")] bool acceptsFullTime,
         [Description("Show part-time jobs. At least one of full-time and part-time must be true.")] bool acceptsPartTime,
         [Description("Hide ads from staffing agencies (bemanningsföretag).")] bool excludeStaffingAgencies,
+        [Description("Hide ads whose title says senior, lead, principal, architect, head of or chef. Keep the current value from get_profile unless the user changes it.")] bool excludeSeniorRoles = false,
         [Description("Home latitude in decimal degrees, e.g. 57.7089 for Göteborg.")] double? homeLatitude = null,
         [Description("Home longitude in decimal degrees, e.g. 11.9746 for Göteborg.")] double? homeLongitude = null,
         [Description("Farthest straight-line distance from home to a workplace, 1-500 km.")] int? maxDistanceKm = null,
@@ -42,7 +43,7 @@ public static class ProfileTools
                 "Give homeLatitude, homeLongitude and maxDistanceKm together, or none of them for no commute limit."),
         };
 
-        var command = new SetPreferencesCommand(acceptsFullTime, acceptsPartTime, excludeStaffingAgencies, commute);
+        var command = new SetPreferencesCommand(acceptsFullTime, acceptsPartTime, excludeStaffingAgencies, commute, excludeSeniorRoles);
         return (await ToolResults.Guard(handler.HandleAsync(command, cancellationToken))).ValueOrToolError();
     }
 }

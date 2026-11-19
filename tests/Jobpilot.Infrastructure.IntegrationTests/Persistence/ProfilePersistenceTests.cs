@@ -113,6 +113,34 @@ public sealed class ProfilePersistenceTests(PostgresFixture postgres) : IAsyncLi
     }
 
     [Fact]
+    public async Task Preferences_RoundTripWithExcludeSeniorRoles()
+    {
+        var preferences = JobPreferences.Create(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, excludeSeniorRoles: true).Value;
+        var profile = Profile.Create();
+        profile.UpdatePreferences(preferences);
+        await SaveAsync(profile);
+
+        (await LoadAsync(profile.Id)).Preferences.ShouldBe(preferences);
+    }
+
+    [Fact]
+    public async Task PreferencesStoredBeforeTheSeniorRule_LoadWithItOff()
+    {
+        var id = Guid.CreateVersion7();
+        await using (var db = NewContext())
+        {
+            var stored = """{"accepts_full_time":true,"accepts_part_time":false,"exclude_staffing_agencies":true,"commute_limit":null}""";
+            await db.Database.ExecuteSqlAsync($"INSERT INTO profiles (id, preferences) VALUES ({id}, {stored}::jsonb)", Ct);
+        }
+
+        var loaded = (await LoadAsync(id)).Preferences;
+
+        loaded.ExcludeSeniorRoles.ShouldBeFalse();
+        loaded.ExcludeStaffingAgencies.ShouldBeTrue();
+        loaded.AcceptsPartTime.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task PreferenceChanges_ArePersisted()
     {
         var profile = Profile.Create();

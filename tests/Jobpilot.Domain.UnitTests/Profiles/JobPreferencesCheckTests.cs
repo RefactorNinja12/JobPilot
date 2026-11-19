@@ -10,8 +10,8 @@ public class JobPreferencesCheckTests
     private static readonly Coordinates _stockholm = Coordinates.Create(59.3293, 18.0686).Value;
     private static readonly Coordinates _uppsala = Coordinates.Create(59.8586, 17.6389).Value; // ~64 km from Stockholm
 
-    private static JobAd Ad(WorkingHours hours = WorkingHours.FullTime, Coordinates? workplace = null) =>
-        JobAd.Create("1", "Backendutvecklare", "C# och Kafka.", new JobAdDetails(
+    private static JobAd Ad(WorkingHours hours = WorkingHours.FullTime, Coordinates? workplace = null, string headline = "Backendutvecklare") =>
+        JobAd.Create("1", headline, "C# och Kafka.", new JobAdDetails(
             new Uri("https://arbetsformedlingen.se/platsbanken/annonser/1"),
             Employer.Create("Skatteverket", "2021005448").Value,
             Workplace.Create("Stockholm", workplace),
@@ -24,12 +24,14 @@ public class JobPreferencesCheckTests
         bool fullTime = true,
         bool partTime = true,
         bool excludeAgencies = false,
-        int? maxKmFromStockholm = null) =>
+        int? maxKmFromStockholm = null,
+        bool excludeSenior = false) =>
         JobPreferences.Create(
             fullTime,
             partTime,
             excludeAgencies,
-            maxKmFromStockholm is { } km ? CommuteLimit.Create(_stockholm, km).Value : null).Value;
+            maxKmFromStockholm is { } km ? CommuteLimit.Create(_stockholm, km).Value : null,
+            excludeSenior).Value;
 
     [Fact]
     public void None_PassesEveryAd_WithoutFlags()
@@ -99,14 +101,29 @@ public class JobPreferencesCheckTests
     public void StaffingAgency_RejectedOnlyWhenExcluded(bool excludeAgencies, bool isStaffingAgency, bool passes) =>
         Preferences(excludeAgencies: excludeAgencies).Check(Ad(), isStaffingAgency).Passes.ShouldBe(passes);
 
+    [Theory]
+    [InlineData("Senior backendutvecklare", true)]
+    [InlineData("Tech Lead - Retail Portal", true)]
+    [InlineData("Lösningsarkitekt inom applikation", true)]
+    [InlineData("Backendutvecklare", false)]
+    [InlineData("Junior C++ Developer", false)]
+    public void SeniorRoles_RejectedOnlyWhenExcluded(string headline, bool senior)
+    {
+        var rejected = Preferences(excludeSenior: true).Check(Ad(headline: headline), isStaffingAgency: false);
+        var allowed = Preferences(excludeSenior: false).Check(Ad(headline: headline), isStaffingAgency: false);
+
+        rejected.Rejections.ShouldBe(senior ? [RejectionReason.TooSenior] : []);
+        allowed.Passes.ShouldBeTrue();
+    }
+
     [Fact]
     public void SeveralBrokenRules_AreAllListed()
     {
-        var preferences = Preferences(fullTime: false, partTime: true, excludeAgencies: true, maxKmFromStockholm: 10);
+        var preferences = Preferences(fullTime: false, partTime: true, excludeAgencies: true, maxKmFromStockholm: 10, excludeSenior: true);
 
-        var verdict = preferences.Check(Ad(WorkingHours.FullTime, _uppsala), isStaffingAgency: true);
+        var verdict = preferences.Check(Ad(WorkingHours.FullTime, _uppsala, "Senior utvecklare"), isStaffingAgency: true);
 
         verdict.Rejections.ShouldBe(
-            [RejectionReason.FullTimeNotAccepted, RejectionReason.TooFarAway, RejectionReason.StaffingAgency]);
+            [RejectionReason.FullTimeNotAccepted, RejectionReason.TooFarAway, RejectionReason.StaffingAgency, RejectionReason.TooSenior]);
     }
 }
