@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { JobsPage } from './JobsPage'
 import { anAssessedJob, respondWithAssessedJobs } from './test/server'
@@ -27,19 +27,31 @@ describe('JobsPage', () => {
     expect(screen.getByText('12 dagar kvar att söka')).toBeInTheDocument()
   })
 
-  it('shows poor chances too, in the order the API gives (best first)', async () => {
+  it('shows the ads worth applying for by default, and the ones Claude sifted out on the other tab', async () => {
     respondWithAssessedJobs([
       anAssessedJob({ adId: 'good', headline: 'Bra', chance: 85 }),
+      anAssessedJob({ adId: 'edge', headline: 'Precis', chance: 50 }),
       anAssessedJob({ adId: 'poor', headline: 'Dålig', chance: 10, municipality: null }),
     ])
-
     render(<JobsPage />)
 
-    const links = await screen.findAllByRole('link', { name: /Bra|Dålig/ })
-    expect(links.map((l) => l.textContent)).toEqual(['Bra', 'Dålig'])
+    const goodTab = await screen.findByRole('tab', { name: 'Värda att söka (2)' })
+    expect(goodTab).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getAllByRole('link').map((l) => l.textContent)).toEqual(['Bra', 'Precis'])
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Bortsållade (1)' }))
+
+    expect(screen.getByRole('tab', { name: 'Bortsållade (1)' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getAllByRole('link').map((l) => l.textContent)).toEqual(['Dålig'])
     expect(screen.getByText('10 %')).toBeInTheDocument()
     expect(screen.getByText(/Ort saknas/)).toBeInTheDocument()
-    expect(screen.getByText(/2 annonser bedömda av Claude/)).toBeInTheDocument()
+  })
+
+  it('says so when a tab is empty', async () => {
+    respondWithAssessedJobs([anAssessedJob({ chance: 20 })])
+    render(<JobsPage />)
+
+    expect(await screen.findByText('Inga annonser med god chans just nu.')).toBeInTheDocument()
   })
 
   it('tells how to get assessments when there are none', async () => {

@@ -3,6 +3,11 @@ import { ApiError, fetchAssessedJobs, type AssessedJob } from './api/jobs'
 import { daysLeft, deadlineText } from './deadline'
 import { JobDescription } from './JobDescription'
 
+/** Claude gives a chance, not a yes or no: from this chance up, an ad counts as worth applying for. */
+const WORTH_APPLYING_FROM = 50
+
+type Tab = 'good' | 'poor'
+
 const date = (iso: string) => new Date(iso).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })
 
 function errorText(error: unknown): string {
@@ -73,15 +78,39 @@ export function JobsPage() {
     )
   }
 
+  return <AssessedJobs jobs={jobs} />
+}
+
+function AssessedJobs({ jobs }: { jobs: AssessedJob[] }) {
+  const [tab, setTab] = useState<Tab>('good')
+  const good = jobs.filter((j) => j.chance >= WORTH_APPLYING_FROM)
+  const poor = jobs.filter((j) => j.chance < WORTH_APPLYING_FROM)
+  const shown = tab === 'good' ? good : poor
+
   return (
     <section>
+      <div role="tablist" aria-label="Claudes bedömning" className="tabs">
+        <button type="button" role="tab" aria-selected={tab === 'good'} onClick={() => setTab('good')}>
+          Värda att söka ({good.length})
+        </button>
+        <button type="button" role="tab" aria-selected={tab === 'poor'} onClick={() => setTab('poor')}>
+          Bortsållade ({poor.length})
+        </button>
+      </div>
       <p className="summary">
-        {jobs.length} annonser bedömda av Claude, bäst chans först. De med låg chans visas också, så att du kan se hur
-        Claude har bedömt.
+        {tab === 'good'
+          ? `Claude bedömer minst ${WORTH_APPLYING_FROM} % chans. Bäst chans först.`
+          : `Under ${WORTH_APPLYING_FROM} % chans enligt Claude. Titta här om du vill se hur Claude har sållat.`}
       </p>
-      {jobs.map((job) => (
-        <JobCard key={job.adId} job={job} />
-      ))}
+      {shown.length === 0 ? (
+        <p>{tab === 'good' ? 'Inga annonser med god chans just nu.' : 'Claude har inte sållat bort någon annons.'}</p>
+      ) : (
+        <div role="tabpanel">
+          {shown.map((job) => (
+            <JobCard key={job.adId} job={job} />
+          ))}
+        </div>
+      )}
     </section>
   )
 }
