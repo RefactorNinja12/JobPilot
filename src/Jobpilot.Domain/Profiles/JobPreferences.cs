@@ -15,18 +15,20 @@ public sealed record JobPreferences
         bool acceptsPartTime,
         bool excludeStaffingAgencies,
         CommuteLimit? commuteLimit,
-        bool excludeSeniorRoles)
+        bool excludeSeniorRoles,
+        int? maxRequiredYears)
     {
         AcceptsFullTime = acceptsFullTime;
         AcceptsPartTime = acceptsPartTime;
         ExcludeStaffingAgencies = excludeStaffingAgencies;
         CommuteLimit = commuteLimit;
         ExcludeSeniorRoles = excludeSeniorRoles;
+        MaxRequiredYears = maxRequiredYears;
     }
 
     /// <summary>No requirements: every ad passes. Default for new profiles.</summary>
     public static JobPreferences None { get; } =
-        new(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, commuteLimit: null, excludeSeniorRoles: false);
+        new(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, commuteLimit: null, excludeSeniorRoles: false, maxRequiredYears: null);
 
     public bool AcceptsFullTime { get; }
 
@@ -37,6 +39,12 @@ public sealed record JobPreferences
     /// <summary>Hide ads whose title says senior, lead, architect or manager (see <see cref="SeniorTitles"/>).</summary>
     public bool ExcludeSeniorRoles { get; }
 
+    /// <summary>
+    /// Hide ads whose description clearly asks for more years of experience than this (see <see cref="RequiredExperience"/>),
+    /// or null for no requirement. Ads that state no years are never rejected.
+    /// </summary>
+    public int? MaxRequiredYears { get; }
+
     /// <summary>Maximum commute distance from home, or null for no requirement.</summary>
     public CommuteLimit? CommuteLimit { get; }
 
@@ -45,14 +53,20 @@ public sealed record JobPreferences
         bool acceptsPartTime,
         bool excludeStaffingAgencies,
         CommuteLimit? commuteLimit = null,
-        bool excludeSeniorRoles = false)
+        bool excludeSeniorRoles = false,
+        int? maxRequiredYears = null)
     {
         if (!acceptsFullTime && !acceptsPartTime)
         {
             return JobPreferencesErrors.NoEmploymentExtentAccepted;
         }
 
-        return new JobPreferences(acceptsFullTime, acceptsPartTime, excludeStaffingAgencies, commuteLimit, excludeSeniorRoles);
+        if (maxRequiredYears is < 0 or > RequiredExperience.MaxPlausibleYears)
+        {
+            return JobPreferencesErrors.MaxRequiredYearsOutOfRange;
+        }
+
+        return new JobPreferences(acceptsFullTime, acceptsPartTime, excludeStaffingAgencies, commuteLimit, excludeSeniorRoles, maxRequiredYears);
     }
 
     /// <summary>
@@ -101,6 +115,11 @@ public sealed record JobPreferences
         if (ExcludeSeniorRoles && SeniorTitles.IsSenior(ad.Headline))
         {
             rejections.Add(RejectionReason.TooSenior);
+        }
+
+        if (MaxRequiredYears is { } maxYears && RequiredExperience.LowestRequiredYears(ad.Description) > maxYears)
+        {
+            rejections.Add(RejectionReason.TooMuchExperienceRequired);
         }
 
         return new DealbreakerVerdict(rejections, unknowns);

@@ -28,8 +28,9 @@ public class SetPreferencesHandlerTests
         bool partTime = false,
         bool excludeAgencies = true,
         CommuteInput? commute = null,
-        bool excludeSenior = false) =>
-        _handler.HandleAsync(new SetPreferencesCommand(fullTime, partTime, excludeAgencies, commute, excludeSenior), Ct);
+        bool excludeSenior = false,
+        int? maxRequiredYears = null) =>
+        _handler.HandleAsync(new SetPreferencesCommand(fullTime, partTime, excludeAgencies, commute, excludeSenior, maxRequiredYears), Ct);
 
     [Fact]
     public async Task Set_WithCommuteLimit_StoresAndReturnsIt()
@@ -41,7 +42,8 @@ public class SetPreferencesHandlerTests
             AcceptsPartTime: false,
             ExcludeStaffingAgencies: true,
             new CommuteView(57.7089, 11.9746, 40),
-            ExcludeSeniorRoles: false);
+            ExcludeSeniorRoles: false,
+            MaxRequiredYears: null);
         result.Value.ShouldBe(expected);
         PreferencesView.From(_profile.Preferences).ShouldBe(expected);
         await _profiles.Received(1).SaveChangesAsync(Ct);
@@ -54,6 +56,24 @@ public class SetPreferencesHandlerTests
 
         result.Value.ExcludeSeniorRoles.ShouldBeTrue();
         _profile.Preferences.ExcludeSeniorRoles.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Set_WithMaxRequiredYears_StoresIt()
+    {
+        var result = await SetAsync(maxRequiredYears: 3);
+
+        result.Value.MaxRequiredYears.ShouldBe(3);
+        _profile.Preferences.MaxRequiredYears.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task Set_WithMaxRequiredYearsOutOfRange_FailsWithoutSaving()
+    {
+        var result = await SetAsync(maxRequiredYears: 16);
+
+        result.Error.ShouldBe(JobPreferencesErrors.MaxRequiredYearsOutOfRange);
+        await _profiles.DidNotReceive().SaveChangesAsync(Ct);
     }
 
     [Fact]

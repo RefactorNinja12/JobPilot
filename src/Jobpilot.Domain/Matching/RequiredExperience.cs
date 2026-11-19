@@ -13,7 +13,7 @@ namespace Jobpilot.Domain.Matching;
 public static partial class RequiredExperience
 {
     /// <summary>Numbers above this are not a requirement on a person but noise, such as company history.</summary>
-    private const int MaxPlausibleYears = 15;
+    public const int MaxPlausibleYears = 15;
 
     private static readonly Dictionary<string, int> _numberWords = new(StringComparer.OrdinalIgnoreCase)
     {

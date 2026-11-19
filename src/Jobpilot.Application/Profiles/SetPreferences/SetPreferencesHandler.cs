@@ -32,7 +32,8 @@ public sealed class SetPreferencesHandler(IProfileRepository profiles)
             command.AcceptsPartTime,
             command.ExcludeStaffingAgencies,
             commuteLimit,
-            command.ExcludeSeniorRoles);
+            command.ExcludeSeniorRoles,
+            command.MaxRequiredYears);
         if (preferences.IsFailure)
         {
             return preferences.Error;

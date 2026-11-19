@@ -41,11 +41,25 @@ public class JobPreferencesTests
         none.ExcludeStaffingAgencies.ShouldBeFalse();
         none.CommuteLimit.ShouldBeNull();
         none.ExcludeSeniorRoles.ShouldBeFalse();
+        none.MaxRequiredYears.ShouldBeNull();
     }
 
     [Fact]
     public void Create_KeepsExcludeSeniorRoles() =>
         JobPreferences.Create(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, excludeSeniorRoles: true).Value.ExcludeSeniorRoles.ShouldBeTrue();
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(5)]
+    [InlineData(15)]
+    public void Create_KeepsMaxRequiredYears(int years) =>
+        JobPreferences.Create(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, maxRequiredYears: years).Value.MaxRequiredYears.ShouldBe(years);
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(16)]
+    public void Create_MaxRequiredYearsOutOfRange_Fails(int years) =>
+        JobPreferences.Create(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, maxRequiredYears: years).Error.ShouldBe(JobPreferencesErrors.MaxRequiredYearsOutOfRange);
 
     [Fact]
     public void Create_WithoutCommuteLimit_HasNoCommuteRequirement() =>

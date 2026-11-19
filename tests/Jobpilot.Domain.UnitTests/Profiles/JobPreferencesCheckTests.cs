@@ -10,8 +10,8 @@ public class JobPreferencesCheckTests
     private static readonly Coordinates _stockholm = Coordinates.Create(59.3293, 18.0686).Value;
     private static readonly Coordinates _uppsala = Coordinates.Create(59.8586, 17.6389).Value; // ~64 km from Stockholm
 
-    private static JobAd Ad(WorkingHours hours = WorkingHours.FullTime, Coordinates? workplace = null, string headline = "Backendutvecklare") =>
-        JobAd.Create("1", headline, "C# och Kafka.", new JobAdDetails(
+    private static JobAd Ad(WorkingHours hours = WorkingHours.FullTime, Coordinates? workplace = null, string headline = "Backendutvecklare", string description = "C# och Kafka.") =>
+        JobAd.Create("1", headline, description, new JobAdDetails(
             new Uri("https://arbetsformedlingen.se/platsbanken/annonser/1"),
             Employer.Create("Skatteverket", "2021005448").Value,
             Workplace.Create("Stockholm", workplace),
@@ -25,13 +25,15 @@ public class JobPreferencesCheckTests
         bool partTime = true,
         bool excludeAgencies = false,
         int? maxKmFromStockholm = null,
-        bool excludeSenior = false) =>
+        bool excludeSenior = false,
+        int? maxRequiredYears = null) =>
         JobPreferences.Create(
             fullTime,
             partTime,
             excludeAgencies,
             maxKmFromStockholm is { } km ? CommuteLimit.Create(_stockholm, km).Value : null,
-            excludeSenior).Value;
+            excludeSenior,
+            maxRequiredYears).Value;
 
     [Fact]
     public void None_PassesEveryAd_WithoutFlags()
@@ -115,6 +117,23 @@ public class JobPreferencesCheckTests
         rejected.Rejections.ShouldBe(senior ? [RejectionReason.TooSenior] : []);
         allowed.Passes.ShouldBeTrue();
     }
+
+    [Theory]
+    [InlineData("Du har minst 5 års erfarenhet av .NET.", 3, true)]
+    [InlineData("Du har minst 3 års erfarenhet av .NET.", 3, false)]
+    [InlineData("Du har 3-5 års erfarenhet av .NET.", 2, true)]
+    [InlineData("Du har ett par års erfarenhet av .NET.", 0, false)]
+    [InlineData("C# och Kafka.", 0, false)]
+    public void RequiredYears_RejectedOnlyWhenClearlyAboveTheMaximum(string description, int maxYears, bool rejected)
+    {
+        var verdict = Preferences(maxRequiredYears: maxYears).Check(Ad(description: description), isStaffingAgency: false);
+
+        verdict.Rejections.ShouldBe(rejected ? [RejectionReason.TooMuchExperienceRequired] : []);
+    }
+
+    [Fact]
+    public void RequiredYears_WithoutMaximum_NeverRejects() =>
+        Preferences().Check(Ad(description: "Minst 10 års erfarenhet."), isStaffingAgency: false).Passes.ShouldBeTrue();
 
     [Fact]
     public void SeveralBrokenRules_AreAllListed()
