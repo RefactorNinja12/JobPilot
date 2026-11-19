@@ -9,6 +9,7 @@ const noLimit: Preferences = {
   acceptsFullTime: true,
   acceptsPartTime: true,
   excludeStaffingAgencies: false,
+  excludeSeniorRoles: false,
   commute: null,
 };
 const withLimit: Preferences = {
@@ -52,9 +53,23 @@ describe("PreferencesEditor", () => {
         acceptsFullTime: true,
         acceptsPartTime: false,
         excludeStaffingAgencies: true,
+        excludeSeniorRoles: false,
         commute: null,
       },
     ]);
+  });
+
+  it("sends the senior-roles dealbreaker when it is ticked", async () => {
+    const sent = respondToPreferenceCalls();
+    render(<PreferencesEditor preferences={noLimit} onChanged={vi.fn()} />);
+
+    await userEvent.click(
+      screen.getByRole("checkbox", { name: /Dölj seniora tjänster/ }),
+    );
+    await userEvent.click(save());
+
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]).toMatchObject({ excludeSeniorRoles: true });
   });
 
   it("will not save with neither full-time nor part-time", async () => {
