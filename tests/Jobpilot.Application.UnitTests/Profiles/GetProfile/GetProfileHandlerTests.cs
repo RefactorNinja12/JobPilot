@@ -28,7 +28,8 @@ public class GetProfileHandlerTests
             AcceptsFullTime: true,
             AcceptsPartTime: true,
             ExcludeStaffingAgencies: false,
-            Commute: null));
+            Commute: null,
+            ExcludeSeniorRoles: false));
     }
 
     [Fact]
@@ -57,6 +58,7 @@ public class GetProfileHandlerTests
             AcceptsFullTime: true,
             AcceptsPartTime: false,
             ExcludeStaffingAgencies: true,
-            new CommuteView(57.7089, 11.9746, 40)));
+            new CommuteView(57.7089, 11.9746, 40),
+            ExcludeSeniorRoles: false));
     }
 }

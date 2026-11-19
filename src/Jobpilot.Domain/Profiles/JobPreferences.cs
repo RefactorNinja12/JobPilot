@@ -14,23 +14,28 @@ public sealed record JobPreferences
         bool acceptsFullTime,
         bool acceptsPartTime,
         bool excludeStaffingAgencies,
-        CommuteLimit? commuteLimit)
+        CommuteLimit? commuteLimit,
+        bool excludeSeniorRoles)
     {
         AcceptsFullTime = acceptsFullTime;
         AcceptsPartTime = acceptsPartTime;
         ExcludeStaffingAgencies = excludeStaffingAgencies;
         CommuteLimit = commuteLimit;
+        ExcludeSeniorRoles = excludeSeniorRoles;
     }
 
     /// <summary>No requirements: every ad passes. Default for new profiles.</summary>
     public static JobPreferences None { get; } =
-        new(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, commuteLimit: null);
+        new(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, commuteLimit: null, excludeSeniorRoles: false);
 
     public bool AcceptsFullTime { get; }
 
     public bool AcceptsPartTime { get; }
 
     public bool ExcludeStaffingAgencies { get; }
+
+    /// <summary>Hide ads whose title says senior, lead, architect or manager (see <see cref="SeniorTitles"/>).</summary>
+    public bool ExcludeSeniorRoles { get; }
 
     /// <summary>Maximum commute distance from home, or null for no requirement.</summary>
     public CommuteLimit? CommuteLimit { get; }
@@ -39,14 +44,15 @@ public sealed record JobPreferences
         bool acceptsFullTime,
         bool acceptsPartTime,
         bool excludeStaffingAgencies,
-        CommuteLimit? commuteLimit = null)
+        CommuteLimit? commuteLimit = null,
+        bool excludeSeniorRoles = false)
     {
         if (!acceptsFullTime && !acceptsPartTime)
         {
             return JobPreferencesErrors.NoEmploymentExtentAccepted;
         }
 
-        return new JobPreferences(acceptsFullTime, acceptsPartTime, excludeStaffingAgencies, commuteLimit);
+        return new JobPreferences(acceptsFullTime, acceptsPartTime, excludeStaffingAgencies, commuteLimit, excludeSeniorRoles);
     }
 
     /// <summary>
@@ -90,6 +96,11 @@ public sealed record JobPreferences
         if (ExcludeStaffingAgencies && isStaffingAgency)
         {
             rejections.Add(RejectionReason.StaffingAgency);
+        }
+
+        if (ExcludeSeniorRoles && SeniorTitles.IsSenior(ad.Headline))
+        {
+            rejections.Add(RejectionReason.TooSenior);
         }
 
         return new DealbreakerVerdict(rejections, unknowns);

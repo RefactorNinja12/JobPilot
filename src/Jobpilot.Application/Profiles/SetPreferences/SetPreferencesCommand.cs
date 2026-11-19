@@ -5,8 +5,10 @@ namespace Jobpilot.Application.Profiles.SetPreferences;
 /// <param name="AcceptsPartTime">Show part-time jobs.</param>
 /// <param name="ExcludeStaffingAgencies">Hide ads from staffing agencies.</param>
 /// <param name="Commute">Maximum commute distance, or null for no limit.</param>
+/// <param name="ExcludeSeniorRoles">Hide ads whose title says senior, lead, architect or manager.</param>
 public sealed record SetPreferencesCommand(
     bool AcceptsFullTime,
     bool AcceptsPartTime,
     bool ExcludeStaffingAgencies,
-    CommuteInput? Commute);
+    CommuteInput? Commute,
+    bool ExcludeSeniorRoles = false);

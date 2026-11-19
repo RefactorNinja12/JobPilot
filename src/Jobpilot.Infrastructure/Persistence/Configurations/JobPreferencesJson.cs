@@ -23,7 +23,8 @@ internal static class JobPreferencesJson
                 preferences.ExcludeStaffingAgencies,
                 preferences.CommuteLimit is { } limit
                     ? new CommuteLimitDto(limit.Home.Latitude, limit.Home.Longitude, limit.MaxDistanceKm)
-                    : null),
+                    : null,
+                preferences.ExcludeSeniorRoles),
             _options);
 
     /// <summary>Only the app writes this column, so invalid JSON is a bug and throws.</summary>
@@ -40,14 +41,16 @@ internal static class JobPreferencesJson
             dto.AcceptsFullTime,
             dto.AcceptsPartTime,
             dto.ExcludeStaffingAgencies,
-            commuteLimit).Value;
+            commuteLimit,
+            dto.ExcludeSeniorRoles).Value;
     }
 
     private sealed record PreferencesDto(
         bool AcceptsFullTime,
         bool AcceptsPartTime,
         bool ExcludeStaffingAgencies,
-        CommuteLimitDto? CommuteLimit);
+        CommuteLimitDto? CommuteLimit,
+        bool ExcludeSeniorRoles = false); // Missing in preferences stored before this rule existed.
 
     private sealed record CommuteLimitDto(double HomeLatitude, double HomeLongitude, int MaxDistanceKm);
 }

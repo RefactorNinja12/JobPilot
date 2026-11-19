@@ -14,4 +14,7 @@ public enum RejectionReason
 
     /// <summary>The employer is a staffing agency and the user excludes them.</summary>
     StaffingAgency = 4,
+
+    /// <summary>The title says senior, lead, architect or manager, and the user excludes senior roles.</summary>
+    TooSenior = 5,
 }

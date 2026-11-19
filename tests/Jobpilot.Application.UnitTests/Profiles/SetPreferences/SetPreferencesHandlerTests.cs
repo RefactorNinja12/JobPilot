@@ -27,8 +27,9 @@ public class SetPreferencesHandlerTests
         bool fullTime = true,
         bool partTime = false,
         bool excludeAgencies = true,
-        CommuteInput? commute = null) =>
-        _handler.HandleAsync(new SetPreferencesCommand(fullTime, partTime, excludeAgencies, commute), Ct);
+        CommuteInput? commute = null,
+        bool excludeSenior = false) =>
+        _handler.HandleAsync(new SetPreferencesCommand(fullTime, partTime, excludeAgencies, commute, excludeSenior), Ct);
 
     [Fact]
     public async Task Set_WithCommuteLimit_StoresAndReturnsIt()
@@ -39,10 +40,20 @@ public class SetPreferencesHandlerTests
             AcceptsFullTime: true,
             AcceptsPartTime: false,
             ExcludeStaffingAgencies: true,
-            new CommuteView(57.7089, 11.9746, 40));
+            new CommuteView(57.7089, 11.9746, 40),
+            ExcludeSeniorRoles: false);
         result.Value.ShouldBe(expected);
         PreferencesView.From(_profile.Preferences).ShouldBe(expected);
         await _profiles.Received(1).SaveChangesAsync(Ct);
+    }
+
+    [Fact]
+    public async Task Set_WithExcludeSeniorRoles_StoresIt()
+    {
+        var result = await SetAsync(excludeSenior: true);
+
+        result.Value.ExcludeSeniorRoles.ShouldBeTrue();
+        _profile.Preferences.ExcludeSeniorRoles.ShouldBeTrue();
     }
 
     [Fact]

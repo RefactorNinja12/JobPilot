@@ -40,7 +40,12 @@ public class JobPreferencesTests
         none.AcceptsPartTime.ShouldBeTrue();
         none.ExcludeStaffingAgencies.ShouldBeFalse();
         none.CommuteLimit.ShouldBeNull();
+        none.ExcludeSeniorRoles.ShouldBeFalse();
     }
+
+    [Fact]
+    public void Create_KeepsExcludeSeniorRoles() =>
+        JobPreferences.Create(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, excludeSeniorRoles: true).Value.ExcludeSeniorRoles.ShouldBeTrue();
 
     [Fact]
     public void Create_WithoutCommuteLimit_HasNoCommuteRequirement() =>
