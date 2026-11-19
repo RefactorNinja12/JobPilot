@@ -27,6 +27,18 @@ describe('SkillsEditor', () => {
     expect(screen.getByRole('textbox', { name: 'Kompetens' })).toHaveValue('')
   })
 
+  it('explains the levels on request', async () => {
+    render(<SkillsEditor skills={[]} onChanged={vi.fn()} />)
+    expect(screen.queryByRole('term')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Vad betyder nivåerna?' }))
+
+    expect(screen.getAllByRole('term').map((t) => t.textContent)).toEqual(['Nybörjare', 'Medel', 'Avancerad', 'Expert'])
+    expect(screen.getByText(/Har byggt egna saker/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Dölj nivåbeskrivning' }))
+    expect(screen.queryByRole('term')).not.toBeInTheDocument()
+  })
+
   it('warns when the skill is not in the vocabulary', async () => {
     respondToSkillCalls({ answer: { status: 200, body: { name: 'Elixirr', inVocabulary: false } } })
     render(<SkillsEditor skills={[]} onChanged={vi.fn()} />)
