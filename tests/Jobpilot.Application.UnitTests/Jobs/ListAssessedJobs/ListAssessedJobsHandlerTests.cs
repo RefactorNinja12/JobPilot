@@ -53,7 +53,21 @@ public class ListAssessedJobsHandlerTests
             new DateOnly(2026, 12, 1),
             65,
             "Why 1",
-            _assessed));
+            _assessed,
+            [],
+            []));
+    }
+
+    [Fact]
+    public async Task List_PassesOnWhichSkillsMatchedAndWhichWereMissing()
+    {
+        var assessed = Assessed("1", 65, _assessed);
+        _store.ListAsync(Ct).Returns([assessed with { Ad = assessed.Ad with { MatchedSkills = ["C#"], MissingSkills = ["Kafka", "Azure"] } }]);
+
+        var job = (await _handler.HandleAsync(Ct)).ShouldHaveSingleItem();
+
+        job.MatchedSkills.ShouldBe(["C#"]);
+        job.MissingSkills.ShouldBe(["Kafka", "Azure"]);
     }
 
     [Fact]

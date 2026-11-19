@@ -11,6 +11,8 @@ namespace Jobpilot.Application.Jobs.ListAssessedJobs;
 /// <param name="Chance">0-100, Claude's judgement of the chance of getting the job.</param>
 /// <param name="Summary">Claude's reasons, in a few sentences.</param>
 /// <param name="AssessedAt">When Claude assessed the ad.</param>
+/// <param name="MatchedSkills">What the ad asks for that the profile had when assessed; empty when not known.</param>
+/// <param name="MissingSkills">What the ad asks for that the profile lacked when assessed; empty when not known.</param>
 public sealed record AssessedJobView(
     string AdId,
     string Headline,
@@ -21,4 +23,6 @@ public sealed record AssessedJobView(
     DateOnly ApplicationDeadline,
     int Chance,
     string Summary,
-    DateTimeOffset AssessedAt);
+    DateTimeOffset AssessedAt,
+    IReadOnlyList<string> MatchedSkills,
+    IReadOnlyList<string> MissingSkills);

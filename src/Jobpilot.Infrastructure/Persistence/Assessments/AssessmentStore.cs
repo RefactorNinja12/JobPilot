@@ -39,7 +39,7 @@ internal sealed class AssessmentStore(JobpilotDbContext db) : IAssessmentStore
         // Only valid assessments and snapshots of valid ads are ever written, so nothing here can fail.
         return rows.ConvertAll(r => new AssessedAd(
             AiAssessment.Create(r.AdId, r.Chance, r.Summary, r.AssessedAt).Value,
-            new AdSnapshot(r.Headline!, r.Employer!, r.Municipality, new Uri(r.Url!), r.PublishedAt!.Value, r.ApplicationDeadline!.Value)));
+            new AdSnapshot(r.Headline!, r.Employer!, r.Municipality, new Uri(r.Url!), r.PublishedAt!.Value, r.ApplicationDeadline!.Value, r.MatchedSkills, r.MissingSkills)));
     }
 
     public async Task SaveAsync(AiAssessment assessment, AdSnapshot ad, CancellationToken cancellationToken)
@@ -63,6 +63,8 @@ internal sealed class AssessmentStore(JobpilotDbContext db) : IAssessmentStore
         row.Url = ad.Url.AbsoluteUri;
         row.PublishedAt = ad.PublishedAt.ToUniversalTime();
         row.ApplicationDeadline = ad.ApplicationDeadline;
+        row.MatchedSkills = ad.MatchedSkills?.ToArray();
+        row.MissingSkills = ad.MissingSkills?.ToArray();
         await db.SaveChangesAsync(cancellationToken);
     }
 }

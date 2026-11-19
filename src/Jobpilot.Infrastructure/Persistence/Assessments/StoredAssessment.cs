@@ -25,4 +25,10 @@ internal sealed class StoredAssessment
     public DateTimeOffset? PublishedAt { get; set; }
 
     public DateOnly? ApplicationDeadline { get; set; }
+
+    /// <summary>What the ad asks for that the profile had when assessed (text[]). Null when not known.</summary>
+    public string[]? MatchedSkills { get; set; }
+
+    /// <summary>What the ad asks for that the profile lacked when assessed (text[]). Null when not known.</summary>
+    public string[]? MissingSkills { get; set; }
 }

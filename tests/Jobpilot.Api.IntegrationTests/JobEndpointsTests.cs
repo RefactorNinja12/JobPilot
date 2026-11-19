@@ -59,17 +59,17 @@ public sealed class JobEndpointsTests : IAsyncDisposable
     private static async Task<JsonElement> ProblemAsync(HttpResponseMessage response) =>
         await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
 
-    private async Task AssessedAsync(string id, int chance) =>
+    private async Task AssessedAsync(string id, int chance, string[]? matched = null, string[]? missing = null) =>
         await _assessments.SaveAsync(
             AiAssessment.Create(id, chance, "Why " + id, new DateTimeOffset(2026, 11, 17, 18, 0, 0, TimeSpan.Zero)).Value,
-            AdSnapshot.From(Ad(id)),
+            AdSnapshot.From(Ad(id)) with { MatchedSkills = matched, MissingSkills = missing },
             Ct);
 
     [Fact]
     public async Task GetAssessed_ReturnsEveryAssessedAd_BestChanceFirst_WithoutSearchingJobTech()
     {
         await AssessedAsync("poor", 15);
-        await AssessedAsync("good", 80);
+        await AssessedAsync("good", 80, matched: ["C#"], missing: ["Kafka"]);
         _jobSearch.Failure = Error.Unavailable("JobSearch.Down", "Should not be called.");
 
         var body = await _http.GetFromJsonAsync<JsonElement>("/api/jobs/assessed", Ct);
@@ -81,6 +81,9 @@ public sealed class JobEndpointsTests : IAsyncDisposable
         good.GetProperty("applicationDeadline").GetString().ShouldBe("2026-12-01");
         good.GetProperty("chance").GetInt32().ShouldBe(80);
         good.GetProperty("summary").GetString().ShouldBe("Why good");
+        good.GetProperty("matchedSkills").EnumerateArray().Select(x => x.GetString()).ShouldBe(["C#"]);
+        good.GetProperty("missingSkills").EnumerateArray().Select(x => x.GetString()).ShouldBe(["Kafka"]);
+        body[1].GetProperty("matchedSkills").GetArrayLength().ShouldBe(0); // Skills not known: an empty list, not null.
     }
 
     [Fact]
