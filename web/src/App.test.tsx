@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import App from './App'
-import { aProfile, aResult, respondWithJobs, respondWithProfile } from './test/server'
+import { anAssessedJob, aProfile, respondWithAssessedJobs, respondWithProfile } from './test/server'
 
 afterEach(() => {
   window.location.hash = ''
@@ -9,7 +9,7 @@ afterEach(() => {
 
 describe('App', () => {
   it('starts on the job list', async () => {
-    respondWithJobs(aResult())
+    respondWithAssessedJobs([anAssessedJob()])
 
     render(<App />)
 
@@ -19,7 +19,7 @@ describe('App', () => {
   })
 
   it('switches to the profile on #/profil', async () => {
-    respondWithJobs(aResult())
+    respondWithAssessedJobs([anAssessedJob()])
     respondWithProfile(aProfile())
     render(<App />)
 

@@ -1,77 +1,72 @@
-import { render, screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { JobsPage } from './JobsPage'
-import { aMatch, aResult, respondWithJobs } from './test/server'
+import { anAssessedJob, respondWithAssessedJobs } from './test/server'
 
 describe('JobsPage', () => {
-  it('shows each match with score, link, details and skills', async () => {
-    respondWithJobs(aResult())
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 10, 19, 12, 0)) // 19 Nov 2026, local time
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("shows each assessed ad with Claude's chance, reasons, link and days left", async () => {
+    respondWithAssessedJobs([anAssessedJob()])
 
     render(<JobsPage />)
 
     const link = await screen.findByRole('link', { name: 'Backendutvecklare C#' })
     expect(link).toHaveAttribute('href', 'https://arbetsformedlingen.se/platsbanken/annonser/31744367')
     expect(link).toHaveAttribute('target', '_blank')
-    expect(screen.getByText('85')).toBeInTheDocument()
-    expect(screen.getByText(/Exempel AB · Göteborg · Heltid · Sista ansökan/)).toBeInTheDocument()
-    const matched = screen.getByRole('list', { name: 'Matchade kompetenser' })
-    expect(within(matched).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['C#', '.net'])
-    const missing = screen.getByRole('list', { name: 'Saknade kompetenser' })
-    expect(within(missing).getByText('Kafka')).toBeInTheDocument()
-  })
-
-  it('summarises what was fetched and why ads were left out', async () => {
-    respondWithJobs(aResult({ fetched: 200, passed: 150, rejected: { TooFarAway: 42, StaffingAgency: 8 } }))
-
-    render(<JobsPage />)
-
-    expect(
-      await screen.findByText('200 hämtade · 150 klarade dina krav · bortsorterade: 42 för långt bort, 8 bemanningsföretag'),
-    ).toBeInTheDocument()
-  })
-
-  it("shows Claude's saved assessment and what could not be checked", async () => {
-    respondWithJobs(
-      aResult({
-        matches: [
-          aMatch({
-            assessment: { chance: 70, summary: 'Stark C#-match, Kafka saknas.', assessedAt: '2026-11-17T18:00:00Z' },
-            unknowns: ['Location'],
-            municipality: null,
-          }),
-        ],
-      }),
-    )
-
-    render(<JobsPage />)
-
-    expect(await screen.findByText('Claudes bedömning: 70 % chans.')).toBeInTheDocument()
+    expect(screen.getByText('70 %')).toBeInTheDocument()
     expect(screen.getByText(/Stark C#-match, Kafka saknas\./)).toBeInTheDocument()
-    expect(screen.getByText('Kunde inte kontrollera avståndet (annonsen saknar plats).')).toBeInTheDocument()
+    expect(screen.getByText(/Exempel AB · Göteborg · Sista ansökan/)).toBeInTheDocument()
+    expect(screen.getByText('12 dagar kvar att söka')).toBeInTheDocument()
+  })
+
+  it('shows the ads worth applying for by default, and the ones Claude sifted out on the other tab', async () => {
+    respondWithAssessedJobs([
+      anAssessedJob({ adId: 'good', headline: 'Bra', chance: 85 }),
+      anAssessedJob({ adId: 'edge', headline: 'Precis', chance: 50 }),
+      anAssessedJob({ adId: 'poor', headline: 'Dålig', chance: 10, municipality: null }),
+    ])
+    render(<JobsPage />)
+
+    const goodTab = await screen.findByRole('tab', { name: 'Värda att söka (2)' })
+    expect(goodTab).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getAllByRole('link').map((l) => l.textContent)).toEqual(['Bra', 'Precis'])
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Bortsållade (1)' }))
+
+    expect(screen.getByRole('tab', { name: 'Bortsållade (1)' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getAllByRole('link').map((l) => l.textContent)).toEqual(['Dålig'])
+    expect(screen.getByText('10 %')).toBeInTheDocument()
     expect(screen.getByText(/Ort saknas/)).toBeInTheDocument()
   })
 
-  it('explains how to choose occupations when none are set', async () => {
-    respondWithJobs({ code: 'FindJobs.NoOccupations', detail: 'No occupations.' }, 400)
+  it('says so when a tab is empty', async () => {
+    respondWithAssessedJobs([anAssessedJob({ chance: 20 })])
+    render(<JobsPage />)
+
+    expect(await screen.findByText('Inga annonser med god chans just nu.')).toBeInTheDocument()
+  })
+
+  it('tells how to get assessments when there are none', async () => {
+    respondWithAssessedJobs([])
 
     render(<JobsPage />)
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Du har inga målyrken än')
+    expect(await screen.findByText(/Inga bedömda annonser än/)).toBeInTheDocument()
   })
 
   it('says a service is down on 503', async () => {
-    respondWithJobs({ code: 'JobSearch.Unavailable', detail: 'JobSearch could not be used: HTTP 503.' }, 503)
+    respondWithAssessedJobs({ code: 'Database.Unavailable', detail: 'The database could not be reached.' }, 503)
 
     render(<JobsPage />)
 
     expect(await screen.findByRole('alert')).toHaveTextContent('En tjänst svarar inte just nu')
-  })
-
-  it('says so when nothing passed the dealbreakers', async () => {
-    respondWithJobs(aResult({ matches: [], passed: 0 }))
-
-    render(<JobsPage />)
-
-    expect(await screen.findByText('Inga annonser klarade dina krav just nu.')).toBeInTheDocument()
   })
 })

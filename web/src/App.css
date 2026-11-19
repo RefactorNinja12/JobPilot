@@ -41,6 +41,28 @@ nav a[aria-current='page'] {
   font-weight: 600;
 }
 
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.tabs button {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tabs button[aria-selected='true'] {
+  background: var(--chip-matched);
+  color: var(--text);
+  font-weight: 600;
+}
+
 .muted {
   color: var(--muted);
 }
@@ -197,6 +219,16 @@ nav a[aria-current='page'] {
 .skill-missing {
   background: var(--chip-missing);
   color: var(--muted);
+}
+
+.deadline {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+}
+
+.deadline-soon {
+  font-weight: 700;
+  color: var(--low);
 }
 
 .assessment {

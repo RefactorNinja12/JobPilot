@@ -46,14 +46,6 @@ public sealed class JobEndpointsTests : IAsyncDisposable
         await _factory.DisposeAsync();
     }
 
-    private void ProfileWithCSharpForBackendJobs()
-    {
-        var profile = Profile.Create();
-        profile.AddSkill(ProfileSkill.Create(Skill.Create("C#").Value, SkillLevel.Expert, 8).Value);
-        profile.SetTargetOccupations([Occupation.Create("7wdX_4rv_33z", "Backend-utvecklare").Value]);
-        _profiles.Add(profile);
-    }
-
     private static JobAd Ad(string id) =>
         JobAd.Create(id, "Utvecklare " + id, "Text", new JobAdDetails(
             new Uri("https://arbetsformedlingen.se/platsbanken/annonser/" + id),
@@ -97,68 +89,6 @@ public sealed class JobEndpointsTests : IAsyncDisposable
         var body = await _http.GetFromJsonAsync<JsonElement>("/api/jobs/assessed", Ct);
 
         body.GetArrayLength().ShouldBe(0);
-    }
-
-    [Fact]
-    public async Task GetJobs_ReturnsRankedMatchesAsCamelCaseJson()
-    {
-        ProfileWithCSharpForBackendJobs();
-        _jobSearch.Ads.Add(Ad("java"));
-        _jobSearch.Ads.Add(Ad("csharp"));
-        _enrichments.SkillsByAd["java"] = ["Java"];
-        _enrichments.SkillsByAd["csharp"] = ["C#", "Kafka"];
-
-        var body = await _http.GetFromJsonAsync<JsonElement>("/api/jobs?top=1", Ct);
-
-        body.GetProperty("fetched").GetInt32().ShouldBe(2);
-        var match = body.GetProperty("matches").EnumerateArray().ShouldHaveSingleItem();
-        match.GetProperty("adId").GetString().ShouldBe("csharp");
-        match.GetProperty("fitScore").GetInt32().ShouldBe(50);
-        match.GetProperty("missingSkills")[0].GetString().ShouldBe("Kafka");
-    }
-
-    [Fact]
-    public async Task GetJobs_WithoutOccupations_Is400WithTheErrorCode()
-    {
-        using var response = await _http.GetAsync(new Uri("/api/jobs", UriKind.Relative), Ct);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-        (await ProblemAsync(response)).GetProperty("code").GetString().ShouldBe("FindJobs.NoOccupations");
-    }
-
-    [Fact]
-    public async Task GetJobs_TopOutOfRange_Is400()
-    {
-        ProfileWithCSharpForBackendJobs();
-
-        using var response = await _http.GetAsync(new Uri("/api/jobs?top=51", UriKind.Relative), Ct);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-        (await ProblemAsync(response)).GetProperty("code").GetString().ShouldBe("FindJobs.TopOutOfRange");
-    }
-
-    [Fact]
-    public async Task GetJobs_JobSearchDown_Is503()
-    {
-        ProfileWithCSharpForBackendJobs();
-        _jobSearch.Failure = Error.Unavailable("JobSearch.Unavailable", "JobSearch could not be used: HTTP 503.");
-
-        using var response = await _http.GetAsync(new Uri("/api/jobs", UriKind.Relative), Ct);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
-        (await ProblemAsync(response)).GetProperty("code").GetString().ShouldBe("JobSearch.Unavailable");
-    }
-
-    [Fact]
-    public async Task GetJobs_HasNoDailyLimit_UnlikeTheMcpTool()
-    {
-        ProfileWithCSharpForBackendJobs();
-
-        for (var i = 0; i < 5; i++)
-        {
-            using var response = await _http.GetAsync(new Uri("/api/jobs", UriKind.Relative), Ct);
-            response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        }
     }
 
     [Fact]
