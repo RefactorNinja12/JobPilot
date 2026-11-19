@@ -26,7 +26,9 @@ public sealed class ListAssessedJobsHandler(IAssessmentStore assessments)
                     a.Ad.ApplicationDeadline,
                     a.Assessment.Chance,
                     a.Assessment.Summary,
-                    a.Assessment.AssessedAt)),
+                    a.Assessment.AssessedAt,
+                    a.Ad.MatchedSkills ?? [],
+                    a.Ad.MissingSkills ?? [])),
         ];
     }
 }

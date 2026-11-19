@@ -107,6 +107,23 @@ public sealed class AssessmentStoreTests(PostgresFixture postgres) : IAsyncLifet
     }
 
     [Fact]
+    public async Task List_KeepsWhichSkillsMatchedAndWhichWereMissing()
+    {
+        await SaveAsync(Assessment("1", 70, "Strong C# match."), Snapshot() with { MatchedSkills = ["C#", "SQL"], MissingSkills = ["Kafka"] });
+        await SaveAsync(Assessment("2", 40, "Skills not known."), Snapshot());
+
+        await using var scope = _provider.CreateAsyncScope();
+        var listed = await scope.ServiceProvider.GetRequiredService<IAssessmentStore>().ListAsync(Ct);
+
+        var withSkills = listed.Single(l => l.Assessment.AdId == "1").Ad;
+        withSkills.MatchedSkills.ShouldBe(["C#", "SQL"]);
+        withSkills.MissingSkills.ShouldBe(["Kafka"]);
+        var withoutSkills = listed.Single(l => l.Assessment.AdId == "2").Ad;
+        withoutSkills.MatchedSkills.ShouldBeNull();
+        withoutSkills.MissingSkills.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task List_LeavesOutAssessmentsSavedBeforeSnapshots()
     {
         await using var scope = _provider.CreateAsyncScope();

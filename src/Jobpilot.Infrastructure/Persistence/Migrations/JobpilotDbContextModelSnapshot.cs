@@ -93,6 +93,14 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("headline");
 
+                    b.PrimitiveCollection<string[]>("MatchedSkills")
+                        .HasColumnType("text[]")
+                        .HasColumnName("matched_skills");
+
+                    b.PrimitiveCollection<string[]>("MissingSkills")
+                        .HasColumnType("text[]")
+                        .HasColumnName("missing_skills");
+
                     b.Property<string>("Municipality")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
