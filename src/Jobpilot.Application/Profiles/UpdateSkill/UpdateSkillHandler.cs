@@ -18,7 +18,7 @@ public sealed class UpdateSkillHandler(IProfileRepository profiles, ISkillVocabu
             return resolved.Error;
         }
 
-        var profileSkill = ProfileSkill.Create(resolved.Value.Skill, command.Level, command.YearsOfExperience);
+        var profileSkill = ProfileSkill.Create(resolved.Value.Skill, command.Level);
         if (profileSkill.IsFailure)
         {
             return profileSkill.Error;
@@ -37,6 +37,6 @@ public sealed class UpdateSkillHandler(IProfileRepository profiles, ISkillVocabu
         }
 
         await profiles.SaveChangesAsync(cancellationToken);
-        return new ProfileSkillView(resolved.Value.Skill.Name, command.Level.ToString(), command.YearsOfExperience);
+        return new ProfileSkillView(resolved.Value.Skill.Name, command.Level.ToString());
     }
 }

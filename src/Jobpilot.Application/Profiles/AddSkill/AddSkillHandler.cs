@@ -20,7 +20,7 @@ public sealed class AddSkillHandler(IProfileRepository profiles, ISkillVocabular
             return resolved.Error;
         }
 
-        var profileSkill = ProfileSkill.Create(resolved.Value.Skill, command.Level, command.YearsOfExperience);
+        var profileSkill = ProfileSkill.Create(resolved.Value.Skill, command.Level);
         if (profileSkill.IsFailure)
         {
             return profileSkill.Error;

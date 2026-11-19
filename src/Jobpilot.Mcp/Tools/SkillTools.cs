@@ -38,24 +38,22 @@ public static class SkillTools
         AddSkillHandler handler,
         [Description("Skill name or synonym, e.g. \"Kafka\" or \"apache kafka\".")] string name,
         [Description("Self-assessed level: Beginner, Intermediate, Advanced or Expert.")] string level,
-        [Description("Whole years of hands-on experience, 0-50.")] int yearsOfExperience,
         CancellationToken cancellationToken = default)
     {
-        return (await ToolResults.Guard(handler.HandleAsync(new AddSkillCommand(name, ParseLevel(level), yearsOfExperience), cancellationToken)))
+        return (await ToolResults.Guard(handler.HandleAsync(new AddSkillCommand(name, ParseLevel(level)), cancellationToken)))
             .ValueOrToolError();
     }
 
     [McpServerTool(Name = "update_skill", Destructive = false, Idempotent = true)]
     [Description(
-        "Changes level and years of experience for a skill already in the profile. " +
+        "Changes the level of a skill already in the profile. " +
         "The skill can be named by its exact name or a synonym, e.g. \"apache kafka\" for Kafka.")]
     public static async Task<ProfileSkillView> UpdateSkill(
         UpdateSkillHandler handler,
         [Description("Skill name or synonym, e.g. \"Kafka\".")] string name,
         [Description("New level: Beginner, Intermediate, Advanced or Expert.")] string level,
-        [Description("New number of whole years of hands-on experience, 0-50.")] int yearsOfExperience,
         CancellationToken cancellationToken = default) =>
-        (await ToolResults.Guard(handler.HandleAsync(new UpdateSkillCommand(name, ParseLevel(level), yearsOfExperience), cancellationToken)))
+        (await ToolResults.Guard(handler.HandleAsync(new UpdateSkillCommand(name, ParseLevel(level)), cancellationToken)))
             .ValueOrToolError();
 
     [McpServerTool(Name = "remove_skill", Destructive = true, Idempotent = false)]

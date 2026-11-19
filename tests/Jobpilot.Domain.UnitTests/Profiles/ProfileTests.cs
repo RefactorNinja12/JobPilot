@@ -8,8 +8,8 @@ public class ProfileTests
     private static readonly Skill _csharp = Skill.Create("C#").Value;
     private static readonly Skill _sql = Skill.Create("SQL").Value;
 
-    private static ProfileSkill CSharp(int years = 4) =>
-        ProfileSkill.Create(_csharp, SkillLevel.Advanced, years).Value;
+    private static ProfileSkill CSharp(SkillLevel level = SkillLevel.Advanced) =>
+        ProfileSkill.Create(_csharp, level).Value;
 
     [Fact]
     public void Create_GivesUniqueIdAndNoSkills()
@@ -37,13 +37,13 @@ public class ProfileTests
     public void AddSkill_SameSkillTwice_FailsWithConflict()
     {
         var profile = Profile.Create();
-        profile.AddSkill(CSharp(years: 4));
+        profile.AddSkill(CSharp(SkillLevel.Advanced));
 
-        var result = profile.AddSkill(CSharp(years: 2));
+        var result = profile.AddSkill(CSharp(SkillLevel.Beginner));
 
         result.Error.Type.ShouldBe(ErrorType.Conflict);
         result.Error.Code.ShouldBe("Profile.SkillAlreadyAdded");
-        profile.Skills.ShouldHaveSingleItem().YearsOfExperience.ShouldBe(4);
+        profile.Skills.ShouldHaveSingleItem().Level.ShouldBe(SkillLevel.Advanced);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class ProfileTests
         profile.AddSkill(CSharp());
         var lowerCase = Skill.Create("c#").Value;
 
-        var result = profile.AddSkill(ProfileSkill.Create(lowerCase, SkillLevel.Beginner, 1).Value);
+        var result = profile.AddSkill(ProfileSkill.Create(lowerCase, SkillLevel.Beginner).Value);
 
         result.Error.Code.ShouldBe("Profile.SkillAlreadyAdded");
     }
@@ -64,23 +64,22 @@ public class ProfileTests
         var profile = Profile.Create();
 
         profile.AddSkill(CSharp());
-        profile.AddSkill(ProfileSkill.Create(_sql, SkillLevel.Intermediate, 2).Value);
+        profile.AddSkill(ProfileSkill.Create(_sql, SkillLevel.Intermediate).Value);
 
         profile.Skills.Count.ShouldBe(2);
     }
 
     [Fact]
-    public void UpdateSkill_ExistingSkill_ReplacesLevelAndYears()
+    public void UpdateSkill_ExistingSkill_ReplacesLevel()
     {
         var profile = Profile.Create();
-        profile.AddSkill(CSharp(years: 4));
+        profile.AddSkill(CSharp());
 
-        var result = profile.UpdateSkill(ProfileSkill.Create(_csharp, SkillLevel.Expert, 6).Value);
+        var result = profile.UpdateSkill(ProfileSkill.Create(_csharp, SkillLevel.Expert).Value);
 
         result.IsSuccess.ShouldBeTrue();
         var updated = profile.Skills.ShouldHaveSingleItem();
         updated.Level.ShouldBe(SkillLevel.Expert);
-        updated.YearsOfExperience.ShouldBe(6);
     }
 
     [Fact]

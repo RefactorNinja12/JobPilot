@@ -39,8 +39,8 @@ public sealed class ProfileRepositoryTests(PostgresFixture postgres) : IAsyncLif
     private Task<Profile?> LoadAsync() =>
         InScopeAsync(services => services.GetRequiredService<IProfileRepository>().GetAsync(Ct));
 
-    private static ProfileSkill SkillOf(string name, SkillLevel level, int years) =>
-        ProfileSkill.Create(Skill.Create(name).Value, level, years).Value;
+    private static ProfileSkill SkillOf(string name, SkillLevel level) =>
+        ProfileSkill.Create(Skill.Create(name).Value, level).Value;
 
     [Fact]
     public async Task Get_WithoutProfile_ReturnsNull() =>
@@ -50,7 +50,7 @@ public sealed class ProfileRepositoryTests(PostgresFixture postgres) : IAsyncLif
     public async Task Add_ThenSave_IsLoadedInTheNextScope()
     {
         var profile = Profile.Create();
-        profile.AddSkill(SkillOf("C#", SkillLevel.Expert, 8));
+        profile.AddSkill(SkillOf("C#", SkillLevel.Expert));
 
         await InScopeAsync(async services =>
         {
@@ -62,7 +62,7 @@ public sealed class ProfileRepositoryTests(PostgresFixture postgres) : IAsyncLif
 
         var loaded = (await LoadAsync()).ShouldNotBeNull();
         loaded.Id.ShouldBe(profile.Id);
-        loaded.Skills.ShouldBe([SkillOf("C#", SkillLevel.Expert, 8)]);
+        loaded.Skills.ShouldBe([SkillOf("C#", SkillLevel.Expert)]);
     }
 
     [Fact]
@@ -80,12 +80,12 @@ public sealed class ProfileRepositoryTests(PostgresFixture postgres) : IAsyncLif
         {
             var repository = services.GetRequiredService<IProfileRepository>();
             var profile = (await repository.GetAsync(Ct)).ShouldNotBeNull();
-            profile.AddSkill(SkillOf("Kafka", SkillLevel.Beginner, 0));
+            profile.AddSkill(SkillOf("Kafka", SkillLevel.Beginner));
             await repository.SaveChangesAsync(Ct);
             return true;
         });
 
-        (await LoadAsync()).ShouldNotBeNull().Skills.ShouldBe([SkillOf("Kafka", SkillLevel.Beginner, 0)]);
+        (await LoadAsync()).ShouldNotBeNull().Skills.ShouldBe([SkillOf("Kafka", SkillLevel.Beginner)]);
     }
 
     [Fact]
@@ -116,5 +116,5 @@ public sealed class ProfileRepositoryTests(PostgresFixture postgres) : IAsyncLif
         services => new AddSkillHandler(
                 services.GetRequiredService<IProfileRepository>(),
                 services.GetRequiredService<ISkillVocabularyStore>())
-            .HandleAsync(new AddSkillCommand(name, SkillLevel.Advanced, 3), Ct);
+            .HandleAsync(new AddSkillCommand(name, SkillLevel.Advanced), Ct);
 }

@@ -46,7 +46,7 @@ public sealed class ProfileEndpointsTests : IAsyncDisposable
     public async Task GetProfile_ReturnsSkillsOccupationsAndPreferences()
     {
         var stored = Profile.Create();
-        stored.AddSkill(ProfileSkill.Create(Skill.Create("C#").Value, SkillLevel.Expert, 8).Value);
+        stored.AddSkill(ProfileSkill.Create(Skill.Create("C#").Value, SkillLevel.Expert).Value);
         stored.SetTargetOccupations([Occupation.Create("7wdX_4rv_33z", "Backend-utvecklare").Value]);
         stored.UpdatePreferences(JobPreferences.Create(
             acceptsFullTime: true,
@@ -60,7 +60,7 @@ public sealed class ProfileEndpointsTests : IAsyncDisposable
         var skill = profile.GetProperty("skills").EnumerateArray().ShouldHaveSingleItem();
         skill.GetProperty("name").GetString().ShouldBe("C#");
         skill.GetProperty("level").GetString().ShouldBe("Expert");
-        skill.GetProperty("yearsOfExperience").GetInt32().ShouldBe(8);
+        skill.TryGetProperty("yearsOfExperience", out _).ShouldBeFalse();
         profile.GetProperty("targetOccupations")[0].GetProperty("label").GetString().ShouldBe("Backend-utvecklare");
         var preferences = profile.GetProperty("preferences");
         preferences.GetProperty("excludeStaffingAgencies").GetBoolean().ShouldBeTrue();

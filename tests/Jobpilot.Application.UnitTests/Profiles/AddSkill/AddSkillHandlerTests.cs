@@ -30,8 +30,8 @@ public class AddSkillHandlerTests
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private Task<Result<AddedSkill>> AddAsync(string name, SkillLevel level = SkillLevel.Advanced, int years = 3) =>
-        _handler.HandleAsync(new AddSkillCommand(name, level, years), Ct);
+    private Task<Result<AddedSkill>> AddAsync(string name, SkillLevel level = SkillLevel.Advanced) =>
+        _handler.HandleAsync(new AddSkillCommand(name, level), Ct);
 
     [Theory]
     [InlineData("apache kafka")]
@@ -39,13 +39,12 @@ public class AddSkillHandlerTests
     [InlineData("Kafka")]
     public async Task Add_TermInVocabulary_StoresTheConceptName(string typed)
     {
-        var result = await AddAsync(typed, SkillLevel.Expert, 5);
+        var result = await AddAsync(typed, SkillLevel.Expert);
 
         result.Value.ShouldBe(new AddedSkill("Kafka", InVocabulary: true));
         var skill = _profile.Skills.ShouldHaveSingleItem();
         skill.Skill.Name.ShouldBe("Kafka");
         skill.Level.ShouldBe(SkillLevel.Expert);
-        skill.YearsOfExperience.ShouldBe(5);
         await _profiles.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -104,11 +103,11 @@ public class AddSkillHandlerTests
     }
 
     [Theory]
-    [InlineData("", 3, "Skill.NameEmpty")]
-    [InlineData("C#", -1, "ProfileSkill.YearsOutOfRange")]
-    public async Task Add_InvalidInput_FailsWithoutTouchingTheProfile(string name, int years, string code)
+    [InlineData("", SkillLevel.Advanced, "Skill.NameEmpty")]
+    [InlineData("C#", (SkillLevel)0, "ProfileSkill.LevelInvalid")]
+    public async Task Add_InvalidInput_FailsWithoutTouchingTheProfile(string name, SkillLevel level, string code)
     {
-        var error = (await AddAsync(name, years: years)).Error;
+        var error = (await AddAsync(name, level)).Error;
 
         error.Code.ShouldBe(code);
         error.Type.ShouldBe(ErrorType.Validation);

@@ -37,7 +37,6 @@ internal sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
                 .HasConversion(skill => skill.Name, name => Skill.Create(name).Value);
 
             skills.Property(s => s.Level).HasConversion<string>().HasMaxLength(20);
-            skills.Property(s => s.YearsOfExperience);
         });
 
         builder.Navigation(p => p.Skills).HasField("_skills").UsePropertyAccessMode(PropertyAccessMode.Field);

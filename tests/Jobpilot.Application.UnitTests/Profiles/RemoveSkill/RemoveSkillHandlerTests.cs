@@ -16,8 +16,8 @@ public class RemoveSkillHandlerTests
 
     public RemoveSkillHandlerTests()
     {
-        _profile.AddSkill(ProfileSkill.Create(Skill.Create("Kafka").Value, SkillLevel.Advanced, 3).Value);
-        _profile.AddSkill(ProfileSkill.Create(Skill.Create("C#").Value, SkillLevel.Expert, 8).Value);
+        _profile.AddSkill(ProfileSkill.Create(Skill.Create("Kafka").Value, SkillLevel.Advanced).Value);
+        _profile.AddSkill(ProfileSkill.Create(Skill.Create("C#").Value, SkillLevel.Expert).Value);
         _profiles.GetAsync(Arg.Any<CancellationToken>()).Returns(_profile);
         _vocabularies.GetAsync(Arg.Any<CancellationToken>()).Returns(SkillVocabulary.Create(
             DateTimeOffset.UnixEpoch,

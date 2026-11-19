@@ -18,7 +18,7 @@ public sealed record ProfileView(
     {
         ArgumentNullException.ThrowIfNull(profile);
         return new(
-            [.. profile.Skills.Select(s => new ProfileSkillView(s.Skill.Name, s.Level.ToString(), s.YearsOfExperience))],
+            [.. profile.Skills.Select(s => new ProfileSkillView(s.Skill.Name, s.Level.ToString()))],
             [.. profile.TargetOccupations.Select(OccupationView.From)],
             PreferencesView.From(profile.Preferences));
     }

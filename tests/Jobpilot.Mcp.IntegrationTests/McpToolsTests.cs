@@ -112,13 +112,12 @@ public sealed class McpToolsTests : IAsyncLifetime
         {
             ["name"] = "apache kafka",
             ["level"] = "expert",
-            ["yearsOfExperience"] = 5,
         });
 
         Read<Added>(result).ShouldBe(new Added("Kafka", InVocabulary: true));
         var skill = _profiles.Profile.ShouldNotBeNull().Skills.ShouldHaveSingleItem();
         skill.Skill.Name.ShouldBe("Kafka");
-        skill.YearsOfExperience.ShouldBe(5);
+        skill.Level.ShouldBe(Domain.Profiles.SkillLevel.Expert);
     }
 
     [Theory]
@@ -126,7 +125,7 @@ public sealed class McpToolsTests : IAsyncLifetime
     [InlineData("3")]
     public async Task AddSkill_UnknownLevel_IsAToolError(string level)
     {
-        var result = await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "C#", ["level"] = level, ["yearsOfExperience"] = 1 });
+        var result = await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "C#", ["level"] = level });
 
         result.IsError.ShouldBe(expected: true);
         Text(result).ShouldContain("Unknown level");
@@ -136,9 +135,9 @@ public sealed class McpToolsTests : IAsyncLifetime
     [Fact]
     public async Task AddSkill_Twice_IsAToolErrorWithTheDomainCode()
     {
-        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "c#", ["level"] = "Advanced", ["yearsOfExperience"] = 3 });
+        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "c#", ["level"] = "Advanced" });
 
-        var result = await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "c-sharp", ["level"] = "Advanced", ["yearsOfExperience"] = 3 });
+        var result = await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "c-sharp", ["level"] = "Advanced" });
 
         result.IsError.ShouldBe(expected: true);
         Text(result).ShouldContain("Profile.SkillAlreadyAdded");
@@ -156,32 +155,31 @@ public sealed class McpToolsTests : IAsyncLifetime
     [Fact]
     public async Task GetProfile_ShowsAddedSkills()
     {
-        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "apache kafka", ["level"] = "Advanced", ["yearsOfExperience"] = 3 });
+        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "apache kafka", ["level"] = "Advanced" });
 
         var skill = Read<JsonElement>(await CallAsync("get_profile", [])).GetProperty("skills").EnumerateArray().ShouldHaveSingleItem();
 
         skill.GetProperty("name").GetString().ShouldBe("Kafka");
         skill.GetProperty("level").GetString().ShouldBe("Advanced");
-        skill.GetProperty("yearsOfExperience").GetInt32().ShouldBe(3);
+        skill.TryGetProperty("yearsOfExperience", out _).ShouldBeFalse();
     }
 
     [Fact]
     public async Task UpdateSkill_BySynonym_ChangesTheStoredSkill()
     {
-        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "Kafka", ["level"] = "Beginner", ["yearsOfExperience"] = 1 });
+        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "Kafka", ["level"] = "Beginner" });
 
-        var result = await CallAsync("update_skill", new(StringComparer.Ordinal) { ["name"] = "apache kafka", ["level"] = "Expert", ["yearsOfExperience"] = 4 });
+        var result = await CallAsync("update_skill", new(StringComparer.Ordinal) { ["name"] = "apache kafka", ["level"] = "Expert" });
 
         result.IsError.ShouldNotBe(expected: true, customMessage: Text(result));
         var skill = _profiles.Profile.ShouldNotBeNull().Skills.ShouldHaveSingleItem();
         skill.Level.ShouldBe(Domain.Profiles.SkillLevel.Expert);
-        skill.YearsOfExperience.ShouldBe(4);
     }
 
     [Fact]
     public async Task RemoveSkill_RemovesItAndReturnsTheStoredName()
     {
-        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "Kafka", ["level"] = "Beginner", ["yearsOfExperience"] = 1 });
+        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "Kafka", ["level"] = "Beginner" });
 
         var result = await CallAsync("remove_skill", new(StringComparer.Ordinal) { ["name"] = "apache kafka" });
 
@@ -251,7 +249,7 @@ public sealed class McpToolsTests : IAsyncLifetime
     [Fact]
     public async Task FindJobs_ReturnsRankedMatchesForTheProfile()
     {
-        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "C#", ["level"] = "Expert", ["yearsOfExperience"] = 8 });
+        await CallAsync("add_skill", new(StringComparer.Ordinal) { ["name"] = "C#", ["level"] = "Expert" });
         await CallAsync("set_occupations", new(StringComparer.Ordinal)
         {
             ["occupations"] = new[] { new { taxonomyId = "7wdX_4rv_33z", label = "Backend-utvecklare" } },
