@@ -2,6 +2,7 @@ using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Application.Abstractions.Employers;
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Application.Abstractions.JobSearch;
+using Jobpilot.Application.Places;
 using Jobpilot.Application.Profiles;
 using Jobpilot.Domain.Common;
 using Jobpilot.Domain.Jobs;
@@ -22,7 +23,8 @@ public sealed class FindJobsHandler(
     IEnrichmentsClient enrichments,
     IAdCompetencyCache competencyCache,
     IAssessmentStore assessments,
-    IStaffingAgencyDirectory staffingAgencies)
+    IStaffingAgencyDirectory staffingAgencies,
+    MunicipalityCentres municipalityCentres)
 {
     /// <summary>Claude's token budget allows 25-50 ads per run.</summary>
     public const int MaxTop = 50;
@@ -94,7 +96,12 @@ public sealed class FindJobsHandler(
         var passed = new List<(JobAd Ad, DealbreakerVerdict Verdict)>();
         foreach (var ad in ads)
         {
-            var verdict = preferences.Check(ad, staffingAgencies.IsStaffingAgency(ad.Employer));
+            // About 10 % of ads have no coordinates; their municipality's centre stands in, so an ad in Stockholm
+            // does not pass a 100 km limit from Uddevalla just because its position is missing.
+            var verdict = preferences.Check(
+                ad,
+                staffingAgencies.IsStaffingAgency(ad.Employer),
+                municipalityCentres.Find(ad.Workplace.Municipality));
             if (verdict.Passes)
             {
                 passed.Add((ad, verdict));

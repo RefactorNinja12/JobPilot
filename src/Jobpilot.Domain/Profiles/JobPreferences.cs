@@ -1,5 +1,6 @@
 using Jobpilot.Domain.Common;
 using Jobpilot.Domain.Jobs;
+using Jobpilot.Domain.Locations;
 using Jobpilot.Domain.Matching;
 
 namespace Jobpilot.Domain.Profiles;
@@ -71,11 +72,16 @@ public sealed record JobPreferences
 
     /// <summary>
     /// Checks an ad against these dealbreakers. Missing information never rejects: an ad without working hours or
-    /// coordinates passes with an <see cref="UnknownDetail"/> flag.
+    /// coordinates passes with an <see cref="UnknownDetail"/> flag. The one exception is the commute limit when the
+    /// caller can estimate where an ad without coordinates is (see <paramref name="estimatedWorkplace"/>): an ad
+    /// whose estimate is out of reach is rejected, one whose estimate is within reach still carries the flag.
     /// </summary>
     /// <param name="ad">The ad to check.</param>
     /// <param name="isStaffingAgency">Whether the ad's employer is a staffing agency; decided outside the domain.</param>
-    public DealbreakerVerdict Check(JobAd ad, bool isStaffingAgency)
+    /// <param name="estimatedWorkplace">
+    /// Where the job probably is, e.g. the centre of the ad's municipality, used only when the ad has no coordinates.
+    /// </param>
+    public DealbreakerVerdict Check(JobAd ad, bool isStaffingAgency, Coordinates? estimatedWorkplace = null)
     {
         ArgumentNullException.ThrowIfNull(ad);
 
@@ -97,13 +103,14 @@ public sealed record JobPreferences
 
         if (CommuteLimit is not null)
         {
-            if (ad.Workplace.Coordinates is not { } workplace)
-            {
-                unknowns.Add(UnknownDetail.Location);
-            }
-            else if (!CommuteLimit.IsWithinReach(workplace))
+            var workplace = ad.Workplace.Coordinates ?? estimatedWorkplace;
+            if (workplace is not null && !CommuteLimit.IsWithinReach(workplace))
             {
                 rejections.Add(RejectionReason.TooFarAway);
+            }
+            else if (!ad.Workplace.HasCoordinates)
+            {
+                unknowns.Add(UnknownDetail.Location);
             }
         }
 
