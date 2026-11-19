@@ -119,5 +119,7 @@ Sample: the 491 newest ads in occupation field Data/IT (`occupation-field=apaJ_2
 - **Senior in the title:** `senior` in 69 titles (14 %); with lead, principal, architect/arkitekt, head of and chef, 130 titles (26 %).
   In the description `senior` occurs in 126 ads, mostly about colleagues, so only the title is used (`SeniorTitles`).
 - **Junior:** only 8 titles say junior, none trainee or graduate. Too few to filter or rank on.
-- **Years of experience:** stated in the text of 122 ads (minimum 2 in 15, 3 in 21, 5 in 39). Free text with noise, so not used as a filter.
+- **Years of experience:** stated in the text of 122 ads (minimum 2 in 15, 3 in 21, 5 in 39). Free text with noise, so only clear
+  statements count (`RequiredExperience`: number + år/years + erfarenhet/experience, lowest wins, the employer's own
+  "vi har 20 års erfarenhet" and numbers above 15 ignored). Basis for an optional "max required years" dealbreaker.
 - `experience_required` was true in 100 % (no ad with false), so it cannot tell junior from senior.
