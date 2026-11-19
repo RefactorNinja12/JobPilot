@@ -230,21 +230,24 @@ public class FindJobsHandlerTests
     }
 
     [Fact]
-    public async Task Find_ShowsEarlierAssessments_OnTheMatchesThatHaveOne()
+    public async Task Find_LeavesOutAdsClaudeHasAssessed_SoNewAdsTakeTheirPlaces_AndTheyCostNoEnrichments()
     {
         Found(Ad("assessed"), Ad("new"));
-        var assessedAt = new DateTimeOffset(2026, 11, 17, 18, 0, 0, TimeSpan.Zero);
         _assessments.GetAsync(Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, AiAssessment>(StringComparer.Ordinal)
             {
-                ["assessed"] = AiAssessment.Create("assessed", 70, "Strong C# match.", assessedAt).Value,
+                ["assessed"] = AiAssessment.Create("assessed", 70, "Strong C# match.", new DateTimeOffset(2026, 11, 17, 18, 0, 0, TimeSpan.Zero)).Value,
             });
 
-        var matches = (await FindAsync()).Value.Matches;
+        var result = (await FindAsync(top: 1)).Value;
 
-        matches.Single(m => m.AdId == "assessed").Assessment.ShouldBe(
-            new Application.Jobs.SaveAssessment.AssessmentView(70, "Strong C# match.", assessedAt));
-        matches.Single(m => m.AdId == "new").Assessment.ShouldBeNull();
+        result.Matches.Select(m => m.AdId).ShouldBe(["new"]);
+        result.Passed.ShouldBe(2);
+        result.AlreadyAssessed.ShouldBe(1);
+        result.NewlyAnalysed.ShouldBe(1);
+        await _enrichments.Received(1).ExtractCompetenciesAsync(
+            Arg.Is<EnrichmentQuery>(q => q.Ads.Count == 1 && q.Ads[0].Id == "new"),
+            Ct);
     }
 
     [Fact]

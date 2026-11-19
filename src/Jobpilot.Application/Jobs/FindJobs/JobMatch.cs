@@ -1,9 +1,7 @@
-using Jobpilot.Application.Jobs.SaveAssessment;
-
 namespace Jobpilot.Application.Jobs.FindJobs;
 
 /// <summary>
-/// Compact summary of one ad that passed the dealbreakers, for Claude to read. No description text: that is fetched
+/// Compact summary of one ad that passed the dealbreakers and has not been assessed yet, for Claude to read. No description text: that is fetched
 /// separately and only for the ads Claude needs.
 /// </summary>
 /// <param name="AdId">JobSearch ad id.</param>
@@ -19,7 +17,6 @@ namespace Jobpilot.Application.Jobs.FindJobs;
 /// <param name="MatchedSkills">Requested skills the profile has, heaviest first.</param>
 /// <param name="MissingSkills">Requested skills the profile lacks, heaviest first.</param>
 /// <param name="Unknowns">Dealbreakers that could not be checked, e.g. "Location" when the ad has no coordinates.</param>
-/// <param name="Assessment">Claude's earlier assessment of this ad, or null if it has not been assessed.</param>
 public sealed record JobMatch(
     string AdId,
     string Headline,
@@ -33,5 +30,4 @@ public sealed record JobMatch(
     int FitScore,
     IReadOnlyList<string> MatchedSkills,
     IReadOnlyList<string> MissingSkills,
-    IReadOnlyList<string> Unknowns,
-    AssessmentView? Assessment = null);
+    IReadOnlyList<string> Unknowns);

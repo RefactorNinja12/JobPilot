@@ -302,13 +302,14 @@ public sealed class McpToolsTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task SaveAssessment_IsShownByFindJobs()
+    public async Task SaveAssessment_MakesFindJobsLeaveTheAdOut()
     {
         await CallAsync("set_occupations", new(StringComparer.Ordinal)
         {
             ["occupations"] = new[] { new { taxonomyId = "7wdX_4rv_33z", label = "Backend-utvecklare" } },
         });
         _jobSearch.Ads.Add(JobAd("31744367"));
+        _jobSearch.Ads.Add(JobAd("31744368"));
 
         var saved = await CallAsync("save_assessment", new(StringComparer.Ordinal)
         {
@@ -318,10 +319,9 @@ public sealed class McpToolsTests : IAsyncLifetime
         });
 
         saved.IsError.ShouldNotBe(expected: true, customMessage: Text(saved));
-        var assessment = Read<JsonElement>(await CallAsync("find_jobs", []))
-            .GetProperty("matches")[0].GetProperty("assessment");
-        assessment.GetProperty("chance").GetInt32().ShouldBe(65);
-        assessment.GetProperty("summary").GetString().ShouldBe("Good C# match; Kafka is missing.");
+        var found = Read<JsonElement>(await CallAsync("find_jobs", []));
+        found.GetProperty("matches").EnumerateArray().Select(m => m.GetProperty("adId").GetString()).ShouldBe(["31744368"]);
+        found.GetProperty("alreadyAssessed").GetInt32().ShouldBe(1);
     }
 
     [Fact]
