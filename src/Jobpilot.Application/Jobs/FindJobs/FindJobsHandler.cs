@@ -2,7 +2,6 @@ using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Application.Abstractions.Employers;
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Application.Abstractions.JobSearch;
-using Jobpilot.Application.Jobs.SaveAssessment;
 using Jobpilot.Application.Profiles;
 using Jobpilot.Domain.Common;
 using Jobpilot.Domain.Jobs;
@@ -12,9 +11,10 @@ using Jobpilot.Domain.Profiles;
 namespace Jobpilot.Application.Jobs.FindJobs;
 
 /// <summary>
-/// The matching funnel, all deterministic: newest ads for the profile's occupations, then dealbreakers, then skills
-/// from Enrichments (only for ads that passed, and only once per ad thanks to the cache), then fit score. Returns the top few as compact summaries,
-/// so Claude only ever reads a short list.
+/// The matching funnel, all deterministic: newest ads for the profile's occupations, then dealbreakers, then ads Claude
+/// has already assessed are left out, then skills from Enrichments (only for the remaining ads, and only once per ad
+/// thanks to the cache), then fit score. Returns the top few as compact summaries, so Claude only ever reads a short
+/// list of ads it has not seen before.
 /// </summary>
 public sealed class FindJobsHandler(
     IProfileRepository profiles,
@@ -59,22 +59,22 @@ public sealed class FindJobsHandler(
         // Dealbreakers first: rejected ads never cost an Enrichments call.
         var (passed, rejected) = ApplyDealbreakers(profile.Preferences, found.Value.Ads);
 
-        var competencies = await ExtractCompetenciesAsync(passed.ConvertAll(p => p.Ad), cancellationToken);
+        // Assessed ads never come back: they would take the places of new ads, and Claude would pay to read them again.
+        var assessed = await assessments.GetAsync([.. passed.Select(p => p.Ad.Id)], cancellationToken);
+        var fresh = passed.Where(p => !assessed.ContainsKey(p.Ad.Id)).ToList();
+
+        var competencies = await ExtractCompetenciesAsync(fresh.ConvertAll(p => p.Ad), cancellationToken);
         if (competencies.IsFailure)
         {
             return competencies.Error;
         }
 
-        var matches = passed
+        var matches = fresh
             .Select(p => ToMatch(p.Ad, p.Verdict, profile, competencies.Value.ByAd.GetValueOrDefault(p.Ad.Id, [])))
             .OrderByDescending(m => m.FitScore)
             .ThenByDescending(m => m.PublishedAt)
             .Take(query.Top)
             .ToList();
-
-        // Only the few returned matches are looked up; Claude skips the ones it has assessed before.
-        var assessed = await assessments.GetAsync([.. matches.Select(m => m.AdId)], cancellationToken);
-        matches = matches.ConvertAll(m => assessed.TryGetValue(m.AdId, out var a) ? m with { Assessment = AssessmentView.From(a) } : m);
 
         return new FindJobsResult(
             matches,
@@ -82,6 +82,7 @@ public sealed class FindJobsHandler(
             found.Value.SkippedCount,
             rejected,
             passed.Count,
+            assessed.Count,
             competencies.Value.NewlyAnalysed);
     }
 

@@ -17,7 +17,8 @@ public static class JobTools
         "cover the skills the ad asks for). 'rejected' counts ads removed per dealbreaker; 'unknowns' on a match " +
         "lists dealbreakers that could not be checked (e.g. Location when the ad has no coordinates). " +
         "Explain matches with matchedSkills and missingSkills only; never claim skills that are not in the profile. " +
-        "A match with 'assessment' has been assessed before: reuse it instead of assessing again. " +
+        "Ads you have already assessed (save_assessment) are left out, so every match is new: assess each one and " +
+        "save it, also the poor ones, because the user reviews them in the web UI. 'alreadyAssessed' counts the left-out ads. " +
         "Fails with FindJobs.NoOccupations if no occupations are set: use search_occupations and set_occupations first.")]
     public static async Task<FindJobsResult> FindJobs(
         FindJobsHandler handler,
