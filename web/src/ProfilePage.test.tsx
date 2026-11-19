@@ -32,7 +32,7 @@ describe('ProfilePage', () => {
       aProfile({
         skills: [],
         targetOccupations: [],
-        preferences: { acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, commute: null },
+        preferences: { acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, excludeSeniorRoles: false, commute: null },
       }),
     )
 

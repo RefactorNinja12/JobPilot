@@ -69,6 +69,7 @@ type Draft = {
   acceptsFullTime: boolean;
   acceptsPartTime: boolean;
   excludeStaffingAgencies: boolean;
+  excludeSeniorRoles: boolean;
   limitCommute: boolean;
   maxDistanceKm: string;
   homeLatitude: string;
@@ -80,6 +81,7 @@ function toDraft(p: Preferences): Draft {
     acceptsFullTime: p.acceptsFullTime,
     acceptsPartTime: p.acceptsPartTime,
     excludeStaffingAgencies: p.excludeStaffingAgencies,
+    excludeSeniorRoles: p.excludeSeniorRoles,
     limitCommute: p.commute !== null,
     maxDistanceKm: String(p.commute?.maxDistanceKm ?? 30),
     homeLatitude: p.commute ? String(p.commute.homeLatitude) : "",
@@ -92,6 +94,7 @@ function toPreferences(d: Draft): Preferences {
     acceptsFullTime: d.acceptsFullTime,
     acceptsPartTime: d.acceptsPartTime,
     excludeStaffingAgencies: d.excludeStaffingAgencies,
+    excludeSeniorRoles: d.excludeSeniorRoles,
     commute: d.limitCommute
       ? {
           homeLatitude: Number(d.homeLatitude),
@@ -187,6 +190,15 @@ export function PreferencesEditor({
           }
         />
         Dölj annonser från bemanningsföretag
+      </label>
+
+      <label>
+        <input
+          type="checkbox"
+          checked={draft.excludeSeniorRoles}
+          onChange={(e) => update({ excludeSeniorRoles: e.target.checked })}
+        />
+        Dölj seniora tjänster (titeln säger senior, lead, arkitekt, chef …)
       </label>
 
       <fieldset>
