@@ -3,6 +3,7 @@ using Jobpilot.Application.Jobs.GetJobAd;
 using Jobpilot.Application.Jobs.ListAssessedJobs;
 using Jobpilot.Application.Jobs.SaveAssessment;
 using Jobpilot.Application.Occupations.Search;
+using Jobpilot.Application.Places;
 using Jobpilot.Application.Places.Search;
 using Jobpilot.Application.Profiles.AddSkill;
 using Jobpilot.Application.Profiles.GetProfile;
@@ -32,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<SetOccupationsHandler>();
         services.AddScoped<SearchOccupationsHandler>();
         services.AddScoped<SearchPlacesHandler>();
+        services.AddSingleton<MunicipalityCentres>();
         services.AddScoped<FindJobsHandler>();
         services.AddScoped<GetJobAdHandler>();
         services.AddScoped<SaveAssessmentHandler>();

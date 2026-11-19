@@ -3,7 +3,9 @@ using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Application.Abstractions.Employers;
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Application.Abstractions.JobSearch;
+using Jobpilot.Application.Abstractions.Places;
 using Jobpilot.Application.Jobs.FindJobs;
+using Jobpilot.Application.Places;
 using Jobpilot.Application.Profiles;
 using Jobpilot.Domain.Common;
 using Jobpilot.Domain.Jobs;
@@ -24,6 +26,7 @@ public class FindJobsHandlerTests
     private readonly IJobSearchClient _jobSearch = Substitute.For<IJobSearchClient>();
     private readonly IEnrichmentsClient _enrichments = Substitute.For<IEnrichmentsClient>();
     private readonly IStaffingAgencyDirectory _agencies = Substitute.For<IStaffingAgencyDirectory>();
+    private readonly IPlaceDirectory _places = Substitute.For<IPlaceDirectory>();
     private readonly InMemoryAdCompetencyCache _cache = new();
     private readonly IAssessmentStore _assessments = Substitute.For<IAssessmentStore>();
     private readonly Profile _profile = Profile.Create();
@@ -48,7 +51,8 @@ public class FindJobsHandlerTests
         _assessments.GetAsync(Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, AiAssessment>(StringComparer.Ordinal));
 
-        _handler = new FindJobsHandler(_profiles, _jobSearch, _enrichments, _cache, _assessments, _agencies);
+        _places.All.Returns([]);
+        _handler = new FindJobsHandler(_profiles, _jobSearch, _enrichments, _cache, _assessments, _agencies, new MunicipalityCentres(_places));
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -171,6 +175,27 @@ public class FindJobsHandlerTests
         var match = (await FindAsync()).Value.Matches.ShouldHaveSingleItem();
 
         match.Unknowns.ShouldBe(["WorkingHours", "Location"]);
+    }
+
+    [Fact]
+    public async Task Find_AdWithoutCoordinates_IsPlacedByItsMunicipality()
+    {
+        // Home in Göteborg, 50 km limit. "Stockholm" is the ad's municipality and its centre is far away.
+        _places.All.Returns([new Place("Stockholm", "Stockholm", _stockholm, 1_500_000), new Place("Göteborg", "Göteborg", _goteborg, 600_000)]);
+        _profile.UpdatePreferences(JobPreferences.Create(
+            acceptsFullTime: true,
+            acceptsPartTime: true,
+            excludeStaffingAgencies: false,
+            CommuteLimit.Create(_goteborg, 50).Value).Value);
+        Found(Ad("far-no-coordinates", workplace: null), Ad("near", workplace: _goteborg));
+
+        var result = (await FindAsync()).Value;
+
+        result.Matches.ShouldHaveSingleItem().AdId.ShouldBe("near");
+        result.Rejected.ShouldBe(new Dictionary<string, int>(StringComparer.Ordinal) { ["TooFarAway"] = 1 });
+        await _enrichments.Received(1).ExtractCompetenciesAsync(
+            Arg.Is<EnrichmentQuery>(q => q.Ads.Count == 1 && q.Ads[0].Id == "near"),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

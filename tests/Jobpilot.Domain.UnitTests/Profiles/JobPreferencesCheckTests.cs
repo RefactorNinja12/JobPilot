@@ -136,6 +136,42 @@ public class JobPreferencesCheckTests
         Preferences().Check(Ad(description: "Minst 10 års erfarenhet."), isStaffingAgency: false).Passes.ShouldBeTrue();
 
     [Fact]
+    public void Commute_AdWithoutCoordinates_IsRejectedWhenItsEstimatedPositionIsOutOfReach()
+    {
+        var verdict = Preferences(maxKmFromStockholm: 10).Check(Ad(), isStaffingAgency: false, estimatedWorkplace: _uppsala);
+
+        verdict.Rejections.ShouldBe([RejectionReason.TooFarAway]);
+        verdict.Unknowns.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Commute_AdWithoutCoordinates_PassesWithTheFlagWhenItsEstimatedPositionIsWithinReach()
+    {
+        var verdict = Preferences(maxKmFromStockholm: 100).Check(Ad(), isStaffingAgency: false, estimatedWorkplace: _uppsala);
+
+        verdict.Passes.ShouldBeTrue();
+        verdict.Unknowns.ShouldBe([UnknownDetail.Location]);
+    }
+
+    [Fact]
+    public void Commute_RealCoordinates_WinOverTheEstimate()
+    {
+        var verdict = Preferences(maxKmFromStockholm: 10).Check(Ad(workplace: _stockholm), isStaffingAgency: false, estimatedWorkplace: _uppsala);
+
+        verdict.Passes.ShouldBeTrue();
+        verdict.Unknowns.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Commute_WithoutCoordinatesOrEstimate_StillPassesWithTheFlag()
+    {
+        var verdict = Preferences(maxKmFromStockholm: 10).Check(Ad(), isStaffingAgency: false);
+
+        verdict.Passes.ShouldBeTrue();
+        verdict.Unknowns.ShouldBe([UnknownDetail.Location]);
+    }
+
+    [Fact]
     public void SeveralBrokenRules_AreAllListed()
     {
         var preferences = Preferences(fullTime: false, partTime: true, excludeAgencies: true, maxKmFromStockholm: 10, excludeSenior: true);

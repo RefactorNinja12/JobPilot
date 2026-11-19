@@ -36,7 +36,11 @@ Other: `experience_required` true in 99%, `driving_license_required` 3.5%, `numb
    They do not map reliably to Taxonomy (see "Skill vocabulary" below), so profile skills use
    Enrichments concepts as their key, not Taxonomy ids.
 3. **Remote/hybrid cannot be filtered reliably in code.** It is mostly in the text, so leave it to the AI step.
-4. **Unknown is not a failure.** Ads without coordinates must pass the commute filter and be flagged.
+4. **Unknown is not a failure, except for the commute limit.** About 10 % of ads have no coordinates, and letting them all
+   through put Stockholm ads in the top 25 for a home near Uddevalla with a 100 km limit. An ad without coordinates but with a
+   municipality (99.5 %) is placed at its municipality's largest place (`MunicipalityCentres`, from `places.json`): out of
+   reach means rejected, within reach passes flagged `Location`. An ad with neither still passes flagged. The centre is rough,
+   so an ad in a municipality whose main town is just beyond the limit can be rejected although part of it is within reach.
 5. **Descriptions average ~3,700 characters (~930 tokens).** Never send full texts to Claude in bulk;
    send compact summaries and fetch details on demand (see the 25–50 ad budget).
 
