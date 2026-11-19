@@ -27,11 +27,10 @@ function LevelSelect({ value, onChange, label }: { value: SkillLevel; onChange: 
 
 function SkillRow({ skill, onChanged, onError }: { skill: ProfileSkill; onChanged: () => void; onError: (m: string) => void }) {
   const [level, setLevel] = useState(skill.level)
-  const [years, setYears] = useState(skill.yearsOfExperience)
-  const changed = level !== skill.level || years !== skill.yearsOfExperience
+  const changed = level !== skill.level
 
   const save = () =>
-    updateSkill({ name: skill.name, level, yearsOfExperience: years }).then(onChanged, (e: unknown) => onError(message(e)))
+    updateSkill({ name: skill.name, level }).then(onChanged, (e: unknown) => onError(message(e)))
 
   const remove = () => {
     if (window.confirm(`Ta bort ${skill.name} från profilen?`)) {
@@ -44,16 +43,6 @@ function SkillRow({ skill, onChanged, onError }: { skill: ProfileSkill; onChange
       <td>{skill.name}</td>
       <td>
         <LevelSelect label={`Nivå för ${skill.name}`} value={level} onChange={setLevel} />
-      </td>
-      <td>
-        <input
-          aria-label={`År med ${skill.name}`}
-          type="number"
-          min={0}
-          max={50}
-          value={years}
-          onChange={(e) => setYears(Number(e.target.value))}
-        />
       </td>
       <td className="actions">
         <button type="button" disabled={!changed} onClick={save}>
@@ -71,7 +60,6 @@ function SkillRow({ skill, onChanged, onError }: { skill: ProfileSkill; onChange
 export function SkillsEditor({ skills, onChanged }: { skills: ProfileSkill[]; onChanged: () => void }) {
   const [name, setName] = useState('')
   const [level, setLevel] = useState<SkillLevel>('Intermediate')
-  const [years, setYears] = useState(1)
   const [suggestions, setSuggestions] = useState<SkillSuggestion[]>([])
   const [notice, setNotice] = useState<string>()
   const [error, setError] = useState<string>()
@@ -93,7 +81,7 @@ export function SkillsEditor({ skills, onChanged }: { skills: ProfileSkill[]; on
     e.preventDefault()
     setError(undefined)
     setNotice(undefined)
-    addSkill({ name, level, yearsOfExperience: years }).then(
+    addSkill({ name, level }).then(
       (added) => {
         if (!added.inVocabulary) {
           setNotice(`${added.name} finns inte i ordlistan som annonserna analyseras med, så den kommer aldrig att matcha en annons.`)
@@ -118,7 +106,6 @@ export function SkillsEditor({ skills, onChanged }: { skills: ProfileSkill[]; on
             <tr>
               <th scope="col">Kompetens</th>
               <th scope="col">Nivå</th>
-              <th scope="col">År</th>
               <th scope="col">
                 <span className="visually-hidden">Åtgärder</span>
               </th>
@@ -126,7 +113,7 @@ export function SkillsEditor({ skills, onChanged }: { skills: ProfileSkill[]; on
           </thead>
           <tbody>
             {skills.map((skill) => (
-              <SkillRow key={`${skill.name}-${skill.level}-${skill.yearsOfExperience}`} skill={skill} onChanged={onChanged} onError={setError} />
+              <SkillRow key={`${skill.name}-${skill.level}`} skill={skill} onChanged={onChanged} onError={setError} />
             ))}
           </tbody>
         </table>
@@ -135,7 +122,6 @@ export function SkillsEditor({ skills, onChanged }: { skills: ProfileSkill[]; on
       <form className="add-skill" onSubmit={onSubmit} aria-label="Lägg till kompetens">
         <input aria-label="Kompetens" placeholder="t.ex. Kafka eller c sharp" value={name} onChange={(e) => setName(e.target.value)} required />
         <LevelSelect label="Nivå" value={level} onChange={setLevel} />
-        <input aria-label="År" type="number" min={0} max={50} value={years} onChange={(e) => setYears(Number(e.target.value))} />
         <button type="submit">Lägg till</button>
       </form>
       {visibleSuggestions.length > 0 && (
