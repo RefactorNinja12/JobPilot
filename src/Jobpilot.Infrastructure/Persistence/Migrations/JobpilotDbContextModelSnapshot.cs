@@ -71,6 +71,10 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("ad_id");
 
+                    b.Property<DateOnly?>("ApplicationDeadline")
+                        .HasColumnType("date")
+                        .HasColumnName("application_deadline");
+
                     b.Property<DateTimeOffset>("AssessedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("assessed_at");
@@ -79,11 +83,35 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("chance");
 
+                    b.Property<string>("Employer")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("employer");
+
+                    b.Property<string>("Headline")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("headline");
+
+                    b.Property<string>("Municipality")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("municipality");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
                     b.Property<string>("Summary")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("summary");
+
+                    b.Property<string>("Url")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("url");
 
                     b.HasKey("AdId")
                         .HasName("pk_ad_assessments");

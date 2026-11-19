@@ -30,10 +30,18 @@ public sealed class AssessmentStoreTests(PostgresFixture postgres) : IAsyncLifet
     private static AiAssessment Assessment(string adId, int chance, string summary) =>
         AiAssessment.Create(adId, chance, summary, _assessedAt).Value;
 
-    private async Task SaveAsync(AiAssessment assessment)
+    private static AdSnapshot Snapshot(string headline = "Utvecklare") => new(
+        headline,
+        "Arbetsgivare",
+        "Stockholm",
+        new Uri("https://arbetsformedlingen.se/platsbanken/annonser/1"),
+        new DateTimeOffset(2026, 11, 16, 8, 0, 0, TimeSpan.FromHours(1)),
+        new DateOnly(2026, 12, 1));
+
+    private async Task SaveAsync(AiAssessment assessment, AdSnapshot? ad = null)
     {
         await using var scope = _provider.CreateAsyncScope();
-        await scope.ServiceProvider.GetRequiredService<IAssessmentStore>().SaveAsync(assessment, Ct);
+        await scope.ServiceProvider.GetRequiredService<IAssessmentStore>().SaveAsync(assessment, ad ?? Snapshot(), Ct);
     }
 
     private async Task<IReadOnlyDictionary<string, AiAssessment>> GetAsync(params string[] adIds)
@@ -68,6 +76,21 @@ public sealed class AssessmentStoreTests(PostgresFixture postgres) : IAsyncLifet
         var stored = (await GetAsync("1"))["1"];
         stored.Chance.ShouldBe(40);
         stored.Summary.ShouldBe("Turns out they want ten years.");
+    }
+
+    [Fact]
+    public async Task Saved_KeepsTheAdSnapshot_AndSavingAgainReplacesIt()
+    {
+        await SaveAsync(Assessment("1", 70, "Strong C# match."), Snapshot("Utvecklare"));
+        await SaveAsync(Assessment("1", 40, "Changed."), Snapshot("Systemutvecklare"));
+
+        await using var scope = _provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<JobpilotDbContext>();
+        var rows = await db.Database
+            .SqlQueryRaw<string>("SELECT headline || '|' || employer || '|' || municipality || '|' || url || '|' || application_deadline::text AS \"Value\" FROM ad_assessments")
+            .ToListAsync(Ct);
+
+        rows.ShouldBe(["Systemutvecklare|Arbetsgivare|Stockholm|https://arbetsformedlingen.se/platsbanken/annonser/1|2026-12-01"]);
     }
 
     [Fact]

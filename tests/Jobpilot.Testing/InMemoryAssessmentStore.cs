@@ -14,7 +14,7 @@ public sealed class InMemoryAssessmentStore : IAssessmentStore
         Task.FromResult<IReadOnlyDictionary<string, AiAssessment>>(
             _stored.Where(s => adIds.Contains(s.Key, StringComparer.Ordinal)).ToDictionary(s => s.Key, s => s.Value, StringComparer.Ordinal));
 
-    public Task SaveAsync(AiAssessment assessment, CancellationToken cancellationToken)
+    public Task SaveAsync(AiAssessment assessment, AdSnapshot ad, CancellationToken cancellationToken)
     {
         _stored[assessment.AdId] = assessment;
         return Task.CompletedTask;

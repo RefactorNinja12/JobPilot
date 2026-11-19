@@ -11,4 +11,18 @@ internal sealed class StoredAssessment
 
     /// <summary>In UTC (timestamptz only accepts UTC).</summary>
     public DateTimeOffset AssessedAt { get; set; }
+
+    // Snapshot of the ad. Null on assessments saved before snapshots existed.
+    public string? Headline { get; set; }
+
+    public string? Employer { get; set; }
+
+    public string? Municipality { get; set; }
+
+    public string? Url { get; set; }
+
+    /// <summary>In UTC.</summary>
+    public DateTimeOffset? PublishedAt { get; set; }
+
+    public DateOnly? ApplicationDeadline { get; set; }
 }
