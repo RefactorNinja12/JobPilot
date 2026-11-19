@@ -147,13 +147,7 @@ public sealed class FindJobsHandler(
         Profile profile,
         IReadOnlyList<ExtractedCompetency> competencies)
     {
-        // A label Skill cannot hold (e.g. too long) cannot be in the profile either, so dropping it loses nothing.
-        var requested = competencies
-            .Select(c => (Skill: Skill.Create(c.Label), c.Prediction))
-            .Where(c => c.Skill.IsSuccess)
-            .Select(c => new RequestedSkill(c.Skill.Value, c.Prediction))
-            .ToList();
-        var score = FitScore.Calculate(profile.Skills, requested);
+        var score = AdSkillMatch.Calculate(profile, competencies);
 
         return new JobMatch(
             ad.Id,
