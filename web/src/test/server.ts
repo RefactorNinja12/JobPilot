@@ -1,46 +1,28 @@
 import { http, HttpResponse, type JsonBodyType } from "msw";
 import { setupServer } from "msw/node";
-import type { FindJobsResult, JobMatch } from "../api/jobs";
+import type { AssessedJob } from "../api/jobs";
 import type { Occupation, Place, Profile } from "../api/profile";
 
-/** A match as GET /api/jobs returns it; override what a test cares about. */
-export function aMatch(overrides: Partial<JobMatch> = {}): JobMatch {
+/** An assessed ad as GET /api/jobs/assessed returns it; override what a test cares about. */
+export function anAssessedJob(overrides: Partial<AssessedJob> = {}): AssessedJob {
   return {
     adId: "31744367",
     headline: "Backendutvecklare C#",
     employer: "Exempel AB",
     municipality: "Göteborg",
-    occupation: "Backend-utvecklare",
-    workingHours: "FullTime",
+    url: "https://arbetsformedlingen.se/platsbanken/annonser/31744367",
     publishedAt: "2026-11-16T09:00:00+01:00",
     applicationDeadline: "2026-12-01",
-    url: "https://arbetsformedlingen.se/platsbanken/annonser/31744367",
-    fitScore: 85,
-    matchedSkills: ["C#", ".net"],
-    missingSkills: ["Kafka"],
-    unknowns: [],
-    assessment: null,
+    chance: 70,
+    summary: "Stark C#-match, Kafka saknas.",
+    assessedAt: "2026-11-17T18:00:00Z",
     ...overrides,
   };
 }
 
-export function aResult(
-  overrides: Partial<FindJobsResult> = {},
-): FindJobsResult {
-  return {
-    matches: [aMatch()],
-    fetched: 200,
-    skipped: 0,
-    rejected: {},
-    passed: 150,
-    newlyAnalysed: 0,
-    ...overrides,
-  };
-}
-
-/** Answers GET /api/jobs with the given body and status, like Jobpilot.Api. */
-export function respondWithJobs(body: JsonBodyType, status = 200) {
-  server.use(http.get("/api/jobs", () => HttpResponse.json(body, { status })));
+/** Answers GET /api/jobs/assessed with the given body and status, like Jobpilot.Api. */
+export function respondWithAssessedJobs(body: JsonBodyType, status = 200) {
+  server.use(http.get("/api/jobs/assessed", () => HttpResponse.json(body, { status })));
 }
 
 /** Answers GET /api/jobs/{adId} with the given body and status, like Jobpilot.Api. Returns the requests seen. */

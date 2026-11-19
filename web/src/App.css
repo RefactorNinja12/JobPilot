@@ -199,6 +199,16 @@ nav a[aria-current='page'] {
   color: var(--muted);
 }
 
+.deadline {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+}
+
+.deadline-soon {
+  font-weight: 700;
+  color: var(--low);
+}
+
 .assessment {
   margin: 10px 0 0;
   padding: 8px 12px;

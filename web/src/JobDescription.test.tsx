@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { JobDescription } from './JobDescription'
-import { aMatch, respondWithJob } from './test/server'
+import { anAssessedJob, respondWithJob } from './test/server'
 
-const anAd = { ...aMatch(), description: 'Vi söker en backendutvecklare.\nDu kan C#.' }
+const anAd = { ...anAssessedJob(), occupation: 'Backend-utvecklare', workingHours: 'FullTime', description: 'Vi söker en backendutvecklare.\nDu kan C#.' }
 
 describe('JobDescription', () => {
   it('fetches and shows the full ad when opened, keeping its line breaks', async () => {
