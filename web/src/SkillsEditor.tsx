@@ -11,6 +11,38 @@ const levelText: Record<SkillLevel, string> = {
 
 const levels = Object.keys(levelText) as SkillLevel[]
 
+/** Level is the user's own judgement of what they can do, not where or for how long they have worked with it. */
+const levelHelp: Record<SkillLevel, string> = {
+  Beginner: 'Har provat eller läst om det, men har inte byggt något på egen hand.',
+  Intermediate: 'Har byggt egna saker med det och känner dig hemma i vardagliga uppgifter.',
+  Advanced: 'Kan det på djupet och löser svåra problem själv.',
+  Expert: 'Kan lära ut det till andra och fattar designbeslut kring det.',
+}
+
+function LevelHelp() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="level-help">
+      <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        {open ? 'Dölj nivåbeskrivning' : 'Vad betyder nivåerna?'}
+      </button>
+      {open && (
+        <>
+          <dl aria-label="Nivåbeskrivning">
+            {levels.map((l) => (
+              <div key={l}>
+                <dt>{levelText[l]}</dt>
+                <dd>{levelHelp[l]}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="muted">Det är din egen bedömning av vad du klarar, oavsett om du lärt dig det i skolan, på egna projekt eller på jobbet.</p>
+        </>
+      )}
+    </div>
+  )
+}
+
 const message = (e: unknown) => (e instanceof ApiError ? e.message : 'Något gick fel. Försök igen.')
 
 function LevelSelect({ value, onChange, label }: { value: SkillLevel; onChange: (l: SkillLevel) => void; label: string }) {
@@ -98,6 +130,7 @@ export function SkillsEditor({ skills, onChanged }: { skills: ProfileSkill[]; on
 
   return (
     <>
+      <LevelHelp />
       {skills.length === 0 ? (
         <p className="muted">Inga kompetenser än. Lägg till din första nedan.</p>
       ) : (

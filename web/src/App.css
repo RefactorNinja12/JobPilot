@@ -375,3 +375,26 @@ nav a[aria-current='page'] {
   white-space: nowrap;
 }
 
+
+.level-help {
+  margin-bottom: 12px;
+}
+
+.level-help dl {
+  margin: 8px 0;
+}
+
+.level-help dl div {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.level-help dt {
+  font-weight: 600;
+  min-width: 6rem;
+}
+
+.level-help dd {
+  margin: 0;
+}
