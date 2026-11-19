@@ -10,6 +10,7 @@ const noLimit: Preferences = {
   acceptsPartTime: true,
   excludeStaffingAgencies: false,
   excludeSeniorRoles: false,
+  maxRequiredYears: null,
   commute: null,
 };
 const withLimit: Preferences = {
@@ -54,6 +55,7 @@ describe("PreferencesEditor", () => {
         acceptsPartTime: false,
         excludeStaffingAgencies: true,
         excludeSeniorRoles: false,
+        maxRequiredYears: null,
         commute: null,
       },
     ]);
@@ -70,6 +72,41 @@ describe("PreferencesEditor", () => {
 
     await vi.waitFor(() => expect(sent).toHaveLength(1));
     expect(sent[0]).toMatchObject({ excludeSeniorRoles: true });
+  });
+
+  it("sends the maximum required years when the limit is ticked", async () => {
+    const sent = respondToPreferenceCalls();
+    render(<PreferencesEditor preferences={noLimit} onChanged={vi.fn()} />);
+
+    await userEvent.click(
+      screen.getByRole("checkbox", { name: /fler års erfarenhet än/ }),
+    );
+    const years = screen.getByLabelText("Högst (år)");
+    await userEvent.clear(years);
+    await userEvent.type(years, "2");
+    await userEvent.click(save());
+
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]).toMatchObject({ maxRequiredYears: 2 });
+  });
+
+  it("shows a saved limit and removes it when unticked", async () => {
+    const sent = respondToPreferenceCalls();
+    render(
+      <PreferencesEditor
+        preferences={{ ...noLimit, maxRequiredYears: 5 }}
+        onChanged={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText("Högst (år)")).toHaveValue(5);
+    await userEvent.click(
+      screen.getByRole("checkbox", { name: /fler års erfarenhet än/ }),
+    );
+    await userEvent.click(save());
+
+    await vi.waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]).toMatchObject({ maxRequiredYears: null });
   });
 
   it("will not save with neither full-time nor part-time", async () => {

@@ -70,6 +70,8 @@ type Draft = {
   acceptsPartTime: boolean;
   excludeStaffingAgencies: boolean;
   excludeSeniorRoles: boolean;
+  limitYears: boolean;
+  maxRequiredYears: string;
   limitCommute: boolean;
   maxDistanceKm: string;
   homeLatitude: string;
@@ -82,6 +84,8 @@ function toDraft(p: Preferences): Draft {
     acceptsPartTime: p.acceptsPartTime,
     excludeStaffingAgencies: p.excludeStaffingAgencies,
     excludeSeniorRoles: p.excludeSeniorRoles,
+    limitYears: p.maxRequiredYears !== null,
+    maxRequiredYears: String(p.maxRequiredYears ?? 3),
     limitCommute: p.commute !== null,
     maxDistanceKm: String(p.commute?.maxDistanceKm ?? 30),
     homeLatitude: p.commute ? String(p.commute.homeLatitude) : "",
@@ -95,6 +99,7 @@ function toPreferences(d: Draft): Preferences {
     acceptsPartTime: d.acceptsPartTime,
     excludeStaffingAgencies: d.excludeStaffingAgencies,
     excludeSeniorRoles: d.excludeSeniorRoles,
+    maxRequiredYears: d.limitYears ? Number(d.maxRequiredYears) : null,
     commute: d.limitCommute
       ? {
           homeLatitude: Number(d.homeLatitude),
@@ -200,6 +205,30 @@ export function PreferencesEditor({
         />
         Dölj seniora tjänster (titeln säger senior, lead, arkitekt, chef …)
       </label>
+
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={draft.limitYears}
+            onChange={(e) => update({ limitYears: e.target.checked })}
+          />
+          Dölj annonser som tydligt kräver fler års erfarenhet än
+        </label>
+        {draft.limitYears && (
+          <label>
+            Högst (år)
+            <input
+              type="number"
+              min={0}
+              max={15}
+              required
+              value={draft.maxRequiredYears}
+              onChange={(e) => update({ maxRequiredYears: e.target.value })}
+            />
+          </label>
+        )}
+      </div>
 
       <fieldset>
         <legend>Pendling</legend>
