@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { JobsPage } from './JobsPage'
 import { anAssessedJob, respondWithAssessedJobs } from './test/server'
@@ -25,6 +25,27 @@ describe('JobsPage', () => {
     expect(screen.getByText(/Stark C#-match, Kafka saknas\./)).toBeInTheDocument()
     expect(screen.getByText(/Exempel AB · Göteborg · Sista ansökan/)).toBeInTheDocument()
     expect(screen.getByText('12 dagar kvar att söka')).toBeInTheDocument()
+  })
+
+  it('shows which skills the ad asks for that the profile has and which it lacks', async () => {
+    respondWithAssessedJobs([anAssessedJob({ matchedSkills: ['C#', 'SQL'], missingSkills: ['Kafka'] })])
+
+    render(<JobsPage />)
+
+    const has = await screen.findByRole('list', { name: 'Du har' })
+    expect(within(has).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['C#', 'SQL'])
+    const lacks = screen.getByRole('list', { name: 'Du saknar' })
+    expect(within(lacks).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Kafka'])
+  })
+
+  it('shows no skill rows when the skills are not known', async () => {
+    respondWithAssessedJobs([anAssessedJob({ matchedSkills: [], missingSkills: [] })])
+
+    render(<JobsPage />)
+
+    await screen.findByRole('link', { name: 'Backendutvecklare C#' })
+    expect(screen.queryByRole('list', { name: 'Du har' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Du saknar' })).not.toBeInTheDocument()
   })
 
   it('shows the ads worth applying for by default, and the ones Claude sifted out on the other tab', async () => {

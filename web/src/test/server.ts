@@ -16,6 +16,8 @@ export function anAssessedJob(overrides: Partial<AssessedJob> = {}): AssessedJob
     chance: 70,
     summary: "Stark C#-match, Kafka saknas.",
     assessedAt: "2026-11-17T18:00:00Z",
+    matchedSkills: ["C#"],
+    missingSkills: ["Kafka"],
     ...overrides,
   };
 }

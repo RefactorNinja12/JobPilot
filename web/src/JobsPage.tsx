@@ -26,6 +26,22 @@ function chanceClass(chance: number) {
   return 'score score-low'
 }
 
+function SkillRow({ label, skills, kind }: { label: string; skills: string[]; kind: 'matched' | 'missing' }) {
+  if (skills.length === 0) return null
+  return (
+    <div className="skill-row">
+      <span className="skill-row-label">{label}</span>
+      <ul className="skills" aria-label={label}>
+        {skills.map((skill) => (
+          <li key={skill} className={`skill skill-${kind}`}>
+            {skill}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 function JobCard({ job }: { job: AssessedJob }) {
   const days = daysLeft(job.applicationDeadline)
   return (
@@ -43,6 +59,8 @@ function JobCard({ job }: { job: AssessedJob }) {
           {job.employer} · {job.municipality ?? 'Ort saknas'} · Sista ansökan {date(job.applicationDeadline)}
         </p>
         <p className={days <= 3 ? 'deadline deadline-soon' : 'deadline'}>{deadlineText(job.applicationDeadline)}</p>
+        <SkillRow label="Du har" skills={job.matchedSkills} kind="matched" />
+        <SkillRow label="Du saknar" skills={job.missingSkills} kind="missing" />
         <p className="assessment">
           <strong>Claudes bedömning:</strong> {job.summary}
         </p>

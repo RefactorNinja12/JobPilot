@@ -15,6 +15,10 @@ export type AssessedJob = {
   chance: number
   summary: string
   assessedAt: string
+  /** What the ad asks for that the profile had when Claude assessed it. Empty when not known (older assessments). */
+  matchedSkills: string[]
+  /** What the ad asks for that the profile lacked when Claude assessed it. Empty when not known. */
+  missingSkills: string[]
 }
 
 /** One ad in full, from GET /api/jobs/{adId}. */

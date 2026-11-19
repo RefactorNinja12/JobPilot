@@ -398,3 +398,15 @@ nav a[aria-current='page'] {
 .level-help dd {
   margin: 0;
 }
+
+.skill-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-row-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  min-width: 5.5rem;
+}
