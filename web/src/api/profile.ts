@@ -17,6 +17,7 @@ export type Preferences = {
   acceptsPartTime: boolean;
   excludeStaffingAgencies: boolean;
   excludeSeniorRoles: boolean;
+  maxRequiredYears: number | null;
   commute: {
     homeLatitude: number;
     homeLongitude: number;

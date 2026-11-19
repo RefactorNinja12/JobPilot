@@ -51,6 +51,7 @@ export function aProfile(overrides: Partial<Profile> = {}): Profile {
       acceptsPartTime: false,
       excludeStaffingAgencies: true,
       excludeSeniorRoles: false,
+      maxRequiredYears: null,
       commute: {
         homeLatitude: 57.7089,
         homeLongitude: 11.9746,
