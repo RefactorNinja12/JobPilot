@@ -40,8 +40,8 @@ export function respondWithJob(body: JsonBodyType, status = 200) {
 export function aProfile(overrides: Partial<Profile> = {}): Profile {
   return {
     skills: [
-      { name: "C#", level: "Expert", yearsOfExperience: 8 },
-      { name: "Kafka", level: "Beginner", yearsOfExperience: 0 },
+      { name: "C#", level: "Expert" },
+      { name: "Kafka", level: "Beginner" },
     ],
     targetOccupations: [
       { taxonomyId: "7wdX_4rv_33z", label: "Backend-utvecklare" },

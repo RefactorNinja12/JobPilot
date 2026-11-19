@@ -5,7 +5,7 @@ import type { ProfileSkill } from './api/profile'
 import { SkillsEditor } from './SkillsEditor'
 import { respondToSkillCalls } from './test/server'
 
-const csharp: ProfileSkill = { name: 'C#', level: 'Expert', yearsOfExperience: 8 }
+const csharp: ProfileSkill = { name: 'C#', level: 'Expert' }
 
 afterEach(() => vi.restoreAllMocks())
 
@@ -18,13 +18,11 @@ describe('SkillsEditor', () => {
     await userEvent.type(screen.getByRole('textbox', { name: 'Kompetens' }), 'apache')
     await userEvent.click(await screen.findByRole('button', { name: 'Kafka' }))
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Nivå' }), 'Avancerad')
-    await userEvent.clear(screen.getByRole('spinbutton', { name: 'År' }))
-    await userEvent.type(screen.getByRole('spinbutton', { name: 'År' }), '3')
     await userEvent.click(screen.getByRole('button', { name: 'Lägg till' }))
 
     await vi.waitFor(() => expect(onChanged).toHaveBeenCalled())
     expect(calls).toEqual([
-      { method: 'POST', url: expect.stringContaining('/api/profile/skills'), body: { name: 'Kafka', level: 'Advanced', yearsOfExperience: 3 } },
+      { method: 'POST', url: expect.stringContaining('/api/profile/skills'), body: { name: 'Kafka', level: 'Advanced' } },
     ])
     expect(screen.getByRole('textbox', { name: 'Kompetens' })).toHaveValue('')
   })
@@ -51,7 +49,7 @@ describe('SkillsEditor', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent("The skill 'C#' is already in the profile.")
   })
 
-  it('saves a changed level and years, and only when something changed', async () => {
+  it('saves a changed level, and only when something changed', async () => {
     const calls = respondToSkillCalls({ answer: { status: 200, body: csharp } })
     const onChanged = vi.fn()
     render(<SkillsEditor skills={[csharp]} onChanged={onChanged} />)
@@ -65,7 +63,7 @@ describe('SkillsEditor', () => {
     expect(calls[0]).toEqual({
       method: 'PUT',
       url: expect.stringContaining('/api/profile/skills'),
-      body: { name: 'C#', level: 'Advanced', yearsOfExperience: 8 },
+      body: { name: 'C#', level: 'Advanced' },
     })
   })
 

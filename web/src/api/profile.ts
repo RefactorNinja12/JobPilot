@@ -7,7 +7,6 @@ export type SkillLevel = "Beginner" | "Intermediate" | "Advanced" | "Expert";
 export type ProfileSkill = {
   name: string;
   level: SkillLevel;
-  yearsOfExperience: number;
 };
 
 export type Occupation = { taxonomyId: string; label: string };

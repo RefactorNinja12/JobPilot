@@ -4,13 +4,12 @@ import { ProfilePage } from './ProfilePage'
 import { aProfile, respondWithProfile } from './test/server'
 
 describe('ProfilePage', () => {
-  it('lists skills with editable level and years', async () => {
+  it('lists skills with an editable level', async () => {
     respondWithProfile(aProfile())
 
     render(<ProfilePage />)
 
     expect(await screen.findByRole('combobox', { name: 'Nivå för C#' })).toHaveValue('Expert')
-    expect(screen.getByRole('spinbutton', { name: 'År med C#' })).toHaveValue(8)
     expect(screen.getByRole('combobox', { name: 'Nivå för Kafka' })).toHaveValue('Beginner')
   })
 
