@@ -8,7 +8,8 @@ public sealed record PreferencesView(
     bool AcceptsPartTime,
     bool ExcludeStaffingAgencies,
     CommuteView? Commute,
-    bool ExcludeSeniorRoles)
+    bool ExcludeSeniorRoles,
+    int? MaxRequiredYears)
 {
     public static PreferencesView From(JobPreferences preferences)
     {
@@ -20,6 +21,7 @@ public sealed record PreferencesView(
             preferences.CommuteLimit is { } limit
                 ? new CommuteView(limit.Home.Latitude, limit.Home.Longitude, limit.MaxDistanceKm)
                 : null,
-            preferences.ExcludeSeniorRoles);
+            preferences.ExcludeSeniorRoles,
+            preferences.MaxRequiredYears);
     }
 }

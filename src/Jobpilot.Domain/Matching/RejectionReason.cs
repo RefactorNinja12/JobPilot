@@ -17,4 +17,7 @@ public enum RejectionReason
 
     /// <summary>The title says senior, lead, architect or manager, and the user excludes senior roles.</summary>
     TooSenior = 5,
+
+    /// <summary>The description clearly asks for more years of experience than the user's maximum.</summary>
+    TooMuchExperienceRequired = 6,
 }

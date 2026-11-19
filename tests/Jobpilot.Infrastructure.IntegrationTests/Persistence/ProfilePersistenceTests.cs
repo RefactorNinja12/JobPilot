@@ -124,6 +124,17 @@ public sealed class ProfilePersistenceTests(PostgresFixture postgres) : IAsyncLi
     }
 
     [Fact]
+    public async Task Preferences_RoundTripWithMaxRequiredYears()
+    {
+        var preferences = JobPreferences.Create(acceptsFullTime: true, acceptsPartTime: true, excludeStaffingAgencies: false, maxRequiredYears: 3).Value;
+        var profile = Profile.Create();
+        profile.UpdatePreferences(preferences);
+        await SaveAsync(profile);
+
+        (await LoadAsync(profile.Id)).Preferences.ShouldBe(preferences);
+    }
+
+    [Fact]
     public async Task PreferencesStoredBeforeTheSeniorRule_LoadWithItOff()
     {
         var id = Guid.CreateVersion7();
@@ -136,6 +147,7 @@ public sealed class ProfilePersistenceTests(PostgresFixture postgres) : IAsyncLi
         var loaded = (await LoadAsync(id)).Preferences;
 
         loaded.ExcludeSeniorRoles.ShouldBeFalse();
+        loaded.MaxRequiredYears.ShouldBeNull();
         loaded.ExcludeStaffingAgencies.ShouldBeTrue();
         loaded.AcceptsPartTime.ShouldBeFalse();
     }

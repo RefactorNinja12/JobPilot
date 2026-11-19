@@ -6,9 +6,11 @@ namespace Jobpilot.Application.Profiles.SetPreferences;
 /// <param name="ExcludeStaffingAgencies">Hide ads from staffing agencies.</param>
 /// <param name="Commute">Maximum commute distance, or null for no limit.</param>
 /// <param name="ExcludeSeniorRoles">Hide ads whose title says senior, lead, architect or manager.</param>
+/// <param name="MaxRequiredYears">Hide ads that clearly ask for more years of experience than this, or null for no limit.</param>
 public sealed record SetPreferencesCommand(
     bool AcceptsFullTime,
     bool AcceptsPartTime,
     bool ExcludeStaffingAgencies,
     CommuteInput? Commute,
-    bool ExcludeSeniorRoles = false);
+    bool ExcludeSeniorRoles = false,
+    int? MaxRequiredYears = null);
