@@ -29,6 +29,19 @@ internal sealed class AssessmentStore(JobpilotDbContext db) : IAssessmentStore
             StringComparer.Ordinal);
     }
 
+    public async Task<IReadOnlyList<AssessedAd>> ListAsync(CancellationToken cancellationToken)
+    {
+        var rows = await db.Set<StoredAssessment>()
+            .AsNoTracking()
+            .Where(a => a.Headline != null && a.Employer != null && a.Url != null && a.PublishedAt != null && a.ApplicationDeadline != null)
+            .ToListAsync(cancellationToken);
+
+        // Only valid assessments and snapshots of valid ads are ever written, so nothing here can fail.
+        return rows.ConvertAll(r => new AssessedAd(
+            AiAssessment.Create(r.AdId, r.Chance, r.Summary, r.AssessedAt).Value,
+            new AdSnapshot(r.Headline!, r.Employer!, r.Municipality, new Uri(r.Url!), r.PublishedAt!.Value, r.ApplicationDeadline!.Value)));
+    }
+
     public async Task SaveAsync(AiAssessment assessment, AdSnapshot ad, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(assessment);

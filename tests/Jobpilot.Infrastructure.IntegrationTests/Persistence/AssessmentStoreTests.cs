@@ -94,6 +94,30 @@ public sealed class AssessmentStoreTests(PostgresFixture postgres) : IAsyncLifet
     }
 
     [Fact]
+    public async Task List_ReturnsEachAssessmentWithItsSnapshot()
+    {
+        await SaveAsync(Assessment("1", 70, "Strong C# match."), Snapshot("Utvecklare"));
+
+        await using var scope = _provider.CreateAsyncScope();
+        var listed = await scope.ServiceProvider.GetRequiredService<IAssessmentStore>().ListAsync(Ct);
+
+        var only = listed.ShouldHaveSingleItem();
+        only.Assessment.ShouldBe(Assessment("1", 70, "Strong C# match."));
+        only.Ad.ShouldBe(Snapshot("Utvecklare")); // Same instant; stored as UTC.
+    }
+
+    [Fact]
+    public async Task List_LeavesOutAssessmentsSavedBeforeSnapshots()
+    {
+        await using var scope = _provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<JobpilotDbContext>();
+        await db.Database.ExecuteSqlRawAsync(
+            "INSERT INTO ad_assessments (ad_id, chance, summary, assessed_at) VALUES ('old', 50, 'No snapshot.', now())", Ct);
+
+        (await scope.ServiceProvider.GetRequiredService<IAssessmentStore>().ListAsync(Ct)).ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Get_NoIds_ReturnsEmpty() =>
         (await GetAsync()).ShouldBeEmpty();
 }
