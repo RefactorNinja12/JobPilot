@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Application.Abstractions.Enrichments;
+using Jobpilot.Application.Abstractions.Interest;
 using Jobpilot.Application.Abstractions.JobSearch;
 using Jobpilot.Application.Profiles;
 using Jobpilot.Domain.Common;
@@ -22,6 +23,7 @@ public sealed class JobEndpointsTests : IAsyncDisposable
     private readonly FakeJobSearch _jobSearch = new();
     private readonly FakeEnrichments _enrichments = new();
     private readonly InMemoryAssessmentStore _assessments = new();
+    private readonly InMemoryAdInterestStore _interests = new();
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _http;
 
@@ -34,6 +36,7 @@ public sealed class JobEndpointsTests : IAsyncDisposable
             services.AddSingleton<IEnrichmentsClient>(_enrichments);
             services.AddSingleton<IAdCompetencyCache>(new InMemoryAdCompetencyCache());
             services.AddSingleton<IAssessmentStore>(_assessments);
+            services.AddSingleton<IAdInterestStore>(_interests);
         }));
         _http = _factory.CreateClient();
     }
@@ -84,6 +87,33 @@ public sealed class JobEndpointsTests : IAsyncDisposable
         good.GetProperty("matchedSkills").EnumerateArray().Select(x => x.GetString()).ShouldBe(["C#"]);
         good.GetProperty("missingSkills").EnumerateArray().Select(x => x.GetString()).ShouldBe(["Kafka"]);
         body[1].GetProperty("matchedSkills").GetArrayLength().ShouldBe(0); // Skills not known: an empty list, not null.
+    }
+
+    [Fact]
+    public async Task PutInterest_MarksTheAd_AndTheListShowsIt_AndItCanBeTakenBack()
+    {
+        await AssessedAsync("wanted", 80);
+        await AssessedAsync("other", 60);
+
+        using var marked = await _http.PutAsJsonAsync("/api/jobs/wanted/interest", new { interested = true }, Ct);
+
+        marked.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await marked.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("interested").GetBoolean().ShouldBeTrue();
+        var list = await _http.GetFromJsonAsync<JsonElement>("/api/jobs/assessed", Ct);
+        list.EnumerateArray().ToDictionary(j => j.GetProperty("adId").GetString()!, j => j.GetProperty("interested").GetBoolean(), StringComparer.Ordinal)
+            .ShouldBe(new Dictionary<string, bool>(StringComparer.Ordinal) { ["wanted"] = true, ["other"] = false });
+
+        (await _http.PutAsJsonAsync("/api/jobs/wanted/interest", new { interested = false }, Ct)).Dispose();
+        (await _http.GetFromJsonAsync<JsonElement>("/api/jobs/assessed", Ct))[0].GetProperty("interested").GetBoolean().ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task PutInterest_AnAdThatIsNotAssessed_Is404()
+    {
+        using var response = await _http.PutAsJsonAsync("/api/jobs/999/interest", new { interested = true }, Ct);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await ProblemAsync(response)).GetProperty("code").GetString().ShouldBe("AdInterest.AdNotAssessed");
     }
 
     [Fact]
