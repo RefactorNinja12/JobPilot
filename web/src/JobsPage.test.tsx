@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { JobsPage } from './JobsPage'
-import { anAssessedJob, respondWithAssessedJobs } from './test/server'
+import { anAssessedJob, respondToInterestCalls, respondWithAssessedJobs } from './test/server'
 
 describe('JobsPage', () => {
   beforeEach(() => {
@@ -89,5 +90,69 @@ describe('JobsPage', () => {
     render(<JobsPage />)
 
     expect(await screen.findByRole('alert')).toHaveTextContent('En tjänst svarar inte just nu')
+  })
+
+  describe('wanting to apply', () => {
+    const tabNamed = (name: RegExp) => screen.getByRole('tab', { name })
+
+    it('marks an ad with the button, counts it in the "Vill söka" tab and sends the choice', async () => {
+      const calls = respondToInterestCalls()
+      respondWithAssessedJobs([anAssessedJob({ adId: 'a1' })])
+      render(<JobsPage />)
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Jag vill söka' }))
+
+      expect(await screen.findByRole('button', { name: /Du vill söka/ })).toHaveAttribute('aria-pressed', 'true')
+      expect(tabNamed(/Vill söka \(1\)/)).toBeInTheDocument()
+      expect(calls).toEqual([{ adId: 'a1', interested: true }])
+    })
+
+    it('shows an ad that was marked before, and takes the mark away again', async () => {
+      const calls = respondToInterestCalls()
+      respondWithAssessedJobs([anAssessedJob({ adId: 'a1', interested: true })])
+      render(<JobsPage />)
+
+      await userEvent.click(await screen.findByRole('button', { name: /Du vill söka/ }))
+
+      expect(await screen.findByRole('button', { name: 'Jag vill söka' })).toHaveAttribute('aria-pressed', 'false')
+      expect(tabNamed(/Vill söka \(0\)/)).toBeInTheDocument()
+      expect(calls).toEqual([{ adId: 'a1', interested: false }])
+    })
+
+    it('lists only the marked ads in the "Vill söka" tab, whatever their chance', async () => {
+      respondWithAssessedJobs([
+        anAssessedJob({ adId: 'good', headline: 'Bra', chance: 85 }),
+        anAssessedJob({ adId: 'poor', headline: 'Dålig men vill ändå', chance: 10, interested: true }),
+      ])
+      render(<JobsPage />)
+      await screen.findByRole('link', { name: 'Bra' })
+
+      await userEvent.click(tabNamed(/Vill söka/))
+
+      expect(screen.getByRole('link', { name: 'Dålig men vill ändå' })).toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: 'Bra' })).not.toBeInTheDocument()
+    })
+
+    it('says so when nothing is marked yet', async () => {
+      respondWithAssessedJobs([anAssessedJob()])
+      render(<JobsPage />)
+      await screen.findByRole('link', { name: 'Backendutvecklare C#' })
+
+      await userEvent.click(tabNamed(/Vill söka/))
+
+      expect(screen.getByText(/Du har inte markerat någon annons än/)).toBeInTheDocument()
+    })
+
+    it('puts the mark back and shows why when the API says no', async () => {
+      respondToInterestCalls({ status: 404, body: { code: 'AdInterest.AdNotAssessed', detail: "The ad 'a1' has not been assessed." } })
+      respondWithAssessedJobs([anAssessedJob({ adId: 'a1' })])
+      render(<JobsPage />)
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Jag vill söka' }))
+
+      expect(await screen.findByRole('alert')).toHaveTextContent("The ad 'a1' has not been assessed.")
+      expect(screen.getByRole('button', { name: 'Jag vill söka' })).toHaveAttribute('aria-pressed', 'false')
+      expect(tabNamed(/Vill söka \(0\)/)).toBeInTheDocument()
+    })
   })
 })

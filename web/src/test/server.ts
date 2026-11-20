@@ -19,6 +19,7 @@ export function anAssessedJob(overrides: Partial<AssessedJob> = {}): AssessedJob
     assessedAt: "2026-11-17T18:00:00Z",
     matchedSkills: ["C#"],
     missingSkills: ["Kafka"],
+    interested: false,
     ...overrides,
   };
 }
@@ -190,4 +191,22 @@ export function respondToDocumentCalls(
     }),
   );
   return { saved, uploads };
+}
+
+/**
+ * Fakes PUT /api/jobs/{adId}/interest: answers with the given status and body (by default the choice it was sent).
+ * Returns the calls made, so tests can check what was sent.
+ */
+export function respondToInterestCalls(answer?: { status: number; body: JsonBodyType }) {
+  const calls: { adId: string; interested: boolean }[] = [];
+  server.use(
+    http.put("/api/jobs/:adId/interest", async ({ request, params }) => {
+      const { interested } = (await request.json()) as { interested: boolean };
+      calls.push({ adId: String(params.adId), interested });
+      return answer
+        ? HttpResponse.json(answer.body, { status: answer.status })
+        : HttpResponse.json({ adId: String(params.adId), interested });
+    }),
+  );
+  return calls;
 }
