@@ -150,6 +150,23 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
                     b.ToTable("base_documents", (string)null);
                 });
 
+            modelBuilder.Entity("Jobpilot.Infrastructure.Persistence.Interest.StoredAdInterest", b =>
+                {
+                    b.Property<string>("AdId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("ad_id");
+
+                    b.Property<DateTimeOffset>("MarkedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("marked_at");
+
+                    b.HasKey("AdId")
+                        .HasName("pk_ad_interests");
+
+                    b.ToTable("ad_interests", (string)null);
+                });
+
             modelBuilder.Entity("Jobpilot.Infrastructure.Persistence.SkillVocabularies.StoredSkillVocabulary", b =>
                 {
                     b.Property<int>("Id")

@@ -1,4 +1,5 @@
 using Jobpilot.Application.Abstractions.Assessments;
+using Jobpilot.Application.Abstractions.Interest;
 using Jobpilot.Application.Jobs.ListAssessedJobs;
 using Jobpilot.Domain.Matching;
 using NSubstitute;
@@ -11,9 +12,14 @@ public class ListAssessedJobsHandlerTests
     private static readonly DateTimeOffset _assessed = new(2026, 11, 17, 18, 0, 0, TimeSpan.Zero);
 
     private readonly IAssessmentStore _store = Substitute.For<IAssessmentStore>();
+    private readonly IAdInterestStore _interests = Substitute.For<IAdInterestStore>();
     private readonly ListAssessedJobsHandler _handler;
 
-    public ListAssessedJobsHandlerTests() => _handler = new ListAssessedJobsHandler(_store);
+    public ListAssessedJobsHandlerTests()
+    {
+        _interests.ListAdIdsAsync(Arg.Any<CancellationToken>()).Returns(new HashSet<string>(StringComparer.Ordinal));
+        _handler = new ListAssessedJobsHandler(_store, _interests);
+    }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -55,7 +61,20 @@ public class ListAssessedJobsHandlerTests
             "Why 1",
             _assessed,
             [],
-            []));
+            [],
+Interested: false));
+    }
+
+    [Fact]
+    public async Task List_MarksTheAdsTheUserWantsToApplyFor()
+    {
+        _store.ListAsync(Ct).Returns([Assessed("wanted", 80, _assessed), Assessed("other", 60, _assessed)]);
+        _interests.ListAdIdsAsync(Ct).Returns(new HashSet<string>(StringComparer.Ordinal) { "wanted" });
+
+        var jobs = await _handler.HandleAsync(Ct);
+
+        jobs.Single(j => j.AdId == "wanted").Interested.ShouldBeTrue();
+        jobs.Single(j => j.AdId == "other").Interested.ShouldBeFalse();
     }
 
     [Fact]
