@@ -18,7 +18,8 @@ Single user. Runs on a local Kubernetes cluster (WSL) and is reached over Tailsc
 Conventions:
 - Use `Result<T>` for expected failures. Exceptions are only for bugs.
 - No MediatR. Inject plain handler classes.
-- The profile is the source of truth. Generated CVs and letters must only use facts from the profile.
+- The profile is the source of truth. Generated CVs and letters must only use facts from the profile and from the user's own base documents (CV and cover letter, `get_documents`). Anything the ad asks for that is in neither is listed as a gap, or asked about, never claimed.
+- Application support (keywords, what to lift, CV suggestions, letter draft; `save_application_support`) is prepared only for ads the user has marked "Jag vill söka" in the web UI. The backend refuses it for other ads.
 
 ## Commits (important)
 - One small, reviewable change per commit, aimed at under ~200–300 changed lines.
