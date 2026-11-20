@@ -127,6 +127,29 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
                     b.ToTable("ad_assessments", (string)null);
                 });
 
+            modelBuilder.Entity("Jobpilot.Infrastructure.Persistence.Documents.StoredBaseDocument", b =>
+                {
+                    b.Property<string>("Kind")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(30000)
+                        .HasColumnType("character varying(30000)")
+                        .HasColumnName("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Kind")
+                        .HasName("pk_base_documents");
+
+                    b.ToTable("base_documents", (string)null);
+                });
+
             modelBuilder.Entity("Jobpilot.Infrastructure.Persistence.SkillVocabularies.StoredSkillVocabulary", b =>
                 {
                     b.Property<int>("Id")

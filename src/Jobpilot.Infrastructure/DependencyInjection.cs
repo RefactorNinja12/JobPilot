@@ -1,4 +1,5 @@
 using Jobpilot.Application.Abstractions.Assessments;
+using Jobpilot.Application.Abstractions.Documents;
 using Jobpilot.Application.Abstractions.Employers;
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Application.Abstractions.JobSearch;
@@ -14,6 +15,7 @@ using Jobpilot.Infrastructure.JobTech.Taxonomy;
 using Jobpilot.Infrastructure.Persistence;
 using Jobpilot.Infrastructure.Persistence.AdCompetencies;
 using Jobpilot.Infrastructure.Persistence.Assessments;
+using Jobpilot.Infrastructure.Persistence.Documents;
 using Jobpilot.Infrastructure.Persistence.Profiles;
 using Jobpilot.Infrastructure.Persistence.SkillVocabularies;
 using Jobpilot.Infrastructure.Persistence.Usage;
@@ -93,6 +95,7 @@ public static class DependencyInjection
         services.AddScoped<ISkillVocabularyStore, SkillVocabularyStore>();
         services.AddScoped<IAdCompetencyCache, AdCompetencyCache>();
         services.AddScoped<IAssessmentStore, AssessmentStore>();
+        services.AddScoped<IBaseDocumentStore, BaseDocumentStore>();
         services.AddScoped<IToolUsageCounter, ToolUsageCounter>();
         services.TryAddSingleton(TimeProvider.System);
     }
