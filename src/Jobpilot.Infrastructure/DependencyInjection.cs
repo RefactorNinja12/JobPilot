@@ -1,3 +1,4 @@
+using Jobpilot.Application.Abstractions.Applications;
 using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Application.Abstractions.Documents;
 using Jobpilot.Application.Abstractions.Employers;
@@ -16,6 +17,7 @@ using Jobpilot.Infrastructure.JobTech.JobSearch;
 using Jobpilot.Infrastructure.JobTech.Taxonomy;
 using Jobpilot.Infrastructure.Persistence;
 using Jobpilot.Infrastructure.Persistence.AdCompetencies;
+using Jobpilot.Infrastructure.Persistence.Applications;
 using Jobpilot.Infrastructure.Persistence.Assessments;
 using Jobpilot.Infrastructure.Persistence.Documents;
 using Jobpilot.Infrastructure.Persistence.Interest;
@@ -100,6 +102,7 @@ public static class DependencyInjection
         services.AddScoped<IAssessmentStore, AssessmentStore>();
         services.AddScoped<IBaseDocumentStore, BaseDocumentStore>();
         services.AddScoped<IAdInterestStore, AdInterestStore>();
+        services.AddScoped<IApplicationSupportStore, ApplicationSupportStore>();
         services.AddSingleton<IDocxTextExtractor, DocxTextExtractor>();
         services.AddScoped<IToolUsageCounter, ToolUsageCounter>();
         services.TryAddSingleton(TimeProvider.System);
