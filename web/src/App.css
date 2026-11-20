@@ -410,3 +410,35 @@ nav a[aria-current='page'] {
   font-size: 0.85rem;
   min-width: 5.5rem;
 }
+
+.documents {
+  display: grid;
+  gap: 24px;
+}
+
+.document-form {
+  display: grid;
+  gap: 8px;
+}
+
+.document-form label {
+  font-weight: 600;
+}
+
+.document-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.document-form p {
+  margin: 0;
+}
+
+.document-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

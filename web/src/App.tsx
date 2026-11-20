@@ -1,3 +1,4 @@
+import { DocumentsPage } from './DocumentsPage'
 import { JobsPage } from './JobsPage'
 import { ProfilePage } from './ProfilePage'
 import { useHashRoute } from './useHashRoute'
@@ -17,9 +18,12 @@ export default function App() {
           <a href="#/profil" aria-current={route === 'profile' ? 'page' : undefined}>
             Profil
           </a>
+          <a href="#/dokument" aria-current={route === 'documents' ? 'page' : undefined}>
+            Dokument
+          </a>
         </nav>
       </header>
-      {route === 'jobs' ? <JobsPage /> : <ProfilePage />}
+      {route === 'jobs' ? <JobsPage /> : route === 'profile' ? <ProfilePage /> : <DocumentsPage />}
     </main>
   )
 }
