@@ -451,3 +451,19 @@ nav a[aria-current='page'] {
   background: var(--chip-matched);
   font-weight: 600;
 }
+
+.support {
+  margin-top: 8px;
+  display: grid;
+  gap: 12px;
+}
+
+.support-section h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+}
+
+.support-text {
+  margin: 0 0 6px;
+  white-space: pre-wrap;
+}

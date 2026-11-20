@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ApiError, fetchAssessedJobs, setInterest, type AssessedJob } from './api/jobs'
 import { daysLeft, deadlineText } from './deadline'
+import { ApplicationSupportPanel } from './ApplicationSupportPanel'
 import { JobDescription } from './JobDescription'
 
 /** Claude gives a chance, not a yes or no: from this chance up, an ad counts as worth applying for. */
@@ -89,6 +90,15 @@ function JobCard({
             {error}
           </p>
         )}
+        {interested &&
+          (job.hasSupport ? (
+            <ApplicationSupportPanel adId={job.adId} />
+          ) : (
+            <p className="muted">
+              Inget underlag än. Be Claude i chatten ta fram underlag för dina markerade annonser, så visas nyckelord, vad du
+              ska lyfta och ett utkast här.
+            </p>
+          ))}
         <JobDescription adId={job.adId} />
       </div>
     </article>
