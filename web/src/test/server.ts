@@ -1,7 +1,7 @@
 import { http, HttpResponse, type JsonBodyType } from "msw";
 import { setupServer } from "msw/node";
 import type { BaseDocument } from "../api/documents";
-import type { AssessedJob } from "../api/jobs";
+import type { ApplicationSupport, AssessedJob } from "../api/jobs";
 import type { Occupation, Place, Profile } from "../api/profile";
 
 /** An assessed ad as GET /api/jobs/assessed returns it; override what a test cares about. */
@@ -20,6 +20,7 @@ export function anAssessedJob(overrides: Partial<AssessedJob> = {}): AssessedJob
     matchedSkills: ["C#"],
     missingSkills: ["Kafka"],
     interested: false,
+    hasSupport: false,
     ...overrides,
   };
 }
@@ -209,4 +210,23 @@ export function respondToInterestCalls(answer?: { status: number; body: JsonBody
     }),
   );
   return calls;
+}
+
+/** Answers GET /api/jobs/{adId}/support with the given body and status, like Jobpilot.Api. */
+export function respondWithSupport(body: JsonBodyType, status = 200) {
+  server.use(http.get("/api/jobs/:adId/support", () => HttpResponse.json(body, { status })));
+}
+
+/** Application support as the API returns it; override what a test cares about. */
+export function someSupport(overrides: Partial<ApplicationSupport> = {}): ApplicationSupport {
+  return {
+    adId: "31744367",
+    keywords: ["C#", "Kubernetes"],
+    highlights: "Lyft C# och Postgres. Kafka saknas i profilen.",
+    cvSuggestions: "Flytta upp projektet med Docker.",
+    letterDraft: "Hej! Jag söker tjänsten som backendutvecklare.",
+    companyNotes: null,
+    updatedAt: "2026-11-20T10:00:00Z",
+    ...overrides,
+  };
 }

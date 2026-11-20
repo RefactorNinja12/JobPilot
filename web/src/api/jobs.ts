@@ -21,6 +21,21 @@ export type AssessedJob = {
   missingSkills: string[]
   /** True when the user has said they want to apply for the ad. */
   interested: boolean
+  /** True when Claude has prepared application support (keywords, what to lift, drafts) for the ad. */
+  hasSupport: boolean
+}
+
+/** What Claude prepared for the user's application to one ad, from GET /api/jobs/{adId}/support. */
+export type ApplicationSupport = {
+  adId: string
+  /** Words from the ad worth using in the CV and letter, most important first. */
+  keywords: string[]
+  /** What to lift from the profile and the base CV, and honest gaps. */
+  highlights: string
+  cvSuggestions: string | null
+  letterDraft: string | null
+  companyNotes: string | null
+  updatedAt: string
 }
 
 /** One ad in full, from GET /api/jobs/{adId}. */
@@ -45,6 +60,10 @@ export function fetchAssessedJobs(signal?: AbortSignal): Promise<AssessedJob[]> 
 /** Marks the ad as one the user wants to apply for, or takes the mark away. */
 export function setInterest(adId: string, interested: boolean): Promise<{ adId: string; interested: boolean }> {
   return sendJson('PUT', `/api/jobs/${encodeURIComponent(adId)}/interest`, { interested })
+}
+
+export function fetchApplicationSupport(adId: string, signal?: AbortSignal): Promise<ApplicationSupport> {
+  return getJson<ApplicationSupport>(`/api/jobs/${encodeURIComponent(adId)}/support`, signal)
 }
 
 export function fetchJob(adId: string, signal?: AbortSignal): Promise<JobAd> {

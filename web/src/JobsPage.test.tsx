@@ -143,6 +143,21 @@ describe('JobsPage', () => {
       expect(screen.getByText(/Du har inte markerat någon annons än/)).toBeInTheDocument()
     })
 
+    it('shows the support of a marked ad that has some, and says how to get it for one that has none', async () => {
+      respondWithAssessedJobs([
+        anAssessedJob({ adId: 'prepared', headline: 'Har underlag', interested: true, hasSupport: true }),
+        anAssessedJob({ adId: 'waiting', headline: 'Väntar', interested: true, hasSupport: false }),
+        anAssessedJob({ adId: 'plain', headline: 'Ej markerad', interested: false, hasSupport: false }),
+      ])
+      render(<JobsPage />)
+      await screen.findByRole('link', { name: 'Har underlag' })
+      await userEvent.click(screen.getByRole('tab', { name: /Vill söka/ }))
+
+      expect(screen.getAllByRole('button', { name: 'Visa underlag för ansökan' })).toHaveLength(1)
+      expect(screen.getByText(/Inget underlag än/)).toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: 'Ej markerad' })).not.toBeInTheDocument()
+    })
+
     it('puts the mark back and shows why when the API says no', async () => {
       respondToInterestCalls({ status: 404, body: { code: 'AdInterest.AdNotAssessed', detail: "The ad 'a1' has not been assessed." } })
       respondWithAssessedJobs([anAssessedJob({ adId: 'a1' })])
