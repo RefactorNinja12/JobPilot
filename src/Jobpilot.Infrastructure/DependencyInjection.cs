@@ -7,6 +7,7 @@ using Jobpilot.Application.Abstractions.Places;
 using Jobpilot.Application.Abstractions.Taxonomy;
 using Jobpilot.Application.Abstractions.Usage;
 using Jobpilot.Application.Profiles;
+using Jobpilot.Infrastructure.Documents;
 using Jobpilot.Infrastructure.Employers;
 using Jobpilot.Infrastructure.JobTech;
 using Jobpilot.Infrastructure.JobTech.Enrichments;
@@ -96,6 +97,7 @@ public static class DependencyInjection
         services.AddScoped<IAdCompetencyCache, AdCompetencyCache>();
         services.AddScoped<IAssessmentStore, AssessmentStore>();
         services.AddScoped<IBaseDocumentStore, BaseDocumentStore>();
+        services.AddSingleton<IDocxTextExtractor, DocxTextExtractor>();
         services.AddScoped<IToolUsageCounter, ToolUsageCounter>();
         services.TryAddSingleton(TimeProvider.System);
     }

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Jobpilot.Infrastructure\Jobpilot.Infrastructure.csproj" />
+    <ProjectReference Include="..\Jobpilot.Testing\Jobpilot.Testing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
