@@ -37,6 +37,17 @@ export async function sendJson<T>(method: string, path: string, body?: unknown, 
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
   })
+  return readJson<T>(response)
+}
+
+/** Uploads one file as multipart form data (field "file") and reads the JSON answer. */
+export async function postFile<T>(path: string, file: File, signal?: AbortSignal): Promise<T> {
+  const form = new FormData()
+  form.append('file', file)
+  return readJson<T>(await fetch(apiUrl(path), { method: 'POST', body: form, signal }))
+}
+
+async function readJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as { code?: string; detail?: string }
     throw new ApiError(response.status, problem.code, problem.detail ?? `HTTP ${response.status}`)

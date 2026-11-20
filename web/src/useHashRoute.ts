@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 
-export type Route = 'jobs' | 'profile'
+export type Route = 'jobs' | 'profile' | 'documents'
 
-const routeFromHash = (hash: string): Route => (hash === '#/profil' ? 'profile' : 'jobs')
+const routeFromHash = (hash: string): Route =>
+  hash === '#/profil' ? 'profile' : hash === '#/dokument' ? 'documents' : 'jobs'
 
-/** Tiny hash router: "#/profil" is the profile, anything else the job list. No library needed for two pages. */
+/** Tiny hash router: "#/profil" is the profile, "#/dokument" the CV and letter, anything else the job list. */
 export function useHashRoute(): Route {
   const [route, setRoute] = useState(() => routeFromHash(window.location.hash))
 

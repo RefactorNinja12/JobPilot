@@ -1,5 +1,6 @@
 import { http, HttpResponse, type JsonBodyType } from "msw";
 import { setupServer } from "msw/node";
+import type { BaseDocument } from "../api/documents";
 import type { AssessedJob } from "../api/jobs";
 import type { Occupation, Place, Profile } from "../api/profile";
 
@@ -154,4 +155,39 @@ export const server = setupServer();
 /** Fakes GET /api/places/search: answers with the given places. */
 export function respondToPlaceSearch(places: Place[]) {
   server.use(http.get("/api/places/search", () => HttpResponse.json(places)));
+}
+
+/**
+ * Fakes the document endpoints of Jobpilot.Api: GET answers with the given documents, PUT stores what it is sent
+ * (or answers with the given status and body), and extract answers with the given text (or status and body).
+ * Returns what was saved and the contents of the files uploaded (jsdom loses the file name), so tests can check what
+ * was sent.
+ */
+export function respondToDocumentCalls(
+  options: {
+    documents?: BaseDocument[];
+    saveAnswer?: { status: number; body: JsonBodyType };
+    extractAnswer?: { status: number; body: JsonBodyType };
+  } = {},
+) {
+  const saved: { kind: string; text: string }[] = [];
+  const uploads: string[] = [];
+  server.use(
+    http.get("/api/documents", () => HttpResponse.json(options.documents ?? [])),
+    http.put("/api/documents", async ({ request }) => {
+      const body = (await request.json()) as { kind: string; text: string };
+      saved.push(body);
+      if (options.saveAnswer) {
+        return HttpResponse.json(options.saveAnswer.body, { status: options.saveAnswer.status });
+      }
+      return HttpResponse.json({ kind: body.kind, text: body.text.trim(), updatedAt: "2026-11-20T10:00:00Z" });
+    }),
+    http.post("/api/documents/extract", async ({ request }) => {
+      const file = (await request.formData()).get("file") as File;
+      uploads.push(await file.text());
+      const answer = options.extractAnswer ?? { status: 200, body: { text: "Text ur Word-filen" } };
+      return HttpResponse.json(answer.body, { status: answer.status });
+    }),
+  );
+  return { saved, uploads };
 }
