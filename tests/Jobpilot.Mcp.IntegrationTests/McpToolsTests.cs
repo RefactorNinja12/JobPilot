@@ -29,6 +29,10 @@ public sealed class McpToolsTests : IAsyncLifetime
             ]),
     };
 
+    private readonly InMemoryAssessmentStore _assessments = new();
+    private readonly InMemoryAdInterestStore _interests = new();
+    private readonly InMemoryBaseDocumentStore _documents = new();
+    private readonly InMemoryApplicationSupportStore _support = new();
     private WebApplicationFactory<Program> _factory = null!;
     private McpClient _client = null!;
 
@@ -44,7 +48,10 @@ public sealed class McpToolsTests : IAsyncLifetime
             services.AddSingleton<Application.Abstractions.JobSearch.IJobSearchClient>(_jobSearch);
             services.AddSingleton<Application.Abstractions.Enrichments.IEnrichmentsClient>(_enrichments);
             services.AddSingleton<Application.Abstractions.Enrichments.IAdCompetencyCache>(new InMemoryAdCompetencyCache());
-            services.AddSingleton<Application.Abstractions.Assessments.IAssessmentStore>(new InMemoryAssessmentStore());
+            services.AddSingleton<Application.Abstractions.Assessments.IAssessmentStore>(_assessments);
+            services.AddSingleton<Application.Abstractions.Interest.IAdInterestStore>(_interests);
+            services.AddSingleton<Application.Abstractions.Documents.IBaseDocumentStore>(_documents);
+            services.AddSingleton<Application.Abstractions.Applications.IApplicationSupportStore>(_support);
             services.AddSingleton<Application.Abstractions.Usage.IToolUsageCounter>(new InMemoryToolUsageCounter());
         }));
 
@@ -83,7 +90,7 @@ public sealed class McpToolsTests : IAsyncLifetime
     {
         var tools = await _client.ListToolsAsync(cancellationToken: Ct);
 
-        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile", "set_preferences", "search_occupations", "set_occupations", "find_jobs", "get_job_ad", "save_assessment"], ignoreOrder: true);
+        tools.Select(t => t.Name).ShouldBe(["search_skills", "add_skill", "update_skill", "remove_skill", "get_profile", "set_preferences", "search_occupations", "set_occupations", "find_jobs", "get_job_ad", "save_assessment", "list_wanted_ads", "get_documents", "save_application_support"], ignoreOrder: true);
     }
 
     [Fact]
@@ -329,6 +336,93 @@ public sealed class McpToolsTests : IAsyncLifetime
 
         result.IsError.ShouldBe(expected: true);
         Text(result).ShouldContain("AiAssessment.ChanceOutOfRange");
+    }
+
+    private async Task AssessAsync(string adId, int chance, bool marked)
+    {
+        await _assessments.SaveAsync(
+            Domain.Matching.AiAssessment.Create(adId, chance, "Why " + adId, DateTimeOffset.UnixEpoch).Value,
+            new Domain.Matching.AdSnapshot("Utvecklare " + adId, "Arbetsgivare", "Göteborg", new Uri("https://arbetsformedlingen.se/platsbanken/annonser/" + adId), DateTimeOffset.UnixEpoch, new DateOnly(2026, 12, 1), ["C#"], ["Kafka"]),
+            Ct);
+        if (marked)
+        {
+            await _interests.SetAsync(adId, interested: true, DateTimeOffset.UnixEpoch, Ct);
+        }
+    }
+
+    private static Dictionary<string, object?> SupportArguments(string adId) => new(StringComparer.Ordinal)
+    {
+        ["adId"] = adId,
+        ["keywords"] = new[] { "C#", "Kubernetes" },
+        ["highlights"] = "Lyft C#. Kafka saknas i profilen.",
+        ["letterDraft"] = "Hej!",
+    };
+
+    [Fact]
+    public async Task ListWantedAds_ShowsOnlyTheMarkedAds_WithoutSupport_UnlessAllAreAsked()
+    {
+        await AssessAsync("marked", 70, marked: true);
+        await AssessAsync("done", 80, marked: true);
+        await AssessAsync("not-marked", 99, marked: false);
+        (await CallAsync("save_application_support", SupportArguments("done"))).IsError.ShouldNotBe(expected: true);
+
+        var pending = Read<JsonElement>(await CallAsync("list_wanted_ads", []));
+        var all = Read<JsonElement>(await CallAsync("list_wanted_ads", new(StringComparer.Ordinal) { ["includeDone"] = true }));
+
+        pending.EnumerateArray().Select(a => a.GetProperty("adId").GetString()).ShouldBe(["marked"]);
+        pending[0].GetProperty("matchedSkills").EnumerateArray().Select(s => s.GetString()).ShouldBe(["C#"]);
+        all.EnumerateArray().Select(a => a.GetProperty("adId").GetString()).ShouldBe(["done", "marked"]);
+    }
+
+    [Fact]
+    public async Task GetDocuments_ReturnsTheBaseCvAndLetter_OrNothing()
+    {
+        Read<JsonElement>(await CallAsync("get_documents", [])).GetArrayLength().ShouldBe(0);
+        await _documents.SaveAsync(Domain.Documents.BaseDocument.Create(Domain.Documents.DocumentKind.Cv, "Mitt CV", DateTimeOffset.UnixEpoch).Value, Ct);
+
+        var documents = Read<JsonElement>(await CallAsync("get_documents", []));
+
+        documents.EnumerateArray().Select(d => (d.GetProperty("kind").GetString(), d.GetProperty("text").GetString())).ShouldBe([("Cv", "Mitt CV")]);
+    }
+
+    [Fact]
+    public async Task SaveApplicationSupport_ForAMarkedAd_IsStored()
+    {
+        await AssessAsync("1", 70, marked: true);
+
+        var saved = await CallAsync("save_application_support", SupportArguments("1"));
+
+        saved.IsError.ShouldNotBe(expected: true, customMessage: Text(saved));
+        var stored = _support.Stored["1"];
+        stored.Keywords.ShouldBe(["C#", "Kubernetes"]);
+        stored.Highlights.ShouldBe("Lyft C#. Kafka saknas i profilen.");
+        stored.LetterDraft.ShouldBe("Hej!");
+        stored.CvSuggestions.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task SaveApplicationSupport_ForAnAdTheUserHasNotMarked_IsAToolError()
+    {
+        await AssessAsync("1", 70, marked: false);
+
+        var result = await CallAsync("save_application_support", SupportArguments("1"));
+
+        result.IsError.ShouldBe(expected: true);
+        Text(result).ShouldContain("ApplicationSupport.AdNotMarked");
+        _support.Stored.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task SaveApplicationSupport_WithoutKeywords_IsAToolError()
+    {
+        await AssessAsync("1", 70, marked: true);
+        var arguments = SupportArguments("1");
+        arguments["keywords"] = Array.Empty<string>();
+
+        var result = await CallAsync("save_application_support", arguments);
+
+        result.IsError.ShouldBe(expected: true);
+        Text(result).ShouldContain("ApplicationSupport.KeywordsEmpty");
     }
 
     [Theory]
