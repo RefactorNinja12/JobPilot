@@ -1,3 +1,4 @@
+using Jobpilot.Application.Documents.ExtractDocxText;
 using Jobpilot.Application.Documents.GetBaseDocuments;
 using Jobpilot.Application.Documents.SetBaseDocument;
 using Jobpilot.Application.Jobs.FindJobs;
@@ -41,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<SaveAssessmentHandler>();
         services.AddScoped<SetBaseDocumentHandler>();
         services.AddScoped<GetBaseDocumentsHandler>();
+        services.AddScoped<ExtractDocxTextHandler>();
         services.AddScoped<ListAssessedJobsHandler>();
         services.AddScoped<RefreshSkillVocabularyHandler>();
         services.AddScoped<SearchSkillsHandler>();

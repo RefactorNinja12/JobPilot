@@ -27,6 +27,7 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
 });
 app.MapGet("/health", () => Results.Ok("healthy"));
 app.MapJobEndpoints();
+app.MapDocumentEndpoints();
 app.MapProfileEndpoints();
 
 // The built web UI (web/dist, copied to wwwroot in the image) is served from the same address as the API, so the UI
