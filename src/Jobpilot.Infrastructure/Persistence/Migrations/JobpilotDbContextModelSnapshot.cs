@@ -64,6 +64,49 @@ namespace Jobpilot.Infrastructure.Persistence.Migrations
                     b.ToTable("ad_competencies", (string)null);
                 });
 
+            modelBuilder.Entity("Jobpilot.Infrastructure.Persistence.Applications.StoredApplicationSupport", b =>
+                {
+                    b.Property<string>("AdId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("ad_id");
+
+                    b.Property<string>("CompanyNotes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("company_notes");
+
+                    b.Property<string>("CvSuggestions")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("cv_suggestions");
+
+                    b.Property<string>("Highlights")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("highlights");
+
+                    b.PrimitiveCollection<string[]>("Keywords")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("keywords");
+
+                    b.Property<string>("LetterDraft")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("letter_draft");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("AdId")
+                        .HasName("pk_application_support");
+
+                    b.ToTable("application_support", (string)null);
+                });
+
             modelBuilder.Entity("Jobpilot.Infrastructure.Persistence.Assessments.StoredAssessment", b =>
                 {
                     b.Property<string>("AdId")

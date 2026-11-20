@@ -4,6 +4,8 @@ using Jobpilot.Application.Documents.SetBaseDocument;
 using Jobpilot.Application.Jobs.FindJobs;
 using Jobpilot.Application.Jobs.GetJobAd;
 using Jobpilot.Application.Jobs.ListAssessedJobs;
+using Jobpilot.Application.Jobs.ListWantedAds;
+using Jobpilot.Application.Jobs.SaveApplicationSupport;
 using Jobpilot.Application.Jobs.SaveAssessment;
 using Jobpilot.Application.Jobs.SetAdInterest;
 using Jobpilot.Application.Occupations.Search;
@@ -42,6 +44,8 @@ public static class DependencyInjection
         services.AddScoped<GetJobAdHandler>();
         services.AddScoped<SaveAssessmentHandler>();
         services.AddScoped<SetAdInterestHandler>();
+        services.AddScoped<SaveApplicationSupportHandler>();
+        services.AddScoped<ListWantedAdsHandler>();
         services.AddScoped<SetBaseDocumentHandler>();
         services.AddScoped<GetBaseDocumentsHandler>();
         services.AddScoped<ExtractDocxTextHandler>();
