@@ -1,3 +1,4 @@
+using Jobpilot.Application.Abstractions.Applications;
 using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Application.Abstractions.Interest;
 using Jobpilot.Application.Jobs.ListAssessedJobs;
@@ -13,12 +14,14 @@ public class ListAssessedJobsHandlerTests
 
     private readonly IAssessmentStore _store = Substitute.For<IAssessmentStore>();
     private readonly IAdInterestStore _interests = Substitute.For<IAdInterestStore>();
+    private readonly IApplicationSupportStore _supports = Substitute.For<IApplicationSupportStore>();
     private readonly ListAssessedJobsHandler _handler;
 
     public ListAssessedJobsHandlerTests()
     {
         _interests.ListAdIdsAsync(Arg.Any<CancellationToken>()).Returns(new HashSet<string>(StringComparer.Ordinal));
-        _handler = new ListAssessedJobsHandler(_store, _interests);
+        _supports.ListAdIdsAsync(Arg.Any<CancellationToken>()).Returns(new HashSet<string>(StringComparer.Ordinal));
+        _handler = new ListAssessedJobsHandler(_store, _interests, _supports);
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -62,7 +65,20 @@ public class ListAssessedJobsHandlerTests
             _assessed,
             [],
             [],
-Interested: false));
+Interested: false,
+            HasSupport: false));
+    }
+
+    [Fact]
+    public async Task List_FlagsTheAdsThatHaveApplicationSupport()
+    {
+        _store.ListAsync(Ct).Returns([Assessed("prepared", 80, _assessed), Assessed("other", 60, _assessed)]);
+        _supports.ListAdIdsAsync(Ct).Returns(new HashSet<string>(StringComparer.Ordinal) { "prepared" });
+
+        var jobs = await _handler.HandleAsync(Ct);
+
+        jobs.Single(j => j.AdId == "prepared").HasSupport.ShouldBeTrue();
+        jobs.Single(j => j.AdId == "other").HasSupport.ShouldBeFalse();
     }
 
     [Fact]
