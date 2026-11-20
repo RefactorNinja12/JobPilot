@@ -95,8 +95,8 @@ function JobCard({
             <ApplicationSupportPanel adId={job.adId} />
           ) : (
             <p className="muted">
-              Inget underlag än. Be Claude i chatten ta fram underlag för dina markerade annonser, så visas nyckelord, vad du
-              ska lyfta och ett utkast här.
+              Inget underlag än. Claude tar fram det automatiskt när bevakaren på din dator körs, annars kan du be Claude i
+              chatten ta fram underlag för dina markerade annonser. Ladda om sidan när det är klart.
             </p>
           ))}
         <JobDescription adId={job.adId} />

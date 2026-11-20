@@ -5,6 +5,12 @@
 #   scripts/run-assessment.sh             run once
 #   scripts/run-assessment.sh --dry-run   check the setup and print the command, without calling Claude
 #
+# Once a day from cron (crontab -e), here at 07:30, using your own path:
+#   30 7 * * * /home/rini/code/Jobpilot/scripts/run-assessment.sh >> ~/.local/state/jobpilot/assessment.log 2>&1
+# Cron has no terminal to log in from: put JOBPILOT_MCP_URL (the Tailscale address) and CLAUDE_CODE_OAUTH_TOKEN (from
+# `claude setup-token`) in ~/.config/jobpilot/env first. find_jobs is limited to 2 calls a day, so one scheduled run
+# leaves one for manual use.
+#
 # Settings: see scripts/lib/claude-task.sh. Also JOBPILOT_MAX_BUDGET_USD, the safety cap for one run (default 1.50).
 set -euo pipefail
 
