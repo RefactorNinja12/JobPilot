@@ -442,3 +442,12 @@ nav a[aria-current='page'] {
   flex-wrap: wrap;
   gap: 8px;
 }
+
+.job-actions {
+  margin-top: 10px;
+}
+
+.interest-on {
+  background: var(--chip-matched);
+  font-weight: 600;
+}
