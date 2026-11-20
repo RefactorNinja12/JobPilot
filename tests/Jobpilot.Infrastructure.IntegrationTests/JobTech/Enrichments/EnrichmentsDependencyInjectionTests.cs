@@ -49,8 +49,10 @@ public sealed class EnrichmentsDependencyInjectionTests : IDisposable
             ["JobTech:Enrichments:BaseUrl"] = baseUrl,
             // Short retry delay keeps retry tests fast; timeouts stay generous unless a test is about them.
             ["JobTech:Enrichments:Resilience:Retry:Delay"] = "00:00:00.010",
-            ["JobTech:Enrichments:Resilience:AttemptTimeout:Timeout"] = (attemptTimeout ?? TimeSpan.FromSeconds(5)).ToString("c"),
-            ["JobTech:Enrichments:Resilience:TotalRequestTimeout:Timeout"] = (totalTimeout ?? TimeSpan.FromSeconds(10)).ToString("c"),
+            // The circuit breaker's window must be at least twice the attempt timeout.
+            ["JobTech:Enrichments:Resilience:CircuitBreaker:SamplingDuration"] = "00:02:00",
+            ["JobTech:Enrichments:Resilience:AttemptTimeout:Timeout"] = (attemptTimeout ?? TimeSpan.FromSeconds(30)).ToString("c"),
+            ["JobTech:Enrichments:Resilience:TotalRequestTimeout:Timeout"] = (totalTimeout ?? TimeSpan.FromSeconds(60)).ToString("c"),
         };
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
 

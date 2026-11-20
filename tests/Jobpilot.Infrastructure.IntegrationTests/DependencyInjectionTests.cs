@@ -33,8 +33,10 @@ public sealed class DependencyInjectionTests : IDisposable
             // Short retry delay keeps retry tests fast. Timeouts stay generous unless a test
             // is about timeouts: a cold first request can exceed a tight attempt timeout and be retried.
             ["JobTech:JobSearch:Resilience:Retry:Delay"] = "00:00:00.010",
-            ["JobTech:JobSearch:Resilience:AttemptTimeout:Timeout"] = (attemptTimeout ?? TimeSpan.FromSeconds(5)).ToString("c"),
-            ["JobTech:JobSearch:Resilience:TotalRequestTimeout:Timeout"] = (totalTimeout ?? TimeSpan.FromSeconds(10)).ToString("c"),
+            // The circuit breaker's window must be at least twice the attempt timeout.
+            ["JobTech:JobSearch:Resilience:CircuitBreaker:SamplingDuration"] = "00:02:00",
+            ["JobTech:JobSearch:Resilience:AttemptTimeout:Timeout"] = (attemptTimeout ?? TimeSpan.FromSeconds(30)).ToString("c"),
+            ["JobTech:JobSearch:Resilience:TotalRequestTimeout:Timeout"] = (totalTimeout ?? TimeSpan.FromSeconds(60)).ToString("c"),
         };
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
 
