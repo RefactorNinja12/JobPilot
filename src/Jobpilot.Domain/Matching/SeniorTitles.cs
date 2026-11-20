@@ -9,16 +9,26 @@ namespace Jobpilot.Domain.Matching;
 /// </summary>
 public static partial class SeniorTitles
 {
-    public static bool IsSenior(string headline)
+    public static bool IsSenior(string headline) => IsSenior(headline, SeniorWords());
+
+    /// <summary>A regex that runs out of time counts as "not senior": missing information never rejects an ad.</summary>
+    internal static bool IsSenior(string headline, Regex seniorWords)
     {
         ArgumentNullException.ThrowIfNull(headline);
-        return SeniorWords().IsMatch(headline);
+        try
+        {
+            return seniorWords.IsMatch(headline);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return false;
+        }
     }
 
     // "lead" only as a word of its own or in team/tech lead: it is also part of words like "leadership".
     [GeneratedRegex(
         @"senior|(?<![a-zåäö])lead(?![a-zåäö])|(?:team|tech)\s?lead|principal|arkitekt|architect|head of|chef",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
-        matchTimeoutMilliseconds: 100)]
+        matchTimeoutMilliseconds: 1000)]
     private static partial Regex SeniorWords();
 }

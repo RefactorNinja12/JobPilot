@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Jobpilot.Domain.Matching;
 
 namespace Jobpilot.Domain.UnitTests.Matching;
@@ -34,6 +35,15 @@ public class RequiredExperienceTests
         RequiredExperience.LowestRequiredYears(
                 "Krav: minst 5 års erfarenhet av .NET. Meriterande: 2 års erfarenhet av Azure.")
             .ShouldBe(2);
+
+    [Fact]
+    public void LowestRequiredYears_WhenTheRegexTimesOut_CountsAsNoClearRequirement()
+    {
+        var impatient = new Regex(@"(?<years>\d+)", RegexOptions.None, TimeSpan.FromTicks(1));
+
+        RequiredExperience.LowestRequiredYears(string.Concat(Enumerable.Repeat("3 år erfarenhet. ", 20_000)), impatient)
+            .ShouldBeNull();
+    }
 
     [Fact]
     public void LowestRequiredYears_ImplausiblyHighNumbers_AreIgnored() =>
