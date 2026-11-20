@@ -45,18 +45,31 @@ public static partial class RequiredExperience
     /// ("3–5 år") the lower bound counts. The lowest wins because a stricter-sounding sentence elsewhere is often
     /// about a nice-to-have.
     /// </summary>
-    public static int? LowestRequiredYears(string description)
+    public static int? LowestRequiredYears(string description) => LowestRequiredYears(description, YearsOfExperience());
+
+    /// <summary>
+    /// A regex that runs out of time is not a bug in the ad: it is a slow machine or an odd text. Missing information
+    /// never rejects, so it counts as "no clear requirement" instead of failing the whole search.
+    /// </summary>
+    internal static int? LowestRequiredYears(string description, Regex yearsOfExperience)
     {
         ArgumentNullException.ThrowIfNull(description);
 
         int? lowest = null;
-        foreach (Match match in YearsOfExperience().Matches(description))
+        try
         {
-            var years = ToNumber(match.Groups["years"].Value);
-            if (years <= MaxPlausibleYears && (lowest is null || years < lowest))
+            foreach (Match match in yearsOfExperience.Matches(description))
             {
-                lowest = years;
+                var years = ToNumber(match.Groups["years"].Value);
+                if (years <= MaxPlausibleYears && (lowest is null || years < lowest))
+                {
+                    lowest = years;
+                }
             }
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return null;
         }
 
         return lowest;
@@ -75,6 +88,6 @@ public static partial class RequiredExperience
         @"(?:års?|years?|yrs?)(?![\p{L}])['’]?" +
         @"(?:\s+[\p{L}-]+){0,3}?\s+[\p{L}-]*(?:erfarenhet|experience)",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
-        matchTimeoutMilliseconds: 100)]
+        matchTimeoutMilliseconds: 1000)]
     private static partial Regex YearsOfExperience();
 }

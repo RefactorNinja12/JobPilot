@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Jobpilot.Domain.Matching;
 
 namespace Jobpilot.Domain.UnitTests.Matching;
@@ -29,4 +30,12 @@ public class SeniorTitlesTests
     [InlineData("Systemutvecklare")]
     public void IsSenior_OtherTitles_AreNot(string headline) =>
         SeniorTitles.IsSenior(headline).ShouldBeFalse();
+
+    [Fact]
+    public void IsSenior_WhenTheRegexTimesOut_CountsAsNotSenior()
+    {
+        var impatient = new Regex("senior", RegexOptions.None, TimeSpan.FromTicks(1));
+
+        SeniorTitles.IsSenior(new string('x', 200_000) + " senior", impatient).ShouldBeFalse();
+    }
 }
