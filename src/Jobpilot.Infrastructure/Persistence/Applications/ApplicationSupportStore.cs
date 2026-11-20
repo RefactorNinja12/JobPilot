@@ -29,6 +29,10 @@ internal sealed class ApplicationSupportStore(JobpilotDbContext db) : IApplicati
             StringComparer.Ordinal);
     }
 
+    public async Task<IReadOnlySet<string>> ListAdIdsAsync(CancellationToken cancellationToken) =>
+        (await db.Set<StoredApplicationSupport>().AsNoTracking().Select(s => s.AdId).ToListAsync(cancellationToken))
+            .ToHashSet(StringComparer.Ordinal);
+
     public async Task SaveAsync(ApplicationSupport support, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(support);

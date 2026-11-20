@@ -1,3 +1,4 @@
+using Jobpilot.Application.Abstractions.Applications;
 using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Application.Abstractions.Interest;
 
@@ -7,12 +8,13 @@ namespace Jobpilot.Application.Jobs.ListAssessedJobs;
 /// Every ad Claude has assessed, good and poor chances alike, best chance first, so the user has the final say and
 /// can see how well Claude judges. Reads only the database: the web UI never searches JobTech itself.
 /// </summary>
-public sealed class ListAssessedJobsHandler(IAssessmentStore assessments, IAdInterestStore interests)
+public sealed class ListAssessedJobsHandler(IAssessmentStore assessments, IAdInterestStore interests, IApplicationSupportStore supports)
 {
     public async Task<IReadOnlyList<AssessedJobView>> HandleAsync(CancellationToken cancellationToken)
     {
         var assessed = await assessments.ListAsync(cancellationToken);
         var interested = await interests.ListAdIdsAsync(cancellationToken);
+        var withSupport = await supports.ListAdIdsAsync(cancellationToken);
         return
         [
             .. assessed
@@ -31,7 +33,8 @@ public sealed class ListAssessedJobsHandler(IAssessmentStore assessments, IAdInt
                     a.Assessment.AssessedAt,
                     a.Ad.MatchedSkills ?? [],
                     a.Ad.MissingSkills ?? [],
-                    interested.Contains(a.Assessment.AdId))),
+                    interested.Contains(a.Assessment.AdId),
+                    withSupport.Contains(a.Assessment.AdId))),
         ];
     }
 }

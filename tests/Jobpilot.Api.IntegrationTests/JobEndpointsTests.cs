@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Jobpilot.Application.Abstractions.Applications;
 using Jobpilot.Application.Abstractions.Assessments;
 using Jobpilot.Application.Abstractions.Enrichments;
 using Jobpilot.Application.Abstractions.Interest;
@@ -24,6 +25,7 @@ public sealed class JobEndpointsTests : IAsyncDisposable
     private readonly FakeEnrichments _enrichments = new();
     private readonly InMemoryAssessmentStore _assessments = new();
     private readonly InMemoryAdInterestStore _interests = new();
+    private readonly InMemoryApplicationSupportStore _support = new();
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _http;
 
@@ -37,6 +39,7 @@ public sealed class JobEndpointsTests : IAsyncDisposable
             services.AddSingleton<IAdCompetencyCache>(new InMemoryAdCompetencyCache());
             services.AddSingleton<IAssessmentStore>(_assessments);
             services.AddSingleton<IAdInterestStore>(_interests);
+            services.AddSingleton<IApplicationSupportStore>(_support);
         }));
         _http = _factory.CreateClient();
     }
@@ -114,6 +117,35 @@ public sealed class JobEndpointsTests : IAsyncDisposable
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await ProblemAsync(response)).GetProperty("code").GetString().ShouldBe("AdInterest.AdNotAssessed");
+    }
+
+    [Fact]
+    public async Task GetSupport_ReturnsWhatWasPrepared_AndTheListFlagsIt()
+    {
+        await AssessedAsync("1", 80);
+        await AssessedAsync("2", 60);
+        await _support.SaveAsync(
+            Jobpilot.Domain.Applications.ApplicationSupport.Create("1", ["C#", "SQL"], "Lyft C#.", "Flytta upp X.", "Hej!", companyNotes: null, DateTimeOffset.UnixEpoch).Value,
+            Ct);
+
+        var support = await _http.GetFromJsonAsync<JsonElement>("/api/jobs/1/support", Ct);
+
+        support.GetProperty("keywords").EnumerateArray().Select(k => k.GetString()).ShouldBe(["C#", "SQL"]);
+        support.GetProperty("highlights").GetString().ShouldBe("Lyft C#.");
+        support.GetProperty("cvSuggestions").GetString().ShouldBe("Flytta upp X.");
+        support.GetProperty("letterDraft").GetString().ShouldBe("Hej!");
+        var list = await _http.GetFromJsonAsync<JsonElement>("/api/jobs/assessed", Ct);
+        list.EnumerateArray().ToDictionary(j => j.GetProperty("adId").GetString()!, j => j.GetProperty("hasSupport").GetBoolean(), StringComparer.Ordinal)
+            .ShouldBe(new Dictionary<string, bool>(StringComparer.Ordinal) { ["1"] = true, ["2"] = false });
+    }
+
+    [Fact]
+    public async Task GetSupport_NothingPrepared_Is404WithTheErrorCode()
+    {
+        using var response = await _http.GetAsync("/api/jobs/999/support", Ct);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await ProblemAsync(response)).GetProperty("code").GetString().ShouldBe("ApplicationSupport.NotFound");
     }
 
     [Fact]

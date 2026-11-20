@@ -14,6 +14,7 @@ namespace Jobpilot.Application.Jobs.ListAssessedJobs;
 /// <param name="MatchedSkills">What the ad asks for that the profile had when assessed; empty when not known.</param>
 /// <param name="MissingSkills">What the ad asks for that the profile lacked when assessed; empty when not known.</param>
 /// <param name="Interested">True when the user has marked the ad as one they want to apply for.</param>
+/// <param name="HasSupport">True when Claude has prepared application support (keywords, what to lift, drafts) for the ad.</param>
 public sealed record AssessedJobView(
     string AdId,
     string Headline,
@@ -27,4 +28,5 @@ public sealed record AssessedJobView(
     DateTimeOffset AssessedAt,
     IReadOnlyList<string> MatchedSkills,
     IReadOnlyList<string> MissingSkills,
-    bool Interested);
+    bool Interested,
+    bool HasSupport);

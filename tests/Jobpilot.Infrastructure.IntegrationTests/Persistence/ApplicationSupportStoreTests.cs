@@ -70,5 +70,17 @@ public sealed class ApplicationSupportStoreTests(PostgresFixture postgres) : IAs
     }
 
     [Fact]
+    public async Task ListAdIds_ReturnsTheIdsOfEveryAdThatHasSupport()
+    {
+        await SaveAsync(Support("1"));
+        await SaveAsync(Support("2"));
+
+        await using var scope = _provider.CreateAsyncScope();
+        var ids = await scope.ServiceProvider.GetRequiredService<IApplicationSupportStore>().ListAdIdsAsync(Ct);
+
+        ids.Order(StringComparer.Ordinal).ShouldBe(["1", "2"]);
+    }
+
+    [Fact]
     public async Task Get_NoIds_ReturnsEmpty() => (await GetAsync()).ShouldBeEmpty();
 }
